@@ -17,9 +17,9 @@ namespace OpGL
         {
             if (Frames.Length <= 1) return;
             AnimFrame += 1;
-            if (AnimFrame > Frames.Length)
+            if (AnimFrame >= Frames.Length)
             {
-                while (AnimFrame > Frames.Length)
+                while (AnimFrame >= Frames.Length)
                 {
                     AnimFrame -= Frames.Length;
                 }

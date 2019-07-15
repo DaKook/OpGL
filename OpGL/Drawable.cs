@@ -60,6 +60,43 @@ namespace OpGL
         }
 
         public bool Visible { get; set; } = true;
+        public enum SolidState {
+            /// <summary>
+            /// Solid for anything except NonSolid.
+            /// </summary>
+            Ground,
+            /// <summary>
+            /// Goes through other entities, but is stopped by Ground.
+            /// </summary>
+            Entity,
+            /// <summary>
+            /// Stops entities, and kills crewmen.
+            /// </summary>
+            KillSolid,
+            /// <summary>
+            /// Goes through entities, but is stopped by Ground, and kills crewmen.
+            /// </summary>
+            KillEntity,
+            /// <summary>
+            /// Goes through everything. Typically will be static.
+            /// </summary>
+            NonSolid }
+        /// <summary>
+        /// Gets or sets the solid state of the Drawable.
+        /// </summary>
+        public SolidState Solid { get; set; } = SolidState.Entity;
+        /// <summary>
+        /// Gets or sets the magnitude of gravity to be applied to the Drawable. Negative values will cause it to fall up.
+        /// </summary>
+        public float Gravity { get; set; }
+        /// <summary>
+        /// When set to true, the Drawable will not have its own collision detection. Other Drawables will still test for collision with Static Drawables.
+        /// </summary>
+        public bool Static { get; set; }
+        /// <summary>
+        /// Determines whether the Drawable will process even while out of the screen. Too many objects that always process could slow down the game.
+        /// </summary>
+        public bool AlwaysProcess { get; set; } = false;
         public readonly Texture Texture;
 
         private Matrix4x4f LocMatrix = Matrix4x4f.Identity;

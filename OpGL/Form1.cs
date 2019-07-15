@@ -63,6 +63,7 @@ namespace OpGL
                         //tiles.Add(new Drawable(10f, 108f, Textures[1], 3f, 6f));
                         //tiles.Add(new Drawable(18f, 108f, Textures[1], 5f, 6f));
                         //tiles.Add(new Drawable(6f, 77f, Textures[0], 0f, 0f));
+                        tiles.Add(new Drawable(8, 8, Textures[2], Textures[2].Animations[0]));
 
                         updatePreview();
 
@@ -107,7 +108,6 @@ namespace OpGL
                 else if (e.KeyCode == Keys.Escape)
                 {
                     playing = true;
-                    tiles.Clear();
                     startFrameCount();
                 }
             }
@@ -145,12 +145,16 @@ namespace OpGL
             stp.Start();
             while (playing)
             {
-                while (stp.ElapsedTicks < System.Diagnostics.Stopwatch.Frequency / 120)
+                while (stp.ElapsedTicks < System.Diagnostics.Stopwatch.Frequency / 60)
                 {
                     Application.DoEvents();
                 }
                 stp.Restart();
                 fps += 1;
+                for (int i = 0; i < tiles.Count; i++)
+                {
+                    tiles[i].Process();
+                }
                 glControl.Invalidate();
                 if (sec != DateTime.Now.Second)
                 {
@@ -205,6 +209,7 @@ namespace OpGL
                     string fl = file.Split('/').Last();
                     fl = fl.Substring(0, fl.Length - 4);
                     int gs = 32;
+                    List<Animation> anims = new List<Animation>();
                     if (System.IO.File.Exists("textures/" + fl + "_data.txt"))
                     {
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fl + "_data.txt"));
@@ -243,6 +248,8 @@ namespace OpGL
                                         }
                                     }
                                 }
+                                an.Frames = frames.ToArray();
+                                anims.Add(an);
                             }
                         }
 
@@ -256,6 +263,7 @@ namespace OpGL
                         //}
                     }
                     InitTex(fl, gs, ref Textures);
+                    Textures.Last().Animations = anims;
                 }
             }
         }

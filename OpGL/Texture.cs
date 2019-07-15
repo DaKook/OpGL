@@ -8,6 +8,7 @@ namespace OpGL
 {
     public class Texture
     {
+        public List<Animation> Animations { get; set; }
         public string Name { get; internal set; }
         public uint ID { get; internal set; }
         public float Width { get; internal set; }
