@@ -220,30 +220,27 @@ namespace OpGL
                         {
                             foreach (var anim in arr)
                             {
-                                JArray hitbox = (JArray)anim["Hitbox"];
-                                //int[] points = hitbox.Cast<int>().ToArray();
                                 JArray frms = (JArray)anim["Frames"];
-                                //points = frms.Cast<int>().ToArray();
-                                List<Point> frames = new List<Point>();
+                                List<Point> frames = new List<Point>(frms.Count);
                                 int speed = (int)anim["Speed"];
-                                for (int i = 0; i < frms.Count; i++)
+                                // Animations are specified as X, Y tile coordinates.
+                                // Or a single negative value indicating re-use previous
+                                int i = 0;
+                                while (i < frms.Count)
                                 {
-                                    if ((int)frms[i] >= 0)
+                                    Point f = new Point();
+                                    int x = (int)frms[i];
+                                    if (x >= 0)
                                     {
-                                        for (int j = 0; j < speed; j++)
-                                        {
-                                            frames.Add(new Point((int)frms[i], (int)frms[i + 1]));
-                                        }
-                                        i += 1;
+                                        i++;
+                                        f = new Point(x, (int)frms[i]);
                                     }
-                                    else
-                                    {
-                                        for (int j = 0; j < speed; j++)
-                                        {
-                                            frames.Add(frames.LastOrDefault());
-                                        }
-                                    }
+                                    for (int j = 0; j < speed; j++)
+                                        frames.Add(f);
+
+                                    i++;
                                 }
+                                JArray hitbox = (JArray)anim["Hitbox"];
                                 Rectangle r = hitbox.Count == 4 ? new Rectangle((int)hitbox[0], (int)hitbox[1], (int)hitbox[2], (int)hitbox[3]) : Rectangle.Empty;
                                 anims.Add(new Animation(frames.ToArray(), r, Textures.Last()));
                             }
