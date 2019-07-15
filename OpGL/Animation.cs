@@ -9,34 +9,31 @@ namespace OpGL
 {
     public class Animation
     {
-        public int AnimFrame { get; internal set; }
-        public Point[] Frames { get; set; }
-        public Point CurrentFrame { get => Frames[AnimFrame]; }
+        // texture location, in pixels
+        private Point[] frames;
+        private Texture texture;
         public Rectangle Hitbox { get; set; }
-        public void AdvanceFrame()
+
+        public int FrameCount { get => frames.Length; }
+
+        public Animation(Point[] frames, Rectangle hitbox, Texture texture)
         {
-            if (Frames.Length <= 1) return;
-            AnimFrame += 1;
-            if (AnimFrame >= Frames.Length)
-            {
-                while (AnimFrame >= Frames.Length)
-                {
-                    AnimFrame -= Frames.Length;
-                }
-            }
-        }
-        public void ResetAnimation()
-        {
-            AnimFrame = 0;
-        }
-        public Animation(Point[] frames, Rectangle hitbox)
-        {
-            Frames = frames;
+            this.frames = new Point[frames.Length];
+            for (int i = 0; i < frames.Length; i++)
+                this.frames[i] = new Point(frames[i].X * texture.TileSize, frames[i].Y * texture.TileSize);
+
+            this.texture = texture;
             Hitbox = hitbox;
         }
         public static Animation EmptyAnimation
         {
-            get => new Animation(new Point[] { }, new Rectangle(0, 0, 0, 0));
+
+            get => new Animation(new Point[] { }, new Rectangle(0, 0, 0, 0), null);
+        }
+
+        public Point GetFrame(int frameId)
+        {
+            return frames[frameId];
         }
     }
 }

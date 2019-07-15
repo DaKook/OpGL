@@ -12,6 +12,8 @@ namespace OpGL
     public class Drawable
     {
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
+        private int animFrame = 0;
+
         private float _X;
         public float X
         {
@@ -32,30 +34,19 @@ namespace OpGL
                 _Y = value;
             }
         }
-        private float _TexX;
-        public float TextureX
+
+        public int TextureX
         {
             get
             {
-                return _TexX;
-            }
-            set
-            {
-                TexMatrix.Translate((value - _TexX) * Texture.TileSize, 0, 0);
-                _TexX = value;
+                return Animation.GetFrame(animFrame).X;
             }
         }
-        private float _TexY;
-        public float TextureY
+        public int TextureY
         {
             get
             {
-                return _TexY;
-            }
-            set
-            {
-                TexMatrix.Translate(0, (value - _TexY) * Texture.TileSize, 0);
-                _TexY = value;
+                return Animation.GetFrame(animFrame).Y;
             }
         }
 
@@ -102,7 +93,7 @@ namespace OpGL
         private Matrix4x4f LocMatrix = Matrix4x4f.Identity;
         private Matrix4x4f TexMatrix = Matrix4x4f.Identity;
 
-        public Drawable(float x, float y, Texture texture, float texX, float texY)
+        public Drawable(float x, float y, Texture texture, int texX, int texY)
         {
             _X = x;
             _Y = y;
@@ -111,9 +102,7 @@ namespace OpGL
             float dw = 1f / texture.Width;
             float dh = 1f / texture.Height;
             TexMatrix.Scale(dw, dh, 1f);
-            TextureX = texX;
-            TextureY = texY;
-            Animation.Frames = new Point[] { new Point((int)texX, (int)texY) };
+            Animation = new Animation(new Point[] { new Point(texX, texY) }, Rectangle.Empty, texture);
         }
 
         public Drawable(float x, float y, Texture texture, Animation animation)
@@ -140,9 +129,7 @@ namespace OpGL
 
         public virtual void Process()
         {
-            Animation.AdvanceFrame();
-            TextureX = Animation.CurrentFrame.X;
-            TextureY = Animation.CurrentFrame.Y;
+            animFrame = (animFrame + 1) % Animation.FrameCount;
         }
     }
 

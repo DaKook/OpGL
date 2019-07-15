@@ -208,24 +208,20 @@ namespace OpGL
                 {
                     string fl = file.Split('/').Last();
                     fl = fl.Substring(0, fl.Length - 4);
-                    int gs = 32;
+
                     List<Animation> anims = new List<Animation>();
                     if (System.IO.File.Exists("textures/" + fl + "_data.txt"))
                     {
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fl + "_data.txt"));
-                        gs = (int)jObject["GridSize"];
+                        InitTex(fl, (int)jObject["GridSize"], ref Textures);
+
                         JArray arr = (JArray)jObject["Animations"];
                         if (arr != null)
                         {
                             foreach (var anim in arr)
                             {
-                                Animation an = Animation.EmptyAnimation;
                                 JArray hitbox = (JArray)anim["Hitbox"];
                                 //int[] points = hitbox.Cast<int>().ToArray();
-                                if (hitbox.Count == 4)
-                                {
-                                    an.Hitbox = new Rectangle((int)hitbox[0], (int)hitbox[1], (int)hitbox[2], (int)hitbox[3]);
-                                }
                                 JArray frms = (JArray)anim["Frames"];
                                 //points = frms.Cast<int>().ToArray();
                                 List<Point> frames = new List<Point>();
@@ -248,8 +244,8 @@ namespace OpGL
                                         }
                                     }
                                 }
-                                an.Frames = frames.ToArray();
-                                anims.Add(an);
+                                Rectangle r = hitbox.Count == 4 ? new Rectangle((int)hitbox[0], (int)hitbox[1], (int)hitbox[2], (int)hitbox[3]) : Rectangle.Empty;
+                                anims.Add(new Animation(frames.ToArray(), r, Textures.Last()));
                             }
                         }
 
@@ -262,13 +258,14 @@ namespace OpGL
                         //    }
                         //}
                     }
-                    InitTex(fl, gs, ref Textures);
+                    else // create with default grid size
+                        InitTex(fl, 32, ref Textures);
                     Textures.Last().Animations = anims;
                 }
             }
         }
 
-        private void InitTex(string texture, float gridSize, ref List<Texture> textureIDs)
+        private void InitTex(string texture, int gridSize, ref List<Texture> textureIDs)
         {
             SKBitmap bmp = SKBitmap.Decode("textures/" + texture + ".png");
             texSpritesWidth = bmp.Width;
