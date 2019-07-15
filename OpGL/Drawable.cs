@@ -102,6 +102,7 @@ namespace OpGL
             float dw = 1f / texture.Width;
             float dh = 1f / texture.Height;
             TexMatrix.Scale(dw, dh, 1f);
+            TexMatrix.Translate(texX * texture.TileSize, texY * texture.TileSize, 0f);
             Animation = new Animation(new Point[] { new Point(texX, texY) }, Rectangle.Empty, texture);
         }
 
@@ -109,8 +110,15 @@ namespace OpGL
         {
             X = x;
             Y = y;
+
             Texture = texture;
+            float dw = 1f / texture.Width;
+            float dh = 1f / texture.Height;
+            TexMatrix.Scale(dw, dh, 1f);
+
             Animation = animation;
+            Point p = Animation.GetFrame(animFrame);
+            TexMatrix.Translate(p.X * texture.TileSize, p.Y * texture.TileSize, 0f);
         }
 
         public void Draw()
@@ -129,7 +137,11 @@ namespace OpGL
 
         public virtual void Process()
         {
+            Point old = Animation.GetFrame(animFrame);
             animFrame = (animFrame + 1) % Animation.FrameCount;
+            Point n = Animation.GetFrame(animFrame);
+            if (old != n)
+                TexMatrix.Translate((n.X - old.Y) * Texture.TileSize, (n.Y - old.Y) * Texture.TileSize, 0f);
         }
     }
 
