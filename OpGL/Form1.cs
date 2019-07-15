@@ -19,8 +19,8 @@ namespace OpGL
         uint texa;
         //uint prg;
         uint texPrg;
-        int texSpritesWidth = 0;
-        int texSpritesHeight = 0;
+        //int texSpritesWidth = 0;
+        //int texSpritesHeight = 0;
         bool init = false;
         bool playing = false;
         List<Texture> Textures = new List<Texture>();
@@ -63,7 +63,7 @@ namespace OpGL
                         //tiles.Add(new Drawable(10f, 108f, Textures[1], 3f, 6f));
                         //tiles.Add(new Drawable(18f, 108f, Textures[1], 5f, 6f));
                         //tiles.Add(new Drawable(6f, 77f, Textures[0], 0f, 0f));
-                        tiles.Add(new Drawable(8, 8, Textures[2], Textures[2].Animations[0]));
+                        tiles.Add(new StringDrawable(8, 8, Textures[0], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
 
                         updatePreview();
 
@@ -202,6 +202,7 @@ namespace OpGL
         private void InitTexQuad()
         {
             List<string> files = System.IO.Directory.EnumerateFiles("textures/").ToList();
+            files.Sort();
             foreach (string file in files)
             {
                 if (file.EndsWith(".png"))
@@ -265,8 +266,8 @@ namespace OpGL
         private void InitTex(string texture, int gridSize, ref List<Texture> textureIDs)
         {
             SKBitmap bmp = SKBitmap.Decode("textures/" + texture + ".png");
-            texSpritesWidth = bmp.Width;
-            texSpritesHeight = bmp.Height;
+            //texSpritesWidth = bmp.Width;
+            //texSpritesHeight = bmp.Height;
 
             texa = Gl.CreateVertexArray();
             Gl.BindVertexArray(texa);
@@ -354,7 +355,7 @@ namespace OpGL
             if (init)
             {
                 if (e.Button == MouseButtons.Left)
-                    tiles.Add(new Drawable(previewTile.X, previewTile.Y, previewTile.Texture, previewTile.TextureX, previewTile.TextureY));
+                    tiles.Add(new Drawable(previewTile.X, previewTile.Y, previewTile.Texture, previewTile.TextureX / previewTile.Texture.TileSize, previewTile.TextureY / previewTile.Texture.TileSize));
                 else
                 {
                     for (int i = 0; i < tiles.Count; i++)

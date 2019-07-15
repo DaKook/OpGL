@@ -11,6 +11,10 @@ namespace OpGL
 {
     public class Drawable
     {
+        public string Name { get; set; } = "";
+
+        public Color Color { get; set; }
+
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
         private int animFrame = 0;
 
@@ -88,12 +92,17 @@ namespace OpGL
         /// Determines whether the Drawable will process even while out of the screen. Too many objects that always process could slow down the game.
         /// </summary>
         public bool AlwaysProcess { get; set; } = false;
-        public readonly Texture Texture;
+        public Texture Texture { get; internal set; }
 
         private Matrix4x4f LocMatrix = Matrix4x4f.Identity;
         private Matrix4x4f TexMatrix = Matrix4x4f.Identity;
 
-        public Drawable(float x, float y, Texture texture, int texX, int texY)
+        internal Drawable()
+        {
+
+        }
+
+        public Drawable(float x, float y, Texture texture, int texX, int texY, Color? color = null)
         {
             _X = x;
             _Y = y;
@@ -104,6 +113,7 @@ namespace OpGL
             TexMatrix.Scale(dw, dh, 1f);
             TexMatrix.Translate(texX * texture.TileSize, texY * texture.TileSize, 0f);
             Animation = new Animation(new Point[] { new Point(texX, texY) }, Rectangle.Empty, texture);
+            Color = color ?? Color.White;
         }
 
         public Drawable(float x, float y, Texture texture, Animation animation)
@@ -118,10 +128,10 @@ namespace OpGL
 
             Animation = animation;
             Point p = Animation.GetFrame(animFrame);
-            TexMatrix.Translate(p.X * texture.TileSize, p.Y * texture.TileSize, 0f);
+            TexMatrix.Translate(p.X, p.Y, 0f);
         }
 
-        public void Draw()
+        public virtual void Draw()
         {
             if (!Visible) return;
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
@@ -131,6 +141,8 @@ namespace OpGL
             Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
             int texLoc = Gl.GetUniformLocation(Texture.Program, "texMatrix");
             Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
+            int colorLoc = Gl.GetUniformLocation(Texture.Program, "color");
+            Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
             
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
         }
@@ -141,7 +153,7 @@ namespace OpGL
             animFrame = (animFrame + 1) % Animation.FrameCount;
             Point n = Animation.GetFrame(animFrame);
             if (old != n)
-                TexMatrix.Translate((n.X - old.Y) * Texture.TileSize, (n.Y - old.Y) * Texture.TileSize, 0f);
+                TexMatrix.Translate((n.X - old.X), (n.Y - old.Y), 0f);
         }
     }
 

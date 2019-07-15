@@ -9,6 +9,5 @@ namespace OpGL
     public class Game
     {
         public List<Texture> Textures;
-
     }
 }
