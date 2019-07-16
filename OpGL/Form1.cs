@@ -133,34 +133,46 @@ namespace OpGL
                 py = (int)previewTile.Y;
             }
             previewTile = new Drawable(px, py, Textures[currentTexture], currentX, currentY);
-            glControl.Invalidate();
+            if (!playing)
+                glControl.Invalidate();
         }
 
         private void startFrameCount()
         {
             int sec = DateTime.Now.Second;
             int x = 1000;
-            int fps = 0;
+            int skippedFrames = 0;
             System.Diagnostics.Stopwatch stp = new System.Diagnostics.Stopwatch();
+            long ticksPerFrame = System.Diagnostics.Stopwatch.Frequency / 60;
+            long nextFrame = ticksPerFrame;
             stp.Start();
+
             while (playing)
             {
-                while (stp.ElapsedTicks < System.Diagnostics.Stopwatch.Frequency / 60)
+                while (stp.ElapsedTicks < nextFrame)
                 {
-                    Application.DoEvents();
+                    int msToSleep = 15 - (int)stp.ElapsedMilliseconds;
+                    if (msToSleep > 0) 
+                        System.Threading.Thread.Sleep(msToSleep);
                 }
-                stp.Restart();
-                fps += 1;
+                long ticksElapsed = stp.ElapsedTicks - nextFrame;
+                int frames = (int)(ticksPerFrame / ticksPerFrame);
+                nextFrame += ticksPerFrame * frames;
+
                 for (int i = 0; i < tiles.Count; i++)
                 {
                     tiles[i].Process();
                 }
+
                 glControl.Invalidate();
+                Application.DoEvents();
+
+                skippedFrames += frames - 1;
                 if (sec != DateTime.Now.Second)
                 {
-                    Text = "Objects: " + x + ", FPS: " + fps;
+                    Text = "Objects: " + x + ", Skipped frames: " + skippedFrames;
                     sec = DateTime.Now.Second;
-                    fps = 0;
+                    skippedFrames = 0;
                 }
             }
         }
@@ -363,7 +375,9 @@ namespace OpGL
                 previewTile.X = x;
                 previewTile.Y = y;
                 previewTile.Visible = true;
-                glControl.Invalidate();
+
+                if (!playing)
+                    glControl.Invalidate();
             }
         }
 
@@ -372,7 +386,8 @@ namespace OpGL
             if (init)
             {
                 previewTile.Visible = false;
-                glControl.Invalidate();
+                if (!playing)
+                    glControl.Invalidate();
             }
         }
 
@@ -394,8 +409,14 @@ namespace OpGL
                         }
                     }
                 }
-                glControl.Invalidate();
+                if (!playing)
+                    glControl.Invalidate();
             }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            playing = false;
         }
     }
 }
