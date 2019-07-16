@@ -62,5 +62,10 @@ namespace OpGL
                     chr.Draw();
             }
         }
+
+        public override void Process()
+        {
+            // do nothing
+        }
     }
 }
