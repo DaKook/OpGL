@@ -28,7 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.glControl = new OpenGL.GlControl();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // glControl
@@ -43,10 +45,15 @@
             this.glControl.Size = new System.Drawing.Size(800, 450);
             this.glControl.StencilBits = ((uint)(0u));
             this.glControl.TabIndex = 0;
-            this.glControl.Render += new System.EventHandler<OpenGL.GlControlEventArgs>(this.GlControl1_Render);
             this.glControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GlControl_MouseClick);
             this.glControl.MouseLeave += new System.EventHandler(this.GlControl_MouseLeave);
             this.glControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GlControl_MouseMove);
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 1;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form1
             // 
@@ -58,7 +65,6 @@
             this.Name = "Form1";
             this.Text = "VVVVVVV";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.ResumeLayout(false);
 
@@ -67,6 +73,7 @@
         #endregion
 
         private OpenGL.GlControl glControl;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
