@@ -12,13 +12,17 @@ namespace OpGL
 {
     public class Game
     {
+        const int RESOLUTION_WIDTH = 320;
+        const int RESOLUTION_HEIGHT = 240;
+
         private GlControl glControl;
         private uint program;
 
-        private Matrix4x4f camera;
+        private Matrix4x4f camera, hudView;
         private List<Texture> textures;
 
         private List<Drawable> sprites;
+        private List<Drawable> hudSprites;
         public bool IsPlaying { get; private set; } = false;
 
         public Game(GlControl control)
@@ -32,10 +36,12 @@ namespace OpGL
             LoadTextures();
 
             sprites = new List<Drawable>();
+            hudSprites = new List<Drawable>();
             // testing
-            sprites.Add(new StringDrawable(8, 8, textures[0], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
+            hudSprites.Add(new StringDrawable(8, 8, textures[0], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
 
             glControl.Render += glControl_Render;
+            glControl.Resize += glControl_Resize;
         }
 
         #region "Init"
@@ -49,7 +55,8 @@ namespace OpGL
 
             // origin at top-left
             camera = Matrix4x4f.Translated(-1f, 1f, 0f); 
-            camera.Scale(4f / glControl.Width, -4f / glControl.Height, 1);
+            camera.Scale(2f / RESOLUTION_WIDTH, -2f / RESOLUTION_HEIGHT, 1);
+            hudView = camera;
             int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
         }
@@ -181,9 +188,19 @@ namespace OpGL
             Gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             //Gl.BlendFuncSeparate(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha, BlendingFactor.OneMinusDstAlpha, BlendingFactor.One);
 
-            Gl.Viewport(0, 0, glControl.Width, glControl.Height);
+            glControl_Resize(null, null);
 
             Gl.ClearColor(0f, 0f, 0f, 1f);
+        }
+
+        private void glControl_Resize(object sender, EventArgs e)
+        {
+            float relX = (float)glControl.Width / RESOLUTION_WIDTH;
+            float relY = (float)glControl.Height / RESOLUTION_HEIGHT;
+            float scaleBy = Math.Min(relX, relY);
+            int w = (int)(RESOLUTION_WIDTH * scaleBy);
+            int h = (int)(RESOLUTION_HEIGHT * scaleBy);
+            Gl.Viewport((glControl.Width - w) / 2, (glControl.Height - h) / 2, w, h);
         }
         #endregion
 
@@ -240,9 +257,13 @@ namespace OpGL
             // clear the color buffer
             Gl.Clear(ClearBufferMask.ColorBufferBit);
 
+            int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
+            Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
             for (int i = 0; i < sprites.Count; i++)
                 sprites[i].Draw();
-
+            Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
+            for (int i = 0; i < hudSprites.Count; i++)
+                hudSprites[i].Draw();
         }
 
     }

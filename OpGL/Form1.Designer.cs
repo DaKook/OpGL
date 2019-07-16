@@ -42,7 +42,7 @@
             this.glControl.Location = new System.Drawing.Point(0, 0);
             this.glControl.MultisampleBits = ((uint)(0u));
             this.glControl.Name = "glControl";
-            this.glControl.Size = new System.Drawing.Size(800, 450);
+            this.glControl.Size = new System.Drawing.Size(640, 480);
             this.glControl.StencilBits = ((uint)(0u));
             this.glControl.TabIndex = 0;
             this.glControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GlControl_MouseClick);
@@ -59,7 +59,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(640, 480);
             this.Controls.Add(this.glControl);
             this.KeyPreview = true;
             this.Name = "Form1";
