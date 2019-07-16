@@ -8,6 +8,10 @@ namespace OpGL
 {
     public class Game
     {
-        public List<Texture> Textures;
+        public List<Texture> Textures = new List<Texture>();
+        public List<Drawable> Entities = new List<Drawable>();
+        public Tile[,] Tiles;
+        public float CameraX;
+        public float CameraY;
     }
 }

@@ -59,23 +59,23 @@ namespace OpGL
             /// <summary>
             /// Solid for anything except NonSolid.
             /// </summary>
-            Ground,
+            Ground = 0,
             /// <summary>
             /// Goes through other entities, but is stopped by Ground.
             /// </summary>
-            Entity,
+            Entity = 1,
             /// <summary>
             /// Stops entities, and kills crewmen.
             /// </summary>
-            KillSolid,
+            KillSolid = 2,
             /// <summary>
             /// Goes through entities, but is stopped by Ground, and kills crewmen.
             /// </summary>
-            KillEntity,
+            KillEntity = 3,
             /// <summary>
             /// Goes through everything. Typically will be static.
             /// </summary>
-            NonSolid }
+            NonSolid = 4 }
         /// <summary>
         /// Gets or sets the solid state of the Drawable.
         /// </summary>
@@ -149,6 +149,7 @@ namespace OpGL
 
         public virtual void Process()
         {
+            //Advance animation frame and change TextureX and TextureY accordingly
             Point old = Animation.GetFrame(animFrame);
             animFrame = (animFrame + 1) % Animation.FrameCount;
             Point n = Animation.GetFrame(animFrame);

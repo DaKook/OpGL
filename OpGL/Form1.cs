@@ -216,10 +216,11 @@ namespace OpGL
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fl + "_data.txt"));
                         InitTex(fl, (int)jObject["GridSize"], ref Textures);
 
+                        //Animations
                         JArray arr = (JArray)jObject["Animations"];
                         if (arr != null)
                         {
-                            foreach (var anim in arr)
+                            foreach (JObject anim in arr)
                             {
                                 JArray frms = (JArray)anim["Frames"];
                                 List<Point> frames = new List<Point>(frms.Count);
@@ -245,6 +246,31 @@ namespace OpGL
                                 Rectangle r = hitbox.Count == 4 ? new Rectangle((int)hitbox[0], (int)hitbox[1], (int)hitbox[2], (int)hitbox[3]) : Rectangle.Empty;
                                 anims.Add(new Animation(frames.ToArray(), r, Textures.Last()));
                             }
+                        }
+                        //Tiles
+                        JArray tls = (JArray)jObject["Tiles"];
+                        if (arr != null)
+                        {
+                            Drawable.SolidState[,] states = new Drawable.SolidState[(int)(Textures.Last().Width / Textures.Last().TileSize), (int)(Textures.Last().Height / Textures.Last().TileSize)];
+                            int i = 0;
+                            int x = 0;
+                            int y = 0;
+                            while (i < tls.Count)
+                            {
+                                int count = (int)tls[i];
+                                for (int j = 0; j < count; j++)
+                                {
+                                    states[x, y] = (Drawable.SolidState)(int)tls[i + 1];
+                                    x += 1;
+                                    if (x >= states.GetLength(0))
+                                    {
+                                        x = 0;
+                                        y += 1;
+                                    }
+                                }
+                                i += 2;
+                            }
+                            Textures.Last().TileSolidStates = states;
                         }
 
                         //string[] s = System.IO.File.ReadAllLines("textures/" + fl + "_data.txt");
