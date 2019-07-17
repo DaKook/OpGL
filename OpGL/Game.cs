@@ -38,7 +38,7 @@ namespace OpGL
             sprites = new List<Drawable>();
             hudSprites = new List<Drawable>();
             // testing
-            hudSprites.Add(new StringDrawable(8, 8, textures[0], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
+            hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
 
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
