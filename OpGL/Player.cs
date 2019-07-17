@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    class Player : Drawable
+    class Player : Crewman
     {
+        public Player(float x, float y, Texture texture) : base(x, y, texture)
+        {
 
+        }
     }
 }

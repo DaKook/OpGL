@@ -151,7 +151,7 @@ namespace OpGL
         {
             //Advance animation frame and change TextureX and TextureY accordingly
             Point old = Animation.GetFrame(animFrame);
-            animFrame = (animFrame + 1) % Animation.FrameCount;
+            if (++animFrame >= Animation.FrameCount) animFrame = Animation.LoopStart;
             Point n = Animation.GetFrame(animFrame);
             if (old != n)
                 TexMatrix.Translate((n.X - old.X), (n.Y - old.Y), 0f);

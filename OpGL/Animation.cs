@@ -15,6 +15,7 @@ namespace OpGL
         public Rectangle Hitbox { get; set; }
 
         public int FrameCount { get => frames.Length; }
+        public int LoopStart { get; set; } = 0;
 
         public Animation(Point[] frames, Rectangle hitbox, Texture texture)
         {
@@ -27,13 +28,9 @@ namespace OpGL
         }
         public static Animation EmptyAnimation
         {
-
             get => new Animation(new Point[] { }, new Rectangle(0, 0, 0, 0), null);
         }
 
-        public Point GetFrame(int frameId)
-        {
-            return frames[frameId];
-        }
+        public Point GetFrame(int frameId) => frames[frameId];
     }
 }
