@@ -38,8 +38,8 @@ namespace OpGL
                         int y = (c - x) / 16;
                         bufferData[index++] = curX;
                         bufferData[index++] = curY;
-                        bufferData[index++] = x * Texture.TileSize;
-                        bufferData[index++] = y * Texture.TileSize;
+                        bufferData[index++] = x;
+                        bufferData[index++] = y;
                         curX += Texture.TileSize;
                     }
                 }

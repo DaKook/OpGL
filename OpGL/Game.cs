@@ -168,10 +168,10 @@ namespace OpGL
             Gl.BindBuffer(BufferTarget.ArrayBuffer, texb);
             float[] fls = new float[]
             {
-                0f,       0f,       0f,       0f,
-                0f,       gridSize, 0f,       gridSize,
-                gridSize, gridSize, gridSize, gridSize,
-                gridSize, 0f,       gridSize, 0f
+                0f,       0f,       0f, 0f,
+                0f,       gridSize, 0f, 1f,
+                gridSize, gridSize, 1f, 1f,
+                gridSize, 0f,       1f, 0f
             };
             Gl.BufferData(BufferTarget.ArrayBuffer, (uint)fls.Length * sizeof(float), fls, BufferUsage.StaticDraw);
 

@@ -107,11 +107,11 @@ namespace OpGL
             _X = x;
             _Y = y;
             LocMatrix = Matrix4x4f.Translated(x, y, 0);
+
             Texture = texture;
-            float dw = 1f / texture.Width;
-            float dh = 1f / texture.Height;
-            TexMatrix.Scale(dw, dh, 1f);
-            TexMatrix.Translate(texX * texture.TileSize, texY * texture.TileSize, 0f);
+            TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
+            TexMatrix.Translate(texX, texY, 0f);
+
             Animation = new Animation(new Point[] { new Point(texX, texY) }, Rectangle.Empty, texture);
             Color = color ?? Color.White;
         }

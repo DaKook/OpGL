@@ -21,7 +21,7 @@ namespace OpGL
         {
             this.frames = new Point[frames.Length];
             for (int i = 0; i < frames.Length; i++)
-                this.frames[i] = new Point(frames[i].X * texture.TileSize, frames[i].Y * texture.TileSize);
+                this.frames[i] = new Point(frames[i].X, frames[i].Y);
 
             this.texture = texture;
             Hitbox = hitbox;
