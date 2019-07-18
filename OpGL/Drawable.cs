@@ -94,8 +94,8 @@ namespace OpGL
         public bool AlwaysProcess { get; set; } = false;
         public Texture Texture { get; internal set; }
 
-        private Matrix4x4f LocMatrix = Matrix4x4f.Identity;
-        private Matrix4x4f TexMatrix = Matrix4x4f.Identity;
+        internal Matrix4x4f LocMatrix = Matrix4x4f.Identity;
+        internal Matrix4x4f TexMatrix = Matrix4x4f.Identity;
 
         internal Drawable()
         {

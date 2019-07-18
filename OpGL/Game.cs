@@ -1,9 +1,12 @@
-﻿using System;
+﻿#define TEST
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Drawing;
+using System.Diagnostics;
 
 using OpenGL;
 using Newtonsoft.Json.Linq;
@@ -12,6 +15,10 @@ namespace OpGL
 {
     public class Game
     {
+#if TEST
+        float renderTime = 0f;
+#endif
+
         const int RESOLUTION_WIDTH = 320;
         const int RESOLUTION_HEIGHT = 240;
 
@@ -39,7 +46,12 @@ namespace OpGL
             hudSprites = new List<Drawable>();
             // testing
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
-
+            sprites.Add(new Drawable(40, 60, textures[Textures.SPRITES], 0, 0));
+#if TEST
+            hudSprites.Add(new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
+            for (int i = 0; i < 1000; i++)
+                sprites.Add(new StringDrawable(40, 32, textures[Textures.FONT], "Hey dude, lag a bit for me. k?", Color.White));
+#endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
         }
@@ -168,8 +180,8 @@ namespace OpGL
             Gl.EnableVertexAttribArray(0);
             Gl.EnableVertexAttribArray(1);
 
-            Texture ret = new Texture(Gl.CreateTexture(TextureTarget.Texture2d), bmp.Width, bmp.Height, gridSize, texture, program, texa);
-            Gl.BindTexture(TextureTarget.Texture2d, ret.ID);
+            uint tex = Gl.CreateTexture(TextureTarget.Texture2d);
+            Gl.BindTexture(TextureTarget.Texture2d, tex);
             Gl.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, bmp.GetPixels());
 
             Gl.GenerateMipmap(TextureTarget.Texture2d);
@@ -179,7 +191,20 @@ namespace OpGL
             Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureBorderColor, new float[] { 0f, 0f, 0f, 0f });
 
-            return ret;
+            // instancing
+            uint ibo = Gl.CreateBuffer();
+            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            float[] empty = new float[] { 0f, 0f, 0f, 0f };
+            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)empty.Length * sizeof(float), empty, BufferUsage.DynamicDraw);
+
+            Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
+            Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+            Gl.EnableVertexAttribArray(2);
+            Gl.EnableVertexAttribArray(3);
+            Gl.VertexAttribDivisor(2, 1);
+            Gl.VertexAttribDivisor(3, 1);
+
+            return new Texture(tex, bmp.Width, bmp.Height, gridSize, texture, program, texa, ibo);
         }
 
         private void InitOpenGLSettings()
@@ -208,8 +233,8 @@ namespace OpGL
         {
             int sec = DateTime.Now.Second;
             int skippedFrames = 0;
-            System.Diagnostics.Stopwatch stp = new System.Diagnostics.Stopwatch();
-            long ticksPerFrame = System.Diagnostics.Stopwatch.Frequency / 60;
+            Stopwatch stp = new Stopwatch();
+            long ticksPerFrame = Stopwatch.Frequency / 60;
             long nextFrame = ticksPerFrame;
             stp.Start();
 
@@ -254,6 +279,11 @@ namespace OpGL
 
         private void glControl_Render(object sender, GlControlEventArgs e)
         {
+#if TEST
+            Stopwatch t = new Stopwatch();
+            t.Start();
+#endif
+
             // clear the color buffer
             Gl.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -264,6 +294,13 @@ namespace OpGL
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
             for (int i = 0; i < hudSprites.Count; i++)
                 hudSprites[i].Draw();
+
+#if TEST
+            const int avgOver = 60;
+            float ms = (float)t.ElapsedTicks / Stopwatch.Frequency * 1000f;
+            renderTime = renderTime * (1f - (1f / avgOver)) + ms * (1f / avgOver);
+            (hudSprites[1] as StringDrawable).Text = "Avg render time: " + renderTime.ToString("0.0");
+#endif
         }
 
     }
