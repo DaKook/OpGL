@@ -26,6 +26,26 @@ namespace OpGL
         private uint program;
 
         private Matrix4x4f camera, hudView;
+        private float _camX;
+        private float _camY;
+        private float cameraX
+        {
+            get => _camX;
+            set
+            {
+                camera.Translate(value - _camX, 0, 0);
+                _camX = value;
+            }
+        }
+        private float cameraY
+        {
+            get => _camY;
+            set
+            {
+                camera.Translate(0, value - _camY, 0);
+                _camY = value;
+            }
+        }
         private List<Texture> textures;
 
         private List<Drawable> sprites;
@@ -252,7 +272,22 @@ namespace OpGL
 
                 for (int i = 0; i < sprites.Count; i++)
                 {
+                    if (!sprites[i].Static)
                     sprites[i].Process();
+                }
+                IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid & (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
+                foreach (Drawable drawable in process)
+                {
+                    if (!drawable.Static)
+                    {
+                        foreach (Drawable testFor in process)
+                        {
+                            if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
+                            {
+
+                            }
+                        }
+                    }
                 }
 
                 glControl.Invalidate();

@@ -9,6 +9,7 @@ namespace OpGL
 {
     public class Animation
     {
+        public string Name;
         // texture location, in pixels
         private Point[] frames;
         private Texture texture;

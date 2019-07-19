@@ -8,6 +8,7 @@ namespace OpGL
 {
     public class Crewman : Drawable
     {
+        public string Name;
         public Animation StandingAnimation;
         public Animation WalkingAnimation;
         public Animation FallingAnimation;
@@ -17,10 +18,12 @@ namespace OpGL
         public float MaxSpeed;
         public float Acceleration;
         private int inputDirection;
-        public Crewman(float x, float y, Texture texture, Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null)
+        public override bool IsCrewman { get => true; }
+        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null)
         {
             X = x;
             Y = y;
+            Name = name;
             Texture = texture;
             StandingAnimation = stand;
             WalkingAnimation = walk;

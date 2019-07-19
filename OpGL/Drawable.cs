@@ -24,6 +24,7 @@ namespace OpGL
             get { return _X; }
             set
             {
+                PreviousX = _X;
                 LocMatrix.Translate(value - _X, 0f, 0f);
                 _X = value;
             }
@@ -34,10 +35,16 @@ namespace OpGL
             get { return _Y; }
             set
             {
+                PreviousY = _Y;
                 LocMatrix.Translate(0f, value - _Y, 0f);
                 _Y = value;
             }
         }
+        public float PreviousX { get; private set; }
+        public float PreviousY { get; private set; }
+        public float HitX { get => X + Animation.Hitbox.X; }
+        public float HitY { get => Y + Animation.Hitbox.Y; }
+        public virtual bool IsCrewman { get => false; }
 
         public int TextureX
         {
@@ -129,6 +136,13 @@ namespace OpGL
             Animation = animation;
             Point p = Animation.GetFrame(animFrame);
             TexMatrix.Translate(p.X, p.Y, 0f);
+        }
+
+        public bool Within(float x, float y, float width, float height)
+        {
+            float xx = Animation.Hitbox.X + X;
+            float yy = Animation.Hitbox.Y + Y;
+            return xx + Animation.Hitbox.Width > x & xx < x + width & yy + Animation.Hitbox.Height > y & yy < y + height;
         }
 
         public virtual void Draw()
