@@ -16,7 +16,13 @@ namespace OpGL
     public class Game
     {
 #if TEST
-        float renderTime = 0f;
+        const int avgOver = 60;
+        float[] renderTimes = new float[avgOver];
+        float rtTotal = 0f;
+        int rtIndex = 0;
+        float[] frameTimes = new float[avgOver];
+        float ftTotal = 0f;
+        int ftIndex = 0;
 #endif
 
         const int RESOLUTION_WIDTH = 320;
@@ -69,7 +75,7 @@ namespace OpGL
             sprites.Add(new Drawable(40, 60, textures[Textures.SPRITES], 0, 0));
 #if TEST
             hudSprites.Add(new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 800; i++)
                 sprites.Add(new StringDrawable(40, 32, textures[Textures.FONT], "Hey dude, lag a bit for me. k?", Color.White));
 #endif
             glControl.Render += glControl_Render;
@@ -251,8 +257,6 @@ namespace OpGL
 
         private void GameLoop()
         {
-            int sec = DateTime.Now.Second;
-            int skippedFrames = 0;
             Stopwatch stp = new Stopwatch();
             long ticksPerFrame = Stopwatch.Frequency / 60;
             long nextFrame = ticksPerFrame;
@@ -262,13 +266,16 @@ namespace OpGL
             {
                 while (stp.ElapsedTicks < nextFrame)
                 {
-                    int msToSleep = 15 - (int)stp.ElapsedMilliseconds;
+                    int msToSleep = (int)((float)(nextFrame - stp.ElapsedTicks) / Stopwatch.Frequency - 0.5f);
                     if (msToSleep > 0)
                         Thread.Sleep(msToSleep);
                 }
                 long ticksElapsed = stp.ElapsedTicks - nextFrame;
-                int frames = (int)(ticksPerFrame / ticksPerFrame);
-                nextFrame += ticksPerFrame * frames;
+                int framesDropped = (int)(ticksElapsed / ticksPerFrame);
+                nextFrame += ticksPerFrame * (framesDropped + 1);
+#if TEST
+                long fStart = stp.ElapsedTicks;
+#endif
 
                 for (int i = 0; i < sprites.Count; i++)
                 {
@@ -292,13 +299,14 @@ namespace OpGL
 
                 glControl.Invalidate();
 
-                skippedFrames += frames - 1;
-                if (sec != DateTime.Now.Second)
-                {
-                    //Text = "Objects: " + x + ", Skipped frames: " + skippedFrames;
-                    sec = DateTime.Now.Second;
-                    skippedFrames = 0;
-                }
+#if TEST
+                float ms = (float)(stp.ElapsedTicks - fStart) / Stopwatch.Frequency * 1000f;
+                ftTotal += ms;
+                ftTotal -= frameTimes[ftIndex];
+                frameTimes[ftIndex] = ms;
+                ftIndex = (ftIndex + 1) % 60;
+#endif
+
             }
         }
         public void StartGame()
@@ -331,10 +339,13 @@ namespace OpGL
                 hudSprites[i].Draw();
 
 #if TEST
-            const int avgOver = 60;
             float ms = (float)t.ElapsedTicks / Stopwatch.Frequency * 1000f;
-            renderTime = renderTime * (1f - (1f / avgOver)) + ms * (1f / avgOver);
-            (hudSprites[1] as StringDrawable).Text = "Avg render time: " + renderTime.ToString("0.0");
+            t.Stop();
+            rtTotal += ms;
+            rtTotal -= renderTimes[rtIndex];
+            renderTimes[rtIndex] = ms;
+            rtIndex = (rtIndex + 1) % 60;
+            (hudSprites[1] as StringDrawable).Text = "Avg time (render, frame): " + (rtTotal / 60).ToString("0.0") + ", " + (ftTotal / 60).ToString("0.0");
 #endif
         }
 
