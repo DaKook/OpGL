@@ -54,8 +54,11 @@ namespace OpGL
         }
         private List<Texture> textures;
 
-        private List<Drawable> sprites;
-        private List<Drawable> hudSprites;
+        private DrawableCollection sprites;
+        private DrawableCollection hudSprites;
+#if TEST
+        private StringDrawable timerSprite;
+#endif
         public bool IsPlaying { get; private set; } = false;
 
         public Game(GlControl control)
@@ -68,13 +71,12 @@ namespace OpGL
             textures = new List<Texture>();
             LoadTextures();
 
-            sprites = new List<Drawable>();
-            hudSprites = new List<Drawable>();
-            // testing
+            sprites = new DrawableCollection();
+            hudSprites = new DrawableCollection();
+#if TEST
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             sprites.Add(new Drawable(40, 60, textures[Textures.SPRITES], 0, 0));
-#if TEST
-            hudSprites.Add(new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
+            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
             for (int i = 0; i < 800; i++)
                 sprites.Add(new StringDrawable(40, 32, textures[Textures.FONT], "Hey dude, lag a bit for me. k?", Color.White));
 #endif
@@ -332,11 +334,10 @@ namespace OpGL
 
             int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
-            for (int i = 0; i < sprites.Count; i++)
-                sprites[i].Draw();
+            sprites.Render();
+        
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
-            for (int i = 0; i < hudSprites.Count; i++)
-                hudSprites[i].Draw();
+            hudSprites.Render();
 
 #if TEST
             float ms = (float)t.ElapsedTicks / Stopwatch.Frequency * 1000f;
@@ -345,7 +346,7 @@ namespace OpGL
             rtTotal -= renderTimes[rtIndex];
             renderTimes[rtIndex] = ms;
             rtIndex = (rtIndex + 1) % 60;
-            (hudSprites[1] as StringDrawable).Text = "Avg time (render, frame): " + (rtTotal / 60).ToString("0.0") + ", " + (ftTotal / 60).ToString("0.0");
+            timerSprite.Text = "Avg time (render, frame): " + (rtTotal / 60).ToString("0.0") + ", " + (ftTotal / 60).ToString("0.0");
 #endif
         }
 

@@ -57,7 +57,10 @@ namespace OpGL
             Text = text;
         }
 
-        public override void Draw()
+        /// <summary>
+        /// Performs OpenGL bindings and uniform gets/updates before drawing.
+        /// </summary>
+        public override void SafeDraw()
         {
             if (!Visible) return;
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
@@ -70,8 +73,14 @@ namespace OpGL
             int colorLoc = Gl.GetUniformLocation(Texture.Program, "color");
             Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
 
+            UnsafeDraw();
+        }
+        // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
+        internal override void UnsafeDraw()
+        {
             Gl.BindBuffer(BufferTarget.ArrayBuffer, Texture.IBO);
             Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
+
             Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
         }
 

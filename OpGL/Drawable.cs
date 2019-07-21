@@ -145,7 +145,10 @@ namespace OpGL
             return xx + Animation.Hitbox.Width > x & xx < x + width & yy + Animation.Hitbox.Height > y & yy < y + height;
         }
 
-        public virtual void Draw()
+        /// <summary>
+        /// Performs OpenGL bindings and uniform gets/updates before drawing.
+        /// </summary>
+        public virtual void SafeDraw()
         {
             if (!Visible) return;
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
@@ -157,7 +160,12 @@ namespace OpGL
             Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
             int colorLoc = Gl.GetUniformLocation(Texture.Program, "color");
             Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
-            
+
+            UnsafeDraw();
+        }
+        // Just the render call; everything should be set up before calling this.
+        internal virtual void UnsafeDraw()
+        {
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
         }
 
