@@ -32,11 +32,11 @@ namespace OpGL
                 if (!d.Visible)
                     continue;
 
+                Gl.BindVertexArray(d.VAO);
                 if (lastTex != d.Texture)
                 {
                     lastTex = d.Texture;
                     Gl.BindTexture(TextureTarget.Texture2d, lastTex.ID);
-                    Gl.BindVertexArray(lastTex.VAO);
                     if (lastProgram != lastTex.Program)
                     {
                         lastProgram = lastTex.Program;

@@ -13,7 +13,6 @@ namespace OpGL
     {
         private int visibleCharacters = 0;
 
-        private float[] bufferData;
         private string _Text;
         public string Text
         {
@@ -47,6 +46,14 @@ namespace OpGL
                 Array.Resize(ref bufferData, index);
             }
         }
+
+        private float[] bufferData;
+        private uint ibo;
+        private bool updateBuffer = true;
+        private bool firstRender = true;
+
+        internal override uint VAO { get; set; }
+
         public StringDrawable(float x, float y, Texture texture, string text, Color? color = null) : base(x, y, texture, 0, 0)
         {
             if (texture.Width / texture.TileSize != 16 || texture.Height / texture.TileSize != 16)
@@ -64,7 +71,7 @@ namespace OpGL
         {
             if (!Visible) return;
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
-            Gl.BindVertexArray(Texture.VAO);
+            Gl.BindVertexArray(VAO);
 
             int modelLoc = Gl.GetUniformLocation(Texture.Program, "model");
             Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
@@ -78,10 +85,39 @@ namespace OpGL
         // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
         internal override void UnsafeDraw()
         {
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, Texture.IBO);
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
+            if (updateBuffer)
+                UpdateBuffer();
 
             Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
+        }
+
+        private void UpdateBuffer()
+        {
+            if (firstRender)
+            {
+                firstRender = false;
+
+                VAO = Gl.CreateVertexArray();
+                Gl.BindVertexArray(VAO);
+
+                Gl.BindBuffer(BufferTarget.ArrayBuffer, Texture.baseVBO);
+                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                Gl.EnableVertexAttribArray(0);
+                Gl.EnableVertexAttribArray(1);
+
+                ibo = Gl.CreateBuffer();
+                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                Gl.EnableVertexAttribArray(2);
+                Gl.EnableVertexAttribArray(3);
+                Gl.VertexAttribDivisor(2, 1);
+                Gl.VertexAttribDivisor(3, 1);
+            }
+
+            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
         }
 
         public override void Process()

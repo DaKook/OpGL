@@ -232,7 +232,7 @@ namespace OpGL
             Gl.VertexAttribDivisor(2, 1);
             Gl.VertexAttribDivisor(3, 1);
 
-            return new Texture(tex, bmp.Width, bmp.Height, gridSize, texture, program, texa, ibo);
+            return new Texture(tex, bmp.Width, bmp.Height, gridSize, texture, program, texa, texb);
         }
 
         private void InitOpenGLSettings()
