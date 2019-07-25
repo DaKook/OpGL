@@ -291,7 +291,24 @@ namespace OpGL
                     {
                         foreach (Drawable testFor in process)
                         {
-                            if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
+                            if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
+                            {
+                                if (testFor.IsCrewman && drawable.KillCrewmen)
+                                {
+                                    if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
+                                    {
+                                        (testFor as Crewman).Die();
+                                    }
+                                }
+                                else if (drawable.IsCrewman && testFor.KillCrewmen)
+                                {
+                                    if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
+                                    {
+                                        (drawable as Crewman).Die();
+                                    }
+                                }
+                            }
+                            else if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
                             {
 
                             }

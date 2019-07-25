@@ -8,7 +8,6 @@ namespace OpGL
 {
     public class Crewman : Drawable
     {
-        public string Name;
         public Animation StandingAnimation;
         public Animation WalkingAnimation;
         public Animation FallingAnimation;
@@ -36,6 +35,12 @@ namespace OpGL
             base.Process();
             YVelocity -= Gravity;
             XVelocity += Math.Sign(inputDirection) * Acceleration;
+        }
+
+        public virtual void Die()
+        {
+            Animation = DyingAnimation;
+            animFrame = 0;
         }
     }
 }

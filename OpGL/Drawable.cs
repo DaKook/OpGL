@@ -16,7 +16,7 @@ namespace OpGL
         public Color Color { get; set; }
 
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
-        private int animFrame = 0;
+        internal int animFrame = 0;
 
         private float _X;
         public float X
@@ -72,17 +72,9 @@ namespace OpGL
             /// </summary>
             Entity = 1,
             /// <summary>
-            /// Stops entities, and kills crewmen.
-            /// </summary>
-            KillSolid = 2,
-            /// <summary>
-            /// Goes through entities, but is stopped by Ground, and kills crewmen.
-            /// </summary>
-            KillEntity = 3,
-            /// <summary>
             /// Goes through everything. Typically will be static.
             /// </summary>
-            NonSolid = 4 }
+            NonSolid = 2 }
         /// <summary>
         /// Gets or sets the solid state of the Drawable.
         /// </summary>
@@ -99,6 +91,7 @@ namespace OpGL
         /// Determines whether the Drawable will process even while out of the screen. Too many objects that always process could slow down the game.
         /// </summary>
         public bool AlwaysProcess { get; set; } = false;
+        public bool KillCrewmen { get; set; } = false;
         public Texture Texture { get; internal set; }
         internal virtual uint VAO { get => Texture.baseVAO; set { } }
 
