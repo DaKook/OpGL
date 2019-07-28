@@ -14,16 +14,14 @@ namespace OpGL
         public Animation DyingAnimation;
         public float XVelocity;
         public float YVelocity;
-        public float MaxSpeed;
-        public float Acceleration;
-        private int inputDirection;
+        public float MaxSpeed = 8;
+        public float Acceleration = 1;
+        public bool OnGround = false;
+        public int InputDirection;
         public override bool IsCrewman { get => true; }
-        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null)
+        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null) : base(x, y, texture, stand)
         {
-            X = x;
-            Y = y;
             Name = name;
-            Texture = texture;
             StandingAnimation = stand;
             WalkingAnimation = walk;
             FallingAnimation = fall;
@@ -34,13 +32,31 @@ namespace OpGL
         {
             base.Process();
             YVelocity -= Gravity;
-            XVelocity += Math.Sign(inputDirection) * Acceleration;
+            OnGround = false;
+            XVelocity += Math.Sign(InputDirection) * Acceleration;
+            if (XVelocity > MaxSpeed)
+                XVelocity = MaxSpeed;
+            else if (XVelocity < -MaxSpeed)
+                XVelocity = -MaxSpeed;
         }
 
         public virtual void Die()
         {
             Animation = DyingAnimation;
             animFrame = 0;
+        }
+
+        public override void CollideY(float distance)
+        {
+            base.CollideY(distance);
+            YVelocity = 0;
+            OnGround = true;
+        }
+
+        public override void CollideX(float distance)
+        {
+            base.CollideX(distance);
+            XVelocity = 0;
         }
     }
 }

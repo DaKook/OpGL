@@ -13,7 +13,7 @@ namespace OpGL
     {
         public string Name { get; set; } = "";
 
-        public Color Color { get; set; }
+        public Color Color { get; set; } = Color.White;
 
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
         internal int animFrame = 0;
@@ -171,6 +171,15 @@ namespace OpGL
             Point n = Animation.GetFrame(animFrame);
             if (old != n)
                 TexMatrix.Translate((n.X - old.X), (n.Y - old.Y), 0f);
+        }
+
+        public virtual void CollideY(float distance)
+        {
+            Y -= distance;
+        }
+        public virtual void CollideX(float distance)
+        {
+            X -= distance;
         }
     }
 

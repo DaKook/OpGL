@@ -10,11 +10,22 @@ using System.Diagnostics;
 
 using OpenGL;
 using Newtonsoft.Json.Linq;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace OpGL
 {
     public class Game
     {
+
+        [DllImport("user32.dll")]
+        static extern short GetAsyncKeyState(Keys vKey);
+
+        bool checkKey(Keys key)
+        {
+            return (GetAsyncKeyState(key) & 0x8000) != 0;
+        }
+
 #if TEST
         const int avgOver = 60;
         float[] renderTimes = new float[avgOver];
@@ -27,6 +38,8 @@ namespace OpGL
 
         const int RESOLUTION_WIDTH = 320;
         const int RESOLUTION_HEIGHT = 240;
+
+        Player ActivePlayer;
 
         private GlControl glControl;
         private uint program;
@@ -74,11 +87,11 @@ namespace OpGL
             sprites = new DrawableCollection();
             hudSprites = new DrawableCollection();
 #if TEST
+            ActivePlayer = new Player(20, 20, textures[Textures.SPRITES], "Viridian", textures[Textures.SPRITES].Animations[0]);
+            sprites.Add(ActivePlayer);
+            sprites.Add(new Drawable(40, 40, textures[Textures.SPRITES], 0, 0));
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
-            sprites.Add(new Drawable(40, 60, textures[Textures.SPRITES], 0, 0));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
-            for (int i = 0; i < 800; i++)
-                sprites.Add(new StringDrawable(40, 32, textures[Textures.FONT], "Hey dude, lag a bit for me. k?", Color.White));
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
@@ -131,9 +144,9 @@ namespace OpGL
                                 // Animations are specified as X, Y tile coordinates.
                                 // Or a single negative value indicating re-use previous
                                 int i = 0;
+                                Point f = new Point();
                                 while (i < frms.Count)
                                 {
-                                    Point f = new Point();
                                     int x = (int)frms[i];
                                     if (x >= 0)
                                     {
@@ -154,7 +167,7 @@ namespace OpGL
 
                         // Tiles
                         JArray tls = (JArray)jObject["Tiles"];
-                        if (arr != null)
+                        if (tls != null)
                         {
                             Drawable.SolidState[,] states = new Drawable.SolidState[(int)(tex.Width / tex.TileSize), (int)(tex.Height / tex.TileSize)];
                             int i = 0;
@@ -279,6 +292,13 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
+                if (checkKey(Keys.Right))
+                    ActivePlayer.InputDirection = 1;
+                else if (checkKey(Keys.Left))
+                    ActivePlayer.InputDirection = -1;
+                else
+                    ActivePlayer.InputDirection = 0;
+
                 for (int i = 0; i < sprites.Count; i++)
                 {
                     if (!sprites[i].Static)
@@ -291,9 +311,7 @@ namespace OpGL
                     {
                         foreach (Drawable testFor in process)
                         {
-                            if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
-                            {
-                                if (testFor.IsCrewman && drawable.KillCrewmen)
+                            if (testFor.IsCrewman && drawable.KillCrewmen)
                                 {
                                     if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
                                     {
@@ -307,10 +325,30 @@ namespace OpGL
                                         (drawable as Crewman).Die();
                                     }
                                 }
+                            if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
+                            {
+                                //Do nothing
                             }
                             else if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
                             {
-
+                                if (drawable.Solid == Drawable.SolidState.Entity & testFor.Solid == Drawable.SolidState.Ground)
+                                {
+                                    float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
+                                    float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
+                                    if (dpy + drawable.Animation.Hitbox.Height < tpy || dpy < tpy + testFor.Animation.Hitbox.Height)
+                                    {
+                                        drawable.CollideY(tpy - dpy);
+                                    }
+                                    else
+                                    {
+                                        float dpx = drawable.PreviousY + drawable.Animation.Hitbox.Y;
+                                        float tpx = testFor.PreviousY + testFor.Animation.Hitbox.Y;
+                                        if (dpx + drawable.Animation.Hitbox.Width < tpx || dpx < tpx + testFor.Animation.Hitbox.Width)
+                                        {
+                                            drawable.CollideX(tpx - dpx);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
