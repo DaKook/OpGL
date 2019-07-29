@@ -5,7 +5,14 @@
 		{
 			"Hitbox": [ 7, 2, 9, 20 ],
 			"Frames": [ 0, 0, 1, 0 ],
-			"Speed": 60
+			"Speed": 60,
+			"Name": "Standing"
+		},
+		{
+			"Hitbox": [ 7, 2, 9, 20 ],
+			"Frames": [ 0, 0, 1, 0 ],
+			"Speed": 20,
+			"Name": "Walking"
 		}
 	]
 }

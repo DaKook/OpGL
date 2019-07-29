@@ -87,9 +87,13 @@ namespace OpGL
             sprites = new DrawableCollection();
             hudSprites = new DrawableCollection();
 #if TEST
-            ActivePlayer = new Player(20, 20, textures[Textures.SPRITES], "Viridian", textures[Textures.SPRITES].Animations[0]);
+            ActivePlayer = new Player(20, 20, textures[Textures.SPRITES], "Viridian", textures[Textures.SPRITES].Animations[0], textures[Textures.SPRITES].Animations[1]);
             sprites.Add(ActivePlayer);
-            sprites.Add(new Drawable(40, 40, textures[Textures.SPRITES], 0, 0));
+
+            for (int i = 0; i < 88; i += 8)
+                sprites.Add(new Tile(i, 160, textures[Textures.TILES], 0, 2));
+            sprites.Add(new Tile(80, 144, textures[Textures.TILES], 0, 2));
+
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
 #endif
@@ -273,7 +277,7 @@ namespace OpGL
         private void GameLoop()
         {
             Stopwatch stp = new Stopwatch();
-            long ticksPerFrame = Stopwatch.Frequency / 60;
+            long ticksPerFrame = Stopwatch.Frequency / 20;
             long nextFrame = ticksPerFrame;
             stp.Start();
 
@@ -311,6 +315,7 @@ namespace OpGL
                     {
                         foreach (Drawable testFor in process)
                         {
+                            if (testFor == drawable) continue;
                             if (testFor.IsCrewman && drawable.KillCrewmen)
                                 {
                                     if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
@@ -335,17 +340,25 @@ namespace OpGL
                                 {
                                     float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
                                     float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
-                                    if (dpy + drawable.Animation.Hitbox.Height < tpy || dpy < tpy + testFor.Animation.Hitbox.Height)
+                                    if (dpy + drawable.Animation.Hitbox.Height < tpy)
                                     {
-                                        drawable.CollideY(tpy - dpy);
+                                        drawable.CollideY(1f + drawable.HitY + drawable.Animation.Hitbox.Height - testFor.HitY);
+                                    }
+                                    else if (dpy > tpy + testFor.Animation.Hitbox.Height)
+                                    {
+                                        drawable.CollideY(1f + drawable.HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
                                     }
                                     else
                                     {
-                                        float dpx = drawable.PreviousY + drawable.Animation.Hitbox.Y;
-                                        float tpx = testFor.PreviousY + testFor.Animation.Hitbox.Y;
-                                        if (dpx + drawable.Animation.Hitbox.Width < tpx || dpx < tpx + testFor.Animation.Hitbox.Width)
+                                        float dpx = drawable.PreviousX + drawable.Animation.Hitbox.X;
+                                        float tpx = testFor.PreviousX + testFor.Animation.Hitbox.X;
+                                        if (dpx + drawable.Animation.Hitbox.Width < tpx)
                                         {
-                                            drawable.CollideX(tpx - dpx);
+                                            drawable.CollideX(1f + drawable.HitX + drawable.Animation.Hitbox.Width - testFor.HitX);
+                                        }
+                                        else if (dpx > tpx + testFor.Animation.Hitbox.Width)
+                                        {
+                                            drawable.CollideX(1f + drawable.HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
                                         }
                                     }
                                 }

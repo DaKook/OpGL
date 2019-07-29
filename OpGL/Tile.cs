@@ -9,12 +9,8 @@ namespace OpGL
 {
     public class Tile : Drawable
     {
-        public Tile(int x, int y, Texture texture, int tileX, int tileY)
+        public Tile(int x, int y, Texture texture, int tileX, int tileY) : base(x, y, texture, tileX, tileY)
         {
-            X = x;
-            Y = y;
-            Texture = texture;
-            Animation = new Animation(new Point[] { new Point(tileX, tileY) }, Rectangle.Empty, Texture);
             if (Texture.TileSolidStates.Length > 0)
             {
                 Solid = Texture.TileSolidStates[tileX, tileY];

@@ -8,17 +8,23 @@ namespace OpGL
 {
     public class Crewman : Drawable
     {
-        public Animation StandingAnimation;
-        public Animation WalkingAnimation;
-        public Animation FallingAnimation;
-        public Animation DyingAnimation;
+        private Animation defaultAnimation;
+        private Animation standingAnimation;
+        private Animation walkingAnimation;
+        private Animation fallingAnimation;
+        private Animation dyingAnimation;
         public float XVelocity;
         public float YVelocity;
-        public float MaxSpeed = 8;
-        public float Acceleration = 1;
+        public float MaxSpeed = 5f;
+        public float Acceleration = 0.5f;
         public bool OnGround = false;
         public int InputDirection;
         public override bool IsCrewman { get => true; }
+        public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
+        public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
+        public Animation FallingAnimation { get => fallingAnimation ?? defaultAnimation; set => fallingAnimation = value; }
+        public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
+
         public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null) : base(x, y, texture, stand)
         {
             Name = name;
@@ -26,18 +32,42 @@ namespace OpGL
             WalkingAnimation = walk;
             FallingAnimation = fall;
             DyingAnimation = die;
+            defaultAnimation = StandingAnimation ?? new Animation(new System.Drawing.Point[] { new System.Drawing.Point(0, 0) }, System.Drawing.Rectangle.Empty, texture);
+            Gravity = 0.375f;
         }
 
         public override void Process()
         {
             base.Process();
-            YVelocity -= Gravity;
+            YVelocity += Gravity;
+            if (OnGround)
+            {
+                if (XVelocity != 0 && Animation != WalkingAnimation)
+                {
+                    Animation = WalkingAnimation;
+                    animFrame = 0;
+                }
+                else if (Animation != StandingAnimation)
+                {
+                    Animation = StandingAnimation;
+                    animFrame = 0;
+                }
+            }
             OnGround = false;
             XVelocity += Math.Sign(InputDirection) * Acceleration;
             if (XVelocity > MaxSpeed)
                 XVelocity = MaxSpeed;
             else if (XVelocity < -MaxSpeed)
                 XVelocity = -MaxSpeed;
+            if (InputDirection == 0)
+            {
+                int s = Math.Sign(XVelocity);
+                XVelocity -= s * Acceleration;
+                if (Math.Sign(XVelocity) != s)
+                    XVelocity = 0;
+            }
+            X += XVelocity;
+            Y += YVelocity;
         }
 
         public virtual void Die()

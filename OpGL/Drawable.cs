@@ -107,6 +107,8 @@ namespace OpGL
         {
             _X = x;
             _Y = y;
+            PreviousX = x;
+            PreviousY = y;
             LocMatrix = Matrix4x4f.Translated(x, y, 0);
 
             Texture = texture;
@@ -121,11 +123,13 @@ namespace OpGL
         {
             X = x;
             Y = y;
+            PreviousX = x;
+            PreviousY = y;
 
             Texture = texture;
             float dw = 1f / texture.Width;
             float dh = 1f / texture.Height;
-            TexMatrix.Scale(dw, dh, 1f);
+            TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
 
             Animation = animation;
             Point p = Animation.GetFrame(animFrame);
