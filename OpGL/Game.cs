@@ -337,25 +337,25 @@ namespace OpGL
                                     // check for vertical collision, if none then horizontal collision
                                     float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
                                     float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
-                                    if (dpy + drawable.Animation.Hitbox.Height < tpy)
+                                    if (dpy + drawable.Animation.Hitbox.Height <= tpy)
                                     {
-                                        drawable.CollideY(1f + drawable.HitY + drawable.Animation.Hitbox.Height - testFor.HitY);
+                                        drawable.CollideY(drawable.HitY + drawable.Animation.Hitbox.Height - testFor.HitY);
                                     }
-                                    else if (dpy > tpy + testFor.Animation.Hitbox.Height)
+                                    else if (dpy >= tpy + testFor.Animation.Hitbox.Height)
                                     {
-                                        drawable.CollideY(1f + drawable.HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
+                                        drawable.CollideY(drawable.HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
                                     }
                                     else
                                     {
                                         float dpx = drawable.PreviousX + drawable.Animation.Hitbox.X;
                                         float tpx = testFor.PreviousX + testFor.Animation.Hitbox.X;
-                                        if (dpx + drawable.Animation.Hitbox.Width < tpx)
+                                        if (dpx + drawable.Animation.Hitbox.Width <= tpx)
                                         {
-                                            drawable.CollideX(1f + drawable.HitX + drawable.Animation.Hitbox.Width - testFor.HitX);
+                                            drawable.CollideX(drawable.HitX + drawable.Animation.Hitbox.Width - testFor.HitX);
                                         }
-                                        else if (dpx > tpx + testFor.Animation.Hitbox.Width)
+                                        else if (dpx >= tpx + testFor.Animation.Hitbox.Width)
                                         {
-                                            drawable.CollideX(1f + drawable.HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
+                                            drawable.CollideX(drawable.HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
                                         }
                                     }
                                 }
