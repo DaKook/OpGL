@@ -115,7 +115,7 @@ namespace OpGL
             TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
             TexMatrix.Translate(texX, texY, 0f);
 
-            Animation = new Animation(new Point[] { new Point(texX, texY) }, Rectangle.Empty, texture);
+            Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSize, texture.TileSize), texture);
             Color = color ?? Color.White;
         }
 
