@@ -111,7 +111,7 @@ namespace OpGL
             Gl.UniformMatrix4f(modelMatrixLoc, 1, false, Matrix4x4f.Identity);
 
             // origin at top-left
-            camera = Matrix4x4f.Translated(-1f, 1f, 0f); 
+            camera = Matrix4x4f.Translated(-1f, 1f, 0f);
             camera.Scale(2f / RESOLUTION_WIDTH, -2f / RESOLUTION_HEIGHT, 1);
             hudView = camera;
             int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
@@ -306,9 +306,9 @@ namespace OpGL
                 for (int i = 0; i < sprites.Count; i++)
                 {
                     if (!sprites[i].Static)
-                    sprites[i].Process();
+                        sprites[i].Process();
                 }
-                IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid & (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
+                IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
                 foreach (Drawable drawable in process)
                 {
                     if (!drawable.Static)
@@ -317,26 +317,26 @@ namespace OpGL
                         {
                             if (testFor == drawable) continue;
                             if (testFor.IsCrewman && drawable.KillCrewmen)
+                            {
+                                if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
                                 {
-                                    if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
-                                    {
-                                        (testFor as Crewman).Die();
-                                    }
+                                    (testFor as Crewman).Die();
                                 }
-                                else if (drawable.IsCrewman && testFor.KillCrewmen)
+                            }
+                            else if (drawable.IsCrewman && testFor.KillCrewmen)
+                            {
+                                if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
                                 {
-                                    if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
-                                    {
-                                        (drawable as Crewman).Die();
-                                    }
+                                    (drawable as Crewman).Die();
                                 }
+                            }
                             if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
                             {
                                 //Do nothing
                             }
                             else if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
                             {
-                                if (drawable.Solid == Drawable.SolidState.Entity & testFor.Solid == Drawable.SolidState.Ground)
+                                if (drawable.Solid == Drawable.SolidState.Entity && testFor.Solid == Drawable.SolidState.Ground)
                                 {
                                     float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
                                     float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
@@ -376,7 +376,6 @@ namespace OpGL
                 frameTimes[ftIndex] = ms;
                 ftIndex = (ftIndex + 1) % 60;
 #endif
-
             }
         }
         public void StartGame()
@@ -403,7 +402,7 @@ namespace OpGL
             int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
             sprites.Render();
-        
+
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
             hudSprites.Render();
 
