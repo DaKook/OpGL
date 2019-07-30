@@ -315,29 +315,26 @@ namespace OpGL
                     {
                         foreach (Drawable testFor in process)
                         {
+                            // do not collide with self
                             if (testFor == drawable) continue;
-                            if (testFor.IsCrewman && drawable.KillCrewmen)
+
+                            // kills
+                            if (drawable.IsCrewman && testFor.KillCrewmen)
                             {
-                                if (testFor.IsOverlapping(drawable))
-                                {
-                                    (testFor as Crewman).Die();
-                                }
-                            }
-                            else if (drawable.IsCrewman && testFor.KillCrewmen)
-                            {
-                                if (testFor.IsOverlapping(drawable))
-                                {
+                                if (drawable.IsOverlapping(testFor))
                                     (drawable as Crewman).Die();
-                                }
                             }
+
                             if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
                             {
                                 //Do nothing
                             }
                             else if (drawable.IsOverlapping(testFor))
                             {
+                                // entity colliding with ground
                                 if (drawable.Solid == Drawable.SolidState.Entity && testFor.Solid == Drawable.SolidState.Ground)
                                 {
+                                    // check for vertical collision, if none then horizontal collision
                                     float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
                                     float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
                                     if (dpy + drawable.Animation.Hitbox.Height < tpy)
