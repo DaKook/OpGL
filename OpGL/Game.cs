@@ -318,14 +318,14 @@ namespace OpGL
                             if (testFor == drawable) continue;
                             if (testFor.IsCrewman && drawable.KillCrewmen)
                             {
-                                if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
+                                if (testFor.IsOverlapping(drawable))
                                 {
                                     (testFor as Crewman).Die();
                                 }
                             }
                             else if (drawable.IsCrewman && testFor.KillCrewmen)
                             {
-                                if (testFor.Within(drawable.HitX, drawable.HitY, drawable.Animation.Hitbox.Width, drawable.Animation.Hitbox.Height))
+                                if (testFor.IsOverlapping(drawable))
                                 {
                                     (drawable as Crewman).Die();
                                 }
@@ -334,7 +334,7 @@ namespace OpGL
                             {
                                 //Do nothing
                             }
-                            else if (drawable.Within(testFor.HitX, testFor.HitY, testFor.Animation.Hitbox.Width, testFor.Animation.Hitbox.Height))
+                            else if (drawable.IsOverlapping(testFor))
                             {
                                 if (drawable.Solid == Drawable.SolidState.Entity && testFor.Solid == Drawable.SolidState.Ground)
                                 {

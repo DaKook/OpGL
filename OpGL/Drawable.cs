@@ -138,9 +138,14 @@ namespace OpGL
 
         public bool Within(float x, float y, float width, float height)
         {
-            float xx = Animation.Hitbox.X + X;
-            float yy = Animation.Hitbox.Y + Y;
-            return xx + Animation.Hitbox.Width > x & xx < x + width & yy + Animation.Hitbox.Height > y & yy < y + height;
+            //     this.right > o.left                  this.left < o.right
+            return HitX + Animation.Hitbox.Width > x && HitX < x + width
+                // this.bottom > o.top                   this.top < o.bottom
+                && HitY + Animation.Hitbox.Height > y && HitY < y + height;
+        }
+        public bool IsOverlapping(Drawable other)
+        {
+            return Within(other.HitX, other.HitY, other.Animation.Hitbox.Width, other.Animation.Hitbox.Height);
         }
 
         /// <summary>
