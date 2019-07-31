@@ -11,6 +11,20 @@ namespace OpGL
 {
     public class Drawable
     {
+        private bool _flipX;
+        protected bool flipX
+        {
+            get => _flipX;
+            set
+            {
+                if (value != _flipX)
+                {
+                    _flipX = value;
+                    TexMatrix.Scale(-1, 1, 1);
+                    TexMatrix.Translate((float)(-2 * TextureX) - 1 + ((float)Animation.Hitbox.X / Texture.TileSize), 0, 0);
+                }
+            }
+        }
         public string Name { get; set; } = "";
 
         public Color Color { get; set; } = Color.White;
@@ -172,6 +186,17 @@ namespace OpGL
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
         }
 
+        public void ResetAnimation()
+        {
+            Point old = Animation.GetFrame(animFrame);
+            animFrame = 0;
+            Point n = Animation.GetFrame(animFrame);
+            if (old != n)
+            {
+                TexMatrix.Translate((flipX ? -1 : 1) * (n.X - old.X), (n.Y - old.Y), 0f);
+            }
+        }
+
         public virtual void Process()
         {
             //Advance animation frame and change TextureX and TextureY accordingly
@@ -179,7 +204,7 @@ namespace OpGL
             if (++animFrame >= Animation.FrameCount) animFrame = Animation.LoopStart;
             Point n = Animation.GetFrame(animFrame);
             if (old != n)
-                TexMatrix.Translate((n.X - old.X), (n.Y - old.Y), 0f);
+                TexMatrix.Translate((flipX ? -1 : 1) * (n.X - old.X), (n.Y - old.Y), 0f);
         }
 
         public virtual void CollideY(float distance)

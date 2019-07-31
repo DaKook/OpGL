@@ -18,6 +18,15 @@ namespace OpGL
     public class Game
     {
 
+        public Texture TextureFromName(string name)
+        {
+            foreach (Texture texture in textures)
+            {
+                if (texture.Name == name) return texture;
+            }
+            return null;
+        }
+
         [DllImport("user32.dll")]
         static extern short GetAsyncKeyState(Keys vKey);
 
@@ -87,12 +96,14 @@ namespace OpGL
             sprites = new DrawableCollection();
             hudSprites = new DrawableCollection();
 #if TEST
-            ActivePlayer = new Player(20, 20, textures[Textures.SPRITES], "Viridian", textures[Textures.SPRITES].Animations[0], textures[Textures.SPRITES].Animations[1]);
+            Texture viridian = TextureFromName("viridian");
+            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1]);
             sprites.Add(ActivePlayer);
 
-            for (int i = 0; i < 88; i += 8)
+            for (int i = 0; i < 168; i += 8)
                 sprites.Add(new Tile(i, 160, textures[Textures.TILES], 0, 2));
-            sprites.Add(new Tile(80, 144, textures[Textures.TILES], 0, 2));
+            sprites.Add(new Tile(160, 144, textures[Textures.TILES], 0, 2));
+            sprites.Add(new Tile(0, 152, textures[Textures.TILES], 0, 2));
 
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
@@ -100,6 +111,7 @@ namespace OpGL
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
         }
+//INITIALIZE
 
         #region "Init"
         private void InitGlProgram()
@@ -157,8 +169,9 @@ namespace OpGL
                                         i++;
                                         f = new Point(x, (int)frms[i]);
                                     }
-                                    for (int j = 0; j < speed; j++)
-                                        frames.Add(f);
+                                    for (int k = 0; k < ((int)frms[i] < 0 ? -(int)frms[i] : 1); k++)
+                                        for (int j = 0; j < speed; j++)
+                                            frames.Add(f);
 
                                     i++;
                                 }
@@ -277,7 +290,7 @@ namespace OpGL
         private void GameLoop()
         {
             Stopwatch stp = new Stopwatch();
-            long ticksPerFrame = Stopwatch.Frequency / 20;
+            long ticksPerFrame = Stopwatch.Frequency / 60;
             long nextFrame = ticksPerFrame;
             stp.Start();
 

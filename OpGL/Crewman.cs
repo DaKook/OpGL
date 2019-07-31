@@ -13,7 +13,7 @@ namespace OpGL
         private Animation walkingAnimation;
         private Animation fallingAnimation;
         private Animation dyingAnimation;
-        public float XVelocity;
+        private float xVelocity;
         public float YVelocity;
         public float MaxSpeed = 5f;
         public float Acceleration = 0.5f;
@@ -24,6 +24,15 @@ namespace OpGL
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
         public Animation FallingAnimation { get => fallingAnimation ?? defaultAnimation; set => fallingAnimation = value; }
         public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
+        public float XVelocity { get => xVelocity; set
+            {
+                if ((flipX && xVelocity > 0) || (!flipX && xVelocity < 0))
+                {
+                    flipX = !flipX;
+                }
+                xVelocity = value;
+            }
+        }
 
         public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null) : base(x, y, texture, stand)
         {
@@ -44,13 +53,13 @@ namespace OpGL
             {
                 if (XVelocity != 0 && Animation != WalkingAnimation)
                 {
+                    ResetAnimation();
                     Animation = WalkingAnimation;
-                    animFrame = 0;
                 }
-                else if (Animation != StandingAnimation)
+                else if (XVelocity == 0 && Animation != StandingAnimation)
                 {
+                    ResetAnimation();
                     Animation = StandingAnimation;
-                    animFrame = 0;
                 }
             }
             OnGround = false;
