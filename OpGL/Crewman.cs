@@ -13,26 +13,18 @@ namespace OpGL
         private Animation walkingAnimation;
         private Animation fallingAnimation;
         private Animation dyingAnimation;
-        private float xVelocity;
         public float YVelocity;
         public float MaxSpeed = 5f;
         public float Acceleration = 0.5f;
         public bool OnGround = false;
         public int InputDirection;
+        public bool CanFlip = true;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
         public Animation FallingAnimation { get => fallingAnimation ?? defaultAnimation; set => fallingAnimation = value; }
         public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
-        public float XVelocity { get => xVelocity; set
-            {
-                if ((flipX && xVelocity > 0) || (!flipX && xVelocity < 0))
-                {
-                    flipX = !flipX;
-                }
-                xVelocity = value;
-            }
-        }
+        public float XVelocity;
 
         public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null) : base(x, y, texture, stand)
         {
@@ -75,6 +67,11 @@ namespace OpGL
                 if (Math.Sign(XVelocity) != s)
                     XVelocity = 0;
             }
+            if ((flipX && XVelocity > 0) || (!flipX && XVelocity < 0))
+            {
+                flipX = !flipX;
+            }
+            if (Gravity >= 0 == flipY) flipY = !flipY;
             X += XVelocity;
             Y += YVelocity;
         }
@@ -82,7 +79,7 @@ namespace OpGL
         public virtual void Die()
         {
             Animation = DyingAnimation;
-            animFrame = 0;
+            ResetAnimation();
         }
 
         public override void CollideY(float distance)

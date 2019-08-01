@@ -17,6 +17,18 @@ namespace OpGL
 {
     public class Game
     {
+        public Keys[] Left = new Keys[] { Keys.Left, Keys.A };
+        public Keys[] Right = new Keys[] { Keys.Right, Keys.D };
+        public Keys[] Jump = new Keys[] { Keys.Z, Keys.V, Keys.Space, Keys.Up, Keys.Down };
+        public Keys[] Pause = new Keys[] { Keys.Enter };
+        public Keys[] Escape = new Keys[] { Keys.Escape };
+
+        public bool KeyLeft { get; set; }
+        public bool KeyRight { get; set; }
+        public bool KeyJump { get; set; }
+        public bool KeyPause { get; set; }
+        public bool KeyEscape { get; set; }
+
 
         public Texture TextureFromName(string name)
         {
@@ -102,6 +114,8 @@ namespace OpGL
 
             for (int i = 0; i < 168; i += 8)
                 sprites.Add(new Tile(i, 160, textures[Textures.TILES], 0, 2));
+            for (int i = 0; i < 168; i += 8)
+                sprites.Add(new Tile(i, 0, textures[Textures.TILES], 0, 2));
             sprites.Add(new Tile(160, 144, textures[Textures.TILES], 0, 2));
             sprites.Add(new Tile(0, 152, textures[Textures.TILES], 0, 2));
 
@@ -309,19 +323,27 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
-                if (checkKey(Keys.Right))
+                if (KeyRight)
                     ActivePlayer.InputDirection = 1;
-                else if (checkKey(Keys.Left))
+                else if (KeyLeft)
                     ActivePlayer.InputDirection = -1;
                 else
                     ActivePlayer.InputDirection = 0;
+
+                if (ActivePlayer.OnGround && KeyJump)
+                {
+                    ActivePlayer.OnGround = false;
+                    if (ActivePlayer.CanFlip)
+                        ActivePlayer.Gravity *= -1;
+                }
 
                 for (int i = 0; i < sprites.Count; i++)
                 {
                     if (!sprites[i].Static)
                         sprites[i].Process();
                 }
-                IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
+                //IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
+                IEnumerable<Drawable> process = sprites;
                 foreach (Drawable drawable in process)
                 {
                     if (!drawable.Static)

@@ -21,7 +21,21 @@ namespace OpGL
                 {
                     _flipX = value;
                     TexMatrix.Scale(-1, 1, 1);
-                    TexMatrix.Translate((float)(-2 * TextureX) - 1 + ((float)Animation.Hitbox.X / Texture.TileSize), 0, 0);
+                    TexMatrix.Translate((float)(-2 * TextureX) - 1 - ((float)(Animation.Hitbox.X - (Texture.TileSize - Animation.Hitbox.X - Animation.Hitbox.Width)) / Texture.TileSize), 0, 0);
+                }
+            }
+        }
+        private bool _flipY;
+        protected bool flipY
+        {
+            get => _flipY;
+            set
+            {
+                if (value != _flipY)
+                {
+                    _flipY = value;
+                    TexMatrix.Scale(1, -1, 1);
+                    TexMatrix.Translate(0, (float)(-2 * TextureY) - 1 - ((float)(Animation.Hitbox.Y - (Texture.TileSize - Animation.Hitbox.Y - Animation.Hitbox.Height)) / Texture.TileSize), 0);
                 }
             }
         }
@@ -30,7 +44,23 @@ namespace OpGL
         public Color Color { get; set; } = Color.White;
 
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
-        internal int animFrame = 0;
+        private int _animFrame;
+        private Point _old = new Point(0, 0);
+        private int animFrame
+        {
+            get => _animFrame;
+            set
+            {
+                Point n = Animation.GetFrame(_animFrame = value);
+                if (n != _old)
+                {
+                    if ((flipX ? -1 : 1) * (n.X - _old.X) > 1 || (flipY ? -1 : 1) * (n.Y - _old.Y) > 1)
+                        ;
+                    TexMatrix.Translate((flipX ? -1 : 1) * (n.X - _old.X), (flipY ? -1 : 1) * (n.Y - _old.Y), 0f);
+                    _old = n;
+                }
+            }
+        }
 
         private float _X;
         public float X
@@ -188,23 +218,16 @@ namespace OpGL
 
         public void ResetAnimation()
         {
-            Point old = Animation.GetFrame(animFrame);
             animFrame = 0;
-            Point n = Animation.GetFrame(animFrame);
-            if (old != n)
-            {
-                TexMatrix.Translate((flipX ? -1 : 1) * (n.X - old.X), (n.Y - old.Y), 0f);
-            }
         }
 
         public virtual void Process()
         {
             //Advance animation frame and change TextureX and TextureY accordingly
-            Point old = Animation.GetFrame(animFrame);
-            if (++animFrame >= Animation.FrameCount) animFrame = Animation.LoopStart;
-            Point n = Animation.GetFrame(animFrame);
-            if (old != n)
-                TexMatrix.Translate((flipX ? -1 : 1) * (n.X - old.X), (n.Y - old.Y), 0f);
+            if (animFrame + 1 >= Animation.FrameCount)
+                animFrame = Animation.LoopStart;
+            else
+                animFrame += 1;
         }
 
         public virtual void CollideY(float distance)

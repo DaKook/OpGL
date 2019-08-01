@@ -45,9 +45,12 @@
             this.glControl.Size = new System.Drawing.Size(640, 480);
             this.glControl.StencilBits = ((uint)(0u));
             this.glControl.TabIndex = 0;
+            this.glControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GlControl_KeyDown);
+            this.glControl.KeyUp += new System.Windows.Forms.KeyEventHandler(this.GlControl_KeyUp);
             this.glControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GlControl_MouseClick);
             this.glControl.MouseLeave += new System.EventHandler(this.GlControl_MouseLeave);
             this.glControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GlControl_MouseMove);
+            this.glControl.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.GlControl_PreviewKeyDown);
             // 
             // timer1
             // 
