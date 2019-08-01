@@ -15,10 +15,6 @@ namespace OpGL
 {
     public partial class Form1 : Form
     {
-        bool init = false;
-        List<Texture> Textures = new List<Texture>();
-        List<Drawable> tiles = new List<Drawable>();
-
         Game game;
 
         public Form1()
@@ -159,8 +155,6 @@ namespace OpGL
             timer1.Dispose();
 
             game = new Game(glControl);
-
-            init = true;
         }
 
         

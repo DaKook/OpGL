@@ -115,17 +115,20 @@ namespace OpGL
             sprites.Add(ActivePlayer);
 
             for (int i = 8; i < 160; i += 8)
-                sprites.Add(new Tile(i, 160, tiles, 1, 4));
+                sprites.Add(new Tile(i, 160, tiles, 4, 4));
             for (int i = 0; i < 160; i += 8)
-                sprites.Add(new Tile(i, 0, tiles, 1, 6));
-            sprites.Add(new Tile(0, 160, tiles, 1, 3));
-            sprites.Add(new Tile(160, 152, tiles, 1, 5));
-            sprites.Add(new Tile(0, 152, tiles, 2, 4));
-            sprites.Add(new Tile(160, 160, tiles, 2, 4));
-            sprites.Add(new Tile(160, 0, tiles, 2, 6));
+                sprites.Add(new Tile(i, 0, tiles, 4, 6));
+            sprites.Add(new Tile(0, 160, tiles, 4, 3));
+            sprites.Add(new Tile(160, 152, tiles, 4, 5));
+            sprites.Add(new Tile(0, 152, tiles, 5, 4));
+            sprites.Add(new Tile(160, 160, tiles, 5, 4));
+            sprites.Add(new Tile(160, 0, tiles, 5, 6));
             sprites.Add(new Platform(96, 32, platforms, platforms.Animations[0], 0, 1, false));
             for (int i = 168; i < 241; i += 8)
-                sprites.Add(new Tile(160, i, tiles, 2, 5));
+                sprites.Add(new Tile(160, i, tiles, 5, 5));
+            for (int i = 0; i < 160; i += 8)
+                for (int j = 168; j < 241; j += 8)
+                    sprites.Add(new Tile(i, j, tiles, 3, 2));
 
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
