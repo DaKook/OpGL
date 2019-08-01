@@ -1,0 +1,18 @@
+{
+	"GridSize": 32,
+	"Animations":
+	[
+		{
+			"Hitbox": [ 7, 2, 10, 21 ],
+			"Frames": [ 0, 0, -30, 1, 0, 0, 0, -30 ],
+			"Speed": 2,
+			"Name": "Standing"
+		},
+		{
+			"Hitbox": [ 7, 2, 10, 21 ],
+			"Frames": [ 0, 0, 1, 0 ],
+			"Speed": 12,
+			"Name": "Walking"
+		}
+	]
+}
