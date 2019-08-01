@@ -109,15 +109,23 @@ namespace OpGL
             hudSprites = new DrawableCollection();
 #if TEST
             Texture viridian = TextureFromName("viridian");
+            Texture tiles = TextureFromName("tiles");
+            Texture platforms = TextureFromName("platforms");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1]);
             sprites.Add(ActivePlayer);
 
-            for (int i = 0; i < 168; i += 8)
-                sprites.Add(new Tile(i, 160, textures[Textures.TILES], 0, 2));
-            for (int i = 0; i < 168; i += 8)
-                sprites.Add(new Tile(i, 0, textures[Textures.TILES], 0, 2));
-            sprites.Add(new Tile(160, 144, textures[Textures.TILES], 0, 2));
-            sprites.Add(new Tile(0, 152, textures[Textures.TILES], 0, 2));
+            for (int i = 8; i < 160; i += 8)
+                sprites.Add(new Tile(i, 160, tiles, 1, 4));
+            for (int i = 0; i < 160; i += 8)
+                sprites.Add(new Tile(i, 0, tiles, 1, 6));
+            sprites.Add(new Tile(0, 160, tiles, 1, 3));
+            sprites.Add(new Tile(160, 152, tiles, 1, 5));
+            sprites.Add(new Tile(0, 152, tiles, 2, 4));
+            sprites.Add(new Tile(160, 160, tiles, 2, 4));
+            sprites.Add(new Tile(160, 0, tiles, 2, 6));
+            sprites.Add(new Platform(96, 32, platforms, platforms.Animations[0], 0, 1, false));
+            for (int i = 168; i < 241; i += 8)
+                sprites.Add(new Tile(160, i, tiles, 2, 5));
 
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
@@ -348,54 +356,7 @@ namespace OpGL
                 {
                     if (!drawable.Static)
                     {
-                        foreach (Drawable testFor in process)
-                        {
-                            // do not collide with self
-                            if (testFor == drawable) continue;
-
-                            // kills
-                            if (drawable.IsCrewman && testFor.KillCrewmen)
-                            {
-                                if (drawable.IsOverlapping(testFor))
-                                    (drawable as Crewman).Die();
-                            }
-
-                            if (testFor.Solid == Drawable.SolidState.Entity && drawable.Solid == Drawable.SolidState.Entity)
-                            {
-                                //Do nothing
-                            }
-                            else if (drawable.IsOverlapping(testFor))
-                            {
-                                // entity colliding with ground
-                                if (drawable.Solid == Drawable.SolidState.Entity && testFor.Solid == Drawable.SolidState.Ground)
-                                {
-                                    // check for vertical collision, if none then horizontal collision
-                                    float dpy = drawable.PreviousY + drawable.Animation.Hitbox.Y;
-                                    float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
-                                    if (dpy + drawable.Animation.Hitbox.Height <= tpy)
-                                    {
-                                        drawable.CollideY(drawable.HitY + drawable.Animation.Hitbox.Height - testFor.HitY);
-                                    }
-                                    else if (dpy >= tpy + testFor.Animation.Hitbox.Height)
-                                    {
-                                        drawable.CollideY(drawable.HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
-                                    }
-                                    else
-                                    {
-                                        float dpx = drawable.PreviousX + drawable.Animation.Hitbox.X;
-                                        float tpx = testFor.PreviousX + testFor.Animation.Hitbox.X;
-                                        if (dpx + drawable.Animation.Hitbox.Width <= tpx)
-                                        {
-                                            drawable.CollideX(drawable.HitX + drawable.Animation.Hitbox.Width - testFor.HitX);
-                                        }
-                                        else if (dpx >= tpx + testFor.Animation.Hitbox.Width)
-                                        {
-                                            drawable.CollideX(drawable.HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        drawable.TestAllCollisions(process);
                     }
                 }
 
@@ -410,6 +371,7 @@ namespace OpGL
 #endif
             }
         }
+
         public void StartGame()
         {
             if (!IsPlaying)

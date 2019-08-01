@@ -85,8 +85,11 @@ namespace OpGL
         public override void CollideY(float distance)
         {
             base.CollideY(distance);
-            YVelocity = 0;
-            OnGround = true;
+            if (Math.Sign(distance) == Math.Sign(Gravity))
+            {
+                YVelocity = 0;
+                OnGround = true;
+            }
         }
 
         public override void CollideX(float distance)

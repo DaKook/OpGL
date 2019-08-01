@@ -20,8 +20,9 @@ namespace OpGL
                 if (value != _flipX)
                 {
                     _flipX = value;
-                    TexMatrix.Scale(-1, 1, 1);
-                    TexMatrix.Translate((float)(-2 * TextureX) - 1 - ((float)(Animation.Hitbox.X - (Texture.TileSize - Animation.Hitbox.X - Animation.Hitbox.Width)) / Texture.TileSize), 0, 0);
+                    LocMatrix.Scale(-1, 1, 1);
+                    LocMatrix.Translate(-Texture.TileSize + (Texture.TileSize - Animation.Hitbox.X * 2 - Animation.Hitbox.Width), 0, 0);
+                    //LocMatrix.Translate((float)(-2 * TextureX) - 1 - ((float)(Animation.Hitbox.X - (Texture.TileSize - Animation.Hitbox.X - Animation.Hitbox.Width)) / Texture.TileSize), 0, 0);
                 }
             }
         }
@@ -34,8 +35,9 @@ namespace OpGL
                 if (value != _flipY)
                 {
                     _flipY = value;
-                    TexMatrix.Scale(1, -1, 1);
-                    TexMatrix.Translate(0, (float)(-2 * TextureY) - 1 - ((float)(Animation.Hitbox.Y - (Texture.TileSize - Animation.Hitbox.Y - Animation.Hitbox.Height)) / Texture.TileSize), 0);
+                    LocMatrix.Scale(1, -1, 1);
+                    LocMatrix.Translate(0, -Texture.TileSize + (Texture.TileSize - Animation.Hitbox.Y * 2 - Animation.Hitbox.Height), 0);
+                    //LocMatrix.Translate(0, (float)(-2 * TextureY) - 1 - ((float)(Animation.Hitbox.Y - (Texture.TileSize - Animation.Hitbox.Y - Animation.Hitbox.Height)) / Texture.TileSize), 0);
                 }
             }
         }
@@ -54,9 +56,7 @@ namespace OpGL
                 Point n = Animation.GetFrame(_animFrame = value);
                 if (n != _old)
                 {
-                    if ((flipX ? -1 : 1) * (n.X - _old.X) > 1 || (flipY ? -1 : 1) * (n.Y - _old.Y) > 1)
-                        ;
-                    TexMatrix.Translate((flipX ? -1 : 1) * (n.X - _old.X), (flipY ? -1 : 1) * (n.Y - _old.Y), 0f);
+                    TexMatrix.Translate((n.X - _old.X), (n.Y - _old.Y), 0f);
                     _old = n;
                 }
             }
@@ -69,7 +69,7 @@ namespace OpGL
             set
             {
                 PreviousX = _X;
-                LocMatrix.Translate(value - _X, 0f, 0f);
+                LocMatrix.Translate((flipX ? -1 : 1) * (value - _X), 0f, 0f);
                 _X = value;
             }
         }
@@ -80,7 +80,7 @@ namespace OpGL
             set
             {
                 PreviousY = _Y;
-                LocMatrix.Translate(0f, value - _Y, 0f);
+                LocMatrix.Translate(0f, (flipY ? -1 : 1) * (value - _Y), 0f);
                 _Y = value;
             }
         }
@@ -237,6 +237,56 @@ namespace OpGL
         public virtual void CollideX(float distance)
         {
             X -= distance;
+        }
+
+        public virtual void TestCollision(Drawable testFor)
+        {
+            // do not collide with self
+            if (testFor == this) return;
+
+            if (IsOverlapping(testFor))
+            {
+                // entity colliding with ground
+                if ((Solid == SolidState.Entity || (Solid == SolidState.Ground && testFor.Static)) && testFor.Solid == SolidState.Ground)
+                {
+                    // check for vertical collision, if none then horizontal collision
+                    float dpy = PreviousY + Animation.Hitbox.Y;
+                    float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
+                    if (dpy + Animation.Hitbox.Height <= tpy)
+                    {
+                        CollideY(HitY + Animation.Hitbox.Height - testFor.HitY);
+                    }
+                    else if (dpy >= tpy + testFor.Animation.Hitbox.Height)
+                    {
+                        CollideY(HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
+                    }
+                    else
+                    {
+                        float dpx = PreviousX + Animation.Hitbox.X;
+                        float tpx = testFor.PreviousX + testFor.Animation.Hitbox.X;
+                        if (dpx + Animation.Hitbox.Width <= tpx)
+                        {
+                            CollideX(HitX + Animation.Hitbox.Width - testFor.HitX);
+                        }
+                        else if (dpx >= tpx + testFor.Animation.Hitbox.Width)
+                        {
+                            CollideX(HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
+                        }
+                    }
+                }
+                else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
+                {
+
+                }
+            }
+        }
+
+        public virtual void TestAllCollisions(in IEnumerable<Drawable> process)
+        {
+            foreach (Drawable testFor in process)
+            {
+                TestCollision(testFor);
+            }
         }
     }
 
