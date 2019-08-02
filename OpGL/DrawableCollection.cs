@@ -32,6 +32,7 @@ namespace OpGL
                 if (!d.Visible)
                     continue;
 
+                d.RenderPrep();
                 Gl.BindVertexArray(d.VAO);
                 if (lastTex != d.Texture)
                 {

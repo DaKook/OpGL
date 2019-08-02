@@ -11,36 +11,9 @@ namespace OpGL
 {
     public class Drawable
     {
-        private bool _flipX;
-        protected bool flipX
-        {
-            get => _flipX;
-            set
-            {
-                if (value != _flipX)
-                {
-                    _flipX = value;
-                    LocMatrix.Scale(-1, 1, 1);
-                    LocMatrix.Translate(-Texture.TileSize + (Texture.TileSize - Animation.Hitbox.X * 2 - Animation.Hitbox.Width), 0, 0);
-                    //LocMatrix.Translate((float)(-2 * TextureX) - 1 - ((float)(Animation.Hitbox.X - (Texture.TileSize - Animation.Hitbox.X - Animation.Hitbox.Width)) / Texture.TileSize), 0, 0);
-                }
-            }
-        }
-        private bool _flipY;
-        protected bool flipY
-        {
-            get => _flipY;
-            set
-            {
-                if (value != _flipY)
-                {
-                    _flipY = value;
-                    LocMatrix.Scale(1, -1, 1);
-                    LocMatrix.Translate(0, -Texture.TileSize + (Texture.TileSize - Animation.Hitbox.Y * 2 - Animation.Hitbox.Height), 0);
-                    //LocMatrix.Translate(0, (float)(-2 * TextureY) - 1 - ((float)(Animation.Hitbox.Y - (Texture.TileSize - Animation.Hitbox.Y - Animation.Hitbox.Height)) / Texture.TileSize), 0);
-                }
-            }
-        }
+        protected bool flipX;
+        protected bool flipY;
+
         public string Name { get; set; } = "";
 
         public Color Color { get; set; } = Color.White;
@@ -62,28 +35,8 @@ namespace OpGL
             }
         }
 
-        private float _X;
-        public float X
-        {
-            get { return _X; }
-            set
-            {
-                PreviousX = _X;
-                LocMatrix.Translate((flipX ? -1 : 1) * (value - _X), 0f, 0f);
-                _X = value;
-            }
-        }
-        private float _Y;
-        public float Y
-        {
-            get { return _Y; }
-            set
-            {
-                PreviousY = _Y;
-                LocMatrix.Translate(0f, (flipY ? -1 : 1) * (value - _Y), 0f);
-                _Y = value;
-            }
-        }
+        public float X { get; set; }
+        public float Y { get; set; }
         public float PreviousX { get; private set; }
         public float PreviousY { get; private set; }
         public float HitX { get => X + Animation.Hitbox.X; }
@@ -139,8 +92,8 @@ namespace OpGL
         public Texture Texture { get; internal set; }
         internal virtual uint VAO { get => Texture.baseVAO; set { } }
 
-        internal Matrix4x4f LocMatrix = Matrix4x4f.Identity;
-        internal Matrix4x4f TexMatrix = Matrix4x4f.Identity;
+        internal Matrix4x4f LocMatrix;
+        internal Matrix4x4f TexMatrix;
 
         internal Drawable()
         {
@@ -149,11 +102,10 @@ namespace OpGL
 
         public Drawable(float x, float y, Texture texture, int texX, int texY, Color? color = null)
         {
-            _X = x;
-            _Y = y;
+            X = x;
+            Y = y;
             PreviousX = x;
             PreviousY = y;
-            LocMatrix = Matrix4x4f.Translated(x, y, 0);
 
             Texture = texture;
             TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
@@ -210,6 +162,21 @@ namespace OpGL
 
             UnsafeDraw();
         }
+        // update model matrix
+        internal virtual void RenderPrep()
+        {
+            LocMatrix = Matrix4x4f.Translated(X, Y, 0);
+            if (flipX)
+            {
+                LocMatrix.Scale(-1, 1, 1);
+                LocMatrix.Translate(-Animation.Hitbox.X * 2 - Animation.Hitbox.Width, 0, 0);
+            }
+            if (flipY)
+            {
+                LocMatrix.Scale(1, -1, 1);
+                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 - Animation.Hitbox.Height, 0);
+            }
+        }
         // Just the render call; everything should be set up before calling this.
         internal virtual void UnsafeDraw()
         {
@@ -228,6 +195,9 @@ namespace OpGL
                 animFrame = Animation.LoopStart;
             else
                 animFrame += 1;
+
+            PreviousX = X;
+            PreviousY = Y;
         }
 
         public virtual void CollideY(float distance)
@@ -281,7 +251,7 @@ namespace OpGL
             }
         }
 
-        public virtual void TestAllCollisions(in IEnumerable<Drawable> process)
+        public virtual void TestAllCollisions(IEnumerable<Drawable> process)
         {
             foreach (Drawable testFor in process)
             {
