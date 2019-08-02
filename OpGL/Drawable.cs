@@ -39,8 +39,6 @@ namespace OpGL
         public float Y { get; set; }
         public float PreviousX { get; private set; }
         public float PreviousY { get; private set; }
-        public float HitX { get => X + Animation.Hitbox.X; }
-        public float HitY { get => Y + Animation.Hitbox.Y; }
         public virtual bool IsCrewman { get => false; }
 
         public int TextureX
@@ -135,13 +133,13 @@ namespace OpGL
         public bool Within(float x, float y, float width, float height)
         {
             //     this.right > o.left                  this.left < o.right
-            return HitX + Animation.Hitbox.Width > x && HitX < x + width
+            return X + Animation.Hitbox.Width > x && X < x + width
                 // this.bottom > o.top                   this.top < o.bottom
-                && HitY + Animation.Hitbox.Height > y && HitY < y + height;
+                && Y + Animation.Hitbox.Height > y && Y < y + height;
         }
         public bool IsOverlapping(Drawable other)
         {
-            return Within(other.HitX, other.HitY, other.Animation.Hitbox.Width, other.Animation.Hitbox.Height);
+            return Within(other.X, other.Y, other.Animation.Hitbox.Width, other.Animation.Hitbox.Height);
         }
 
         /// <summary>
@@ -165,7 +163,7 @@ namespace OpGL
         // update model matrix
         internal virtual void RenderPrep()
         {
-            LocMatrix = Matrix4x4f.Translated(X, Y, 0);
+            LocMatrix = Matrix4x4f.Translated(X - Animation.Hitbox.X, Y - Animation.Hitbox.Y, 0);
             if (flipX)
             {
                 LocMatrix.Scale(-1, 1, 1);
@@ -220,28 +218,20 @@ namespace OpGL
                 if ((Solid == SolidState.Entity || (Solid == SolidState.Ground && testFor.Static)) && testFor.Solid == SolidState.Ground)
                 {
                     // check for vertical collision, if none then horizontal collision
-                    float dpy = PreviousY + Animation.Hitbox.Y;
-                    float tpy = testFor.PreviousY + testFor.Animation.Hitbox.Y;
-                    if (dpy + Animation.Hitbox.Height <= tpy)
-                    {
-                        CollideY(HitY + Animation.Hitbox.Height - testFor.HitY);
-                    }
-                    else if (dpy >= tpy + testFor.Animation.Hitbox.Height)
-                    {
-                        CollideY(HitY - (testFor.HitY + testFor.Animation.Hitbox.Height));
-                    }
+                    // collide with top
+                    if (PreviousY + Animation.Hitbox.Height <= testFor.PreviousY)
+                        CollideY(Y + Animation.Hitbox.Height - testFor.Y);
+                    // collide with bottom
+                    else if (PreviousY >= testFor.PreviousY + testFor.Animation.Hitbox.Height)
+                        CollideY(Y - (testFor.Y + testFor.Animation.Hitbox.Height));
                     else
                     {
-                        float dpx = PreviousX + Animation.Hitbox.X;
-                        float tpx = testFor.PreviousX + testFor.Animation.Hitbox.X;
-                        if (dpx + Animation.Hitbox.Width <= tpx)
-                        {
-                            CollideX(HitX + Animation.Hitbox.Width - testFor.HitX);
-                        }
-                        else if (dpx >= tpx + testFor.Animation.Hitbox.Width)
-                        {
-                            CollideX(HitX - (testFor.HitX + testFor.Animation.Hitbox.Width));
-                        }
+                        // collide with left side
+                        if (PreviousX + Animation.Hitbox.Width <= testFor.PreviousX)
+                            CollideX(X + Animation.Hitbox.Width - testFor.X);
+                        // collide with right side
+                        else if (PreviousX >= testFor.PreviousX + testFor.Animation.Hitbox.Width)
+                            CollideX(X - (testFor.X + testFor.Animation.Hitbox.Width));
                     }
                 }
                 else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
