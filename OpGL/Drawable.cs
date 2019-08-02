@@ -39,6 +39,9 @@ namespace OpGL
         public float Y { get; set; }
         public float PreviousX { get; private set; }
         public float PreviousY { get; private set; }
+        public float Width { get => Animation.Hitbox.Width; }
+        public float Height { get => Animation.Hitbox.Height; }
+
         public virtual bool IsCrewman { get => false; }
 
         public int TextureX
@@ -133,13 +136,13 @@ namespace OpGL
         public bool Within(float x, float y, float width, float height)
         {
             //     this.right > o.left                  this.left < o.right
-            return X + Animation.Hitbox.Width > x && X < x + width
+            return X + Width > x && X < x + width
                 // this.bottom > o.top                   this.top < o.bottom
-                && Y + Animation.Hitbox.Height > y && Y < y + height;
+                && Y + Height > y && Y < y + height;
         }
         public bool IsOverlapping(Drawable other)
         {
-            return Within(other.X, other.Y, other.Animation.Hitbox.Width, other.Animation.Hitbox.Height);
+            return Within(other.X, other.Y, other.Width, other.Height);
         }
 
         /// <summary>
@@ -167,12 +170,12 @@ namespace OpGL
             if (flipX)
             {
                 LocMatrix.Scale(-1, 1, 1);
-                LocMatrix.Translate(-Animation.Hitbox.X * 2 - Animation.Hitbox.Width, 0, 0);
+                LocMatrix.Translate(-Animation.Hitbox.X * 2 - Width, 0, 0);
             }
             if (flipY)
             {
                 LocMatrix.Scale(1, -1, 1);
-                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 - Animation.Hitbox.Height, 0);
+                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 - Height, 0);
             }
         }
         // Just the render call; everything should be set up before calling this.
@@ -219,19 +222,19 @@ namespace OpGL
                 {
                     // check for vertical collision, if none then horizontal collision
                     // collide with top
-                    if (PreviousY + Animation.Hitbox.Height <= testFor.PreviousY)
-                        CollideY(Y + Animation.Hitbox.Height - testFor.Y);
+                    if (PreviousY + Height <= testFor.PreviousY)
+                        CollideY(Y + Height - testFor.Y);
                     // collide with bottom
-                    else if (PreviousY >= testFor.PreviousY + testFor.Animation.Hitbox.Height)
-                        CollideY(Y - (testFor.Y + testFor.Animation.Hitbox.Height));
+                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
+                        CollideY(Y - (testFor.Y + testFor.Height));
                     else
                     {
                         // collide with left side
-                        if (PreviousX + Animation.Hitbox.Width <= testFor.PreviousX)
-                            CollideX(X + Animation.Hitbox.Width - testFor.X);
+                        if (PreviousX + Width <= testFor.PreviousX)
+                            CollideX(X + Width - testFor.X);
                         // collide with right side
-                        else if (PreviousX >= testFor.PreviousX + testFor.Animation.Hitbox.Width)
-                            CollideX(X - (testFor.X + testFor.Animation.Hitbox.Width));
+                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
+                            CollideX(X - (testFor.X + testFor.Width));
                     }
                 }
                 else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
