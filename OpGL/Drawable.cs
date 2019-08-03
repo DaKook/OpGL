@@ -13,6 +13,7 @@ namespace OpGL
     {
         protected bool flipX;
         protected bool flipY;
+        protected Platform onPlatform;
 
         public string Name { get; set; } = "";
 
@@ -201,11 +202,11 @@ namespace OpGL
             PreviousY = Y;
         }
 
-        public virtual void CollideY(float distance)
+        public virtual void CollideY(float distance, Drawable collision)
         {
             Y -= distance;
         }
-        public virtual void CollideX(float distance)
+        public virtual void CollideX(float distance, Drawable collision)
         {
             X -= distance;
         }
@@ -223,18 +224,18 @@ namespace OpGL
                     // check for vertical collision, if none then horizontal collision
                     // collide with top
                     if (PreviousY + Height <= testFor.PreviousY)
-                        CollideY(Y + Height - testFor.Y);
+                        CollideY(Y + Height - testFor.Y, testFor);
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
-                        CollideY(Y - (testFor.Y + testFor.Height));
+                        CollideY(Y - (testFor.Y + testFor.Height), testFor);
                     else
                     {
                         // collide with left side
                         if (PreviousX + Width <= testFor.PreviousX)
-                            CollideX(X + Width - testFor.X);
+                            CollideX(X + Width - testFor.X, testFor);
                         // collide with right side
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
-                            CollideX(X - (testFor.X + testFor.Width));
+                            CollideX(X - (testFor.X + testFor.Width), testFor);
                     }
                 }
                 else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)

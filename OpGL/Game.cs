@@ -124,6 +124,9 @@ namespace OpGL
             sprites.Add(new Tile(160, 160, tiles, 5, 4));
             sprites.Add(new Tile(160, 0, tiles, 5, 6));
             sprites.Add(new Platform(96, 32, platforms, platforms.Animations[0], 0, 1, false));
+            sprites.Add(new Platform(160, 80, platforms, platforms.Animations[0], -1, 0, false));
+            sprites.Add(new Tile(0, 80, tiles, 4, 5));
+            sprites.Add(new Tile(200, 80, tiles, 4, 5));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
             for (int i = 0; i < 160; i += 8)

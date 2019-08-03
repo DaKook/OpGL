@@ -54,6 +54,10 @@ namespace OpGL
                     Animation = StandingAnimation;
                 }
             }
+            else
+            {
+                onPlatform = null;
+            }
             OnGround = false;
             XVelocity += Math.Sign(InputDirection) * Acceleration;
             if (XVelocity > MaxSpeed)
@@ -74,6 +78,11 @@ namespace OpGL
             if (Gravity >= 0 == flipY) flipY = !flipY;
             X += XVelocity;
             Y += YVelocity;
+            if (onPlatform != null)
+            {
+                X += onPlatform.XVel;
+                Y += onPlatform.YVel;
+            }
         }
 
         public virtual void Die()
@@ -82,19 +91,21 @@ namespace OpGL
             ResetAnimation();
         }
 
-        public override void CollideY(float distance)
+        public override void CollideY(float distance, Drawable collision)
         {
-            base.CollideY(distance);
+            base.CollideY(distance, collision);
             if (Math.Sign(distance) == Math.Sign(Gravity))
             {
                 YVelocity = 0;
                 OnGround = true;
+                if (collision as Platform != null && onPlatform != collision) onPlatform = collision as Platform;
+                else if (collision as Platform == null) onPlatform = null;
             }
         }
 
-        public override void CollideX(float distance)
+        public override void CollideX(float distance, Drawable collision)
         {
-            base.CollideX(distance);
+            base.CollideX(distance, collision);
             XVelocity = 0;
         }
     }

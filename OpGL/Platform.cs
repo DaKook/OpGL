@@ -10,8 +10,8 @@ namespace OpGL
     {
         public float XSpeed;
         public float YSpeed;
-        private float XVel;
-        private float YVel;
+        public float XVel;
+        public float YVel;
         public bool Disappear;
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, bool disappear = false) : base(x, y, texture, animation)
         {
@@ -30,15 +30,15 @@ namespace OpGL
             Y += YVel;
         }
 
-        public override void CollideX(float distance)
+        public override void CollideX(float distance, Drawable collision)
         {
-            base.CollideX(distance);
+            base.CollideX(distance, collision);
             XVel *= -1;
         }
 
-        public override void CollideY(float distance)
+        public override void CollideY(float distance, Drawable collision)
         {
-            base.CollideY(distance);
+            base.CollideY(distance, collision);
             YVel *= -1;
         }
     }
