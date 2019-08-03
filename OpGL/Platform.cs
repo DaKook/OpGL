@@ -13,6 +13,7 @@ namespace OpGL
         public float XVel;
         public float YVel;
         public bool Disappear;
+        public List<Drawable> OnTop = new List<Drawable>();
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, bool disappear = false) : base(x, y, texture, animation)
         {
             XSpeed = xSpeed;
@@ -32,14 +33,36 @@ namespace OpGL
 
         public override void CollideX(float distance, Drawable collision)
         {
-            base.CollideX(distance, collision);
-            XVel *= -1;
+            if (XVel != 0)
+            {
+                base.CollideX(distance, collision);
+                foreach (Drawable d in OnTop)
+                {
+                    d.X -= distance;
+                }
+                XVel *= -1;
+            }
+            else if (!collision.Static && collision.Solid == SolidState.Ground)
+            {
+                collision.X += distance;
+            }
         }
 
         public override void CollideY(float distance, Drawable collision)
         {
-            base.CollideY(distance, collision);
-            YVel *= -1;
+            if (YVel != 0)
+            {
+                base.CollideY(distance, collision);
+                foreach (Drawable d in OnTop)
+                {
+                    d.Y -= distance;
+                }
+                YVel *= -1;
+            }
+            else if (!collision.Static && collision.Solid == SolidState.Ground)
+            {
+                collision.Y += distance;
+            }
         }
     }
 }

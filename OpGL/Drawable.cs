@@ -211,10 +211,10 @@ namespace OpGL
             X -= distance;
         }
 
-        public virtual void TestCollision(Drawable testFor)
+        public virtual bool TestCollision(Drawable testFor)
         {
             // do not collide with self
-            if (testFor == this) return;
+            if (testFor == this) return false;
 
             if (IsOverlapping(testFor))
             {
@@ -237,20 +237,56 @@ namespace OpGL
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
                             CollideX(X - (testFor.X + testFor.Width), testFor);
                     }
+                    return true;
                 }
                 else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
                 {
-
+                    // check for vertical collision, if none then horizontal collision
+                    // collide with top
+                    if (PreviousY + Height <= testFor.PreviousY)
+                    {
+                        float d = (Y + Height - testFor.Y) / 2;
+                        CollideY(d, testFor);
+                        testFor.CollideY(-d, this);
+                    }
+                    // collide with bottom
+                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
+                    {
+                        float d = (Y - (testFor.Y + testFor.Height)) / 2;
+                        CollideY(d, testFor);
+                        testFor.CollideY(-d, this);
+                    }
+                    else
+                    {
+                        // collide with left side
+                        if (PreviousX + Width <= testFor.PreviousX)
+                        {
+                            float d = (X + Width - testFor.X) / 2;
+                            CollideX(d, testFor);
+                            testFor.CollideX(-d, this);
+                        }
+                        // collide with right side
+                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
+                        {
+                            float d = (X - (testFor.X + testFor.Width)) / 2;
+                            CollideX(d, testFor);
+                            testFor.CollideY(-d, this);
+                        }
+                    }
+                    return true;
                 }
             }
+            return false;
         }
 
-        public virtual void TestAllCollisions(IEnumerable<Drawable> process)
+        public virtual bool TestAllCollisions(IEnumerable<Drawable> process)
         {
+            bool ret = false;
             foreach (Drawable testFor in process)
             {
-                TestCollision(testFor);
+                if (TestCollision(testFor)) ret = true;
             }
+            return ret;
         }
     }
 

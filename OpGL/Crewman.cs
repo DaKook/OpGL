@@ -56,7 +56,11 @@ namespace OpGL
             }
             else
             {
-                onPlatform = null;
+                if (onPlatform != null)
+                {
+                    onPlatform.OnTop.Remove(this);
+                    onPlatform = null;
+                }
             }
             OnGround = false;
             XVelocity += Math.Sign(InputDirection) * Acceleration;
@@ -94,12 +98,22 @@ namespace OpGL
         public override void CollideY(float distance, Drawable collision)
         {
             base.CollideY(distance, collision);
+            //Check if landing on ground
             if (Math.Sign(distance) == Math.Sign(Gravity))
             {
                 YVelocity = 0;
                 OnGround = true;
-                if (collision as Platform != null && onPlatform != collision) onPlatform = collision as Platform;
-                else if (collision as Platform == null) onPlatform = null;
+                //Check if landing on a platform
+                if (collision as Platform != null && onPlatform != collision)
+                {
+                    onPlatform = collision as Platform;
+                    onPlatform.OnTop.Add(this);
+                }
+                else if (onPlatform != null && collision as Platform == null)
+                {
+                    onPlatform.OnTop.Remove(this);
+                    onPlatform = null;
+                }
             }
         }
 
