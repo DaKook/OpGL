@@ -39,14 +39,6 @@ namespace OpGL
             return null;
         }
 
-        [DllImport("user32.dll")]
-        static extern short GetAsyncKeyState(Keys vKey);
-
-        bool checkKey(Keys key)
-        {
-            return (GetAsyncKeyState(key) & 0x8000) != 0;
-        }
-
 #if TEST
         const int avgOver = 60;
         float[] renderTimes = new float[avgOver];

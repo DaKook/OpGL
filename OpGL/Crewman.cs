@@ -14,8 +14,9 @@ namespace OpGL
         private Animation fallingAnimation;
         private Animation dyingAnimation;
         public float YVelocity;
-        public float MaxSpeed = 5f;
-        public float Acceleration = 0.5f;
+        public static float TerminalVelocity = 5f;
+        public float MaxSpeed = 3f;
+        public float Acceleration = 0.375f;
         public bool OnGround = false;
         public int InputDirection;
         public bool CanFlip = true;
@@ -34,7 +35,7 @@ namespace OpGL
             FallingAnimation = fall;
             DyingAnimation = die;
             defaultAnimation = StandingAnimation ?? new Animation(new System.Drawing.Point[] { new System.Drawing.Point(0, 0) }, System.Drawing.Rectangle.Empty, texture);
-            Gravity = 0.375f;
+            Gravity = 0.6875f;
         }
 
         public override void Process()

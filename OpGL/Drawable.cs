@@ -35,7 +35,6 @@ namespace OpGL
                 }
             }
         }
-
         public float X { get; set; }
         public float Y { get; set; }
         public float PreviousX { get; private set; }
@@ -169,7 +168,7 @@ namespace OpGL
         // update model matrix
         internal virtual void RenderPrep()
         {
-            LocMatrix = Matrix4x4f.Translated(X - Animation.Hitbox.X, Y - Animation.Hitbox.Y, 0);
+            LocMatrix = Matrix4x4f.Translated((int)X - Animation.Hitbox.X, (int)Y - Animation.Hitbox.Y, 0);
             if (flipX)
             {
                 LocMatrix.Scale(-1, 1, 1);
