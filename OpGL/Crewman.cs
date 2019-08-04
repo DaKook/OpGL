@@ -20,6 +20,7 @@ namespace OpGL
         public bool OnGround = false;
         public int InputDirection;
         public bool CanFlip = true;
+        public float Jump = 1.6875f;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
@@ -123,6 +124,16 @@ namespace OpGL
         {
             base.CollideX(distance, collision);
             XVelocity = 0;
+        }
+
+        public void FlipOrJump()
+        {
+            OnGround = false;
+            if (CanFlip)
+            {
+                Gravity *= -1;
+            }
+            YVelocity = Jump * Math.Sign(Gravity);
         }
     }
 }

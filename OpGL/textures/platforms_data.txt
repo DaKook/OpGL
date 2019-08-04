@@ -12,7 +12,13 @@
 			"Hitbox": [ 0, 0, 32, 8 ],
 			"Frames": [ 0, 1, 0, 2, 0, 3, 0, 4 ],
 			"Speed": 1,
-			"Name": "conveyor1"
+			"Name": "conveyor1r"
+		},
+		{
+			"Hitbox": [ 0, 0, 32, 8 ],
+			"Frames": [ 0, 4, 0, 3, 0, 2, 0, 1 ],
+			"Speed": 1,
+			"Name": "conveyor1l"
 		}
 	]
 }

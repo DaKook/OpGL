@@ -118,6 +118,7 @@ namespace OpGL
             sprites.Add(new Platform(96, 64, platforms, platforms.Animations[0], 0, 1, 0, false));
             sprites.Add(new Platform(144, 80, platforms, platforms.Animations[0], -1, 0, 0, false));
             sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
+            sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Tile(0, 80, tiles, 4, 5));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             for (int i = 168; i < 241; i += 8)
@@ -339,9 +340,7 @@ namespace OpGL
 
                 if (ActivePlayer.OnGround && KeyJump)
                 {
-                    ActivePlayer.OnGround = false;
-                    if (ActivePlayer.CanFlip)
-                        ActivePlayer.Gravity *= -1;
+                    ActivePlayer.FlipOrJump();
                 }
 
                 for (int i = 0; i < sprites.Count; i++)
