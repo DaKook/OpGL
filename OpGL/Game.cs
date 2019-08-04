@@ -104,6 +104,8 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1]);
+            ActivePlayer.CanFlip = false;
+            ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
 
             for (int i = 8; i < 160; i += 8)

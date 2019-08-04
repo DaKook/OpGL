@@ -118,6 +118,10 @@ namespace OpGL
                     onPlatform = null;
                 }
             }
+            else if (Math.Sign(distance) == Math.Sign(YVelocity))
+            {
+                YVelocity = 0;
+            }
         }
 
         public override void CollideX(float distance, Drawable collision)
@@ -133,7 +137,7 @@ namespace OpGL
             {
                 Gravity *= -1;
             }
-            YVelocity = Jump * Math.Sign(Gravity);
+            YVelocity = -Jump * Math.Sign(Gravity);
         }
     }
 }
