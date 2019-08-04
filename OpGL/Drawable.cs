@@ -257,14 +257,17 @@ namespace OpGL
                     // collide with top
                     if (PreviousY + Height <= testFor.PreviousY)
                     {
-                        float d = (Y + Height - testFor.Y) / 2;
+                        // overlap for the two collisions is equal to distance travelled beyond what was required for collision
+                        // that extra distance should go back to moving away
+                        // otherwise a moving platform can be touching another for two consecutive frames during a collision
+                        float d = (Y + Height - testFor.Y);
                         CollideY(d, testFor);
                         testFor.CollideY(-d, this);
                     }
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
                     {
-                        float d = (Y - (testFor.Y + testFor.Height)) / 2;
+                        float d = (Y - (testFor.Y + testFor.Height));
                         CollideY(d, testFor);
                         testFor.CollideY(-d, this);
                     }
@@ -273,14 +276,14 @@ namespace OpGL
                         // collide with left side
                         if (PreviousX + Width <= testFor.PreviousX)
                         {
-                            float d = (X + Width - testFor.X) / 2;
+                            float d = (X + Width - testFor.X);
                             CollideX(d, testFor);
                             testFor.CollideX(-d, this);
                         }
                         // collide with right side
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
                         {
-                            float d = (X - (testFor.X + testFor.Width)) / 2;
+                            float d = (X - (testFor.X + testFor.Width));
                             CollideX(d, testFor);
                             testFor.CollideX(-d, this);
                         }
@@ -289,44 +292,6 @@ namespace OpGL
                 }
             }
             return false;
-        }
-
-        public virtual bool TestAllCollisions(IEnumerable<Drawable> process)
-        {
-            bool ret = false;
-            foreach (Drawable testFor in process)
-            {
-                if (TestCollision(testFor)) ret = true;
-            }
-            #region Test1
-            if (ret && Solid == SolidState.Entity && !Static)
-            {
-                ret = false;
-                foreach (Drawable testFor in process)
-                {
-                    if (TestCollision(testFor))
-                    {
-                        ret = true;
-                        break;
-                    }
-                }
-                if (ret)
-                {
-                    foreach (Drawable d in process)
-                    {
-                        if (d.Static) continue;
-                        if (d as Platform == null) continue;
-                        if (!IsOverlapping(d)) continue;
-                        Solid = SolidState.Ground;
-                        Static = true;
-                        d.TestCollision(this);
-                        Static = false;
-                        Solid = SolidState.Entity;
-                    }
-                }
-            }
-            #endregion
-            return ret;
         }
     }
 

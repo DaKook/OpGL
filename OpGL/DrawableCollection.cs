@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections;
+using Point = System.Drawing.Point;
 
 using OpenGL;
 
@@ -10,6 +12,12 @@ namespace OpGL
 {
     class DrawableCollection : List<Drawable>
     {
+        // A smaller group size results in more tiles to check; a larger group size results in more drawables per tile.
+        // I expect that group size equal to the smallest tile size is ideal, but I have not done any tests.
+        const int GROUP_SIZE = 8;
+        SortedList<Point, List<Drawable>> perTile;
+        static Comparer<Point> pointComparer = Comparer<Point>.Create(TileCompare);
+
         public DrawableCollection() : base() { }
         public DrawableCollection(int capacity) : base(capacity) { }
         public DrawableCollection(IEnumerable<Drawable> drawables) : base()
@@ -56,13 +64,92 @@ namespace OpGL
             }
         }
 
-        private int DrawableCompare(Drawable d1, Drawable d2)
+        private class TileEnumerator : IEnumerator<Point>
+        {
+            int minX, maxX, minY, maxY;
+            int cX, cY;
+            public TileEnumerator(Drawable d)
+            {
+                minX = (int)d.X / GROUP_SIZE;
+                minY = (int)d.Y / GROUP_SIZE;
+                // don't include a tile if the Drawable only extends exactly to the tile boundary
+                float xw = d.X + d.Width;
+                maxX = (int)(xw) / GROUP_SIZE - (xw % GROUP_SIZE == 0 ? 1 : 0);
+                float yh = d.Y + d.Height;
+                maxY = (int)(yh) / GROUP_SIZE - (yh % GROUP_SIZE == 0 ? 1 : 0);
+
+                cX = minX;
+                cY = minY;
+            }
+
+            public Point Current => new Point(cX, cY);
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose() { } // do nothing
+
+            public bool MoveNext()
+            {
+                cY++;
+                if (cY > maxY)
+                {
+                    cY = minY;
+                    cX++;
+                    return cX <= maxX;
+                }
+                else // for special case where the Drawable has width 0 and is grid aligned; maxX will be less than minX
+                    return true;
+            }
+
+            public void Reset()
+            {
+                cX = minX;
+                cY = minY;
+            }
+        }
+        public void SortForCollisions()
+        {
+            perTile = new SortedList<Point, List<Drawable>>(pointComparer);
+            foreach (Drawable d in this)
+            {
+                TileEnumerator te = new TileEnumerator(d);
+                do
+                {
+                    if (!perTile.ContainsKey(te.Current))
+                        perTile.Add(te.Current, new List<Drawable>());
+                    perTile[te.Current].Add(d);
+                } while (te.MoveNext());
+            }
+        }
+        public List<Drawable> GetPotentialColliders(Drawable d)
+        {
+            List<Drawable> colliders = new List<Drawable>();
+
+            TileEnumerator te = new TileEnumerator(d);
+            do
+            {
+                if (perTile.ContainsKey(te.Current))
+                    colliders.AddRange(perTile[te.Current].Where((item) => item != d && !colliders.Contains(item)));
+            } while (te.MoveNext());
+
+            return colliders;
+        }
+
+        private int RenderCompare(Drawable d1, Drawable d2)
         {
             int t = d1.Texture.ID.CompareTo(d2.Texture.ID);
             if (t == 0)
                 return d1.Color.ToArgb().CompareTo(d2.Color.ToArgb());
             else
                 return t;
+        }
+        static int TileCompare(Point p1, Point p2)
+        {
+            int x = p1.X.CompareTo(p2.X);
+            if (x == 0)
+                return p1.Y.CompareTo(p2.Y);
+            else
+                return x;
         }
 
         /// <summary>
@@ -74,7 +161,7 @@ namespace OpGL
             int index = (max - min) / 2 + min;
             while (min < max)
             {
-                int r = DrawableCompare(d, this[index]);
+                int r = RenderCompare(d, this[index]);
                 if (r == -1)
                 {
                     min = index + 1;
@@ -90,6 +177,7 @@ namespace OpGL
             }
             return index;
         }
+
 
         public new void Add(Drawable d)
         {
@@ -133,7 +221,7 @@ namespace OpGL
         /// </summary>
         public new void Sort()
         {
-            base.Sort(DrawableCompare);
+            base.Sort(RenderCompare);
         }
         /// <summary>
         /// This method is not supported.

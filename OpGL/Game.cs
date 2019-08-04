@@ -349,13 +349,15 @@ namespace OpGL
                     if (!sprites[i].Static)
                         sprites[i].Process();
                 }
+
+                sprites.SortForCollisions();
                 //IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
                 IEnumerable<Drawable> process = sprites;
                 foreach (Drawable drawable in process)
                 {
                     if (!drawable.Static)
                     {
-                        drawable.TestAllCollisions(process);
+                        PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable));
                     }
                 }
 
@@ -369,6 +371,44 @@ namespace OpGL
                 ftIndex = (ftIndex + 1) % 60;
 #endif
             }
+        }
+
+        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor, IEnumerable<Drawable> exclude = null)
+        {
+            if (exclude == null)
+                exclude = new List<Drawable>(0);
+
+            List<Drawable> collided = new List<Drawable>();
+            bool checkedAll;
+            do
+            {
+                checkedAll = true;
+                foreach (Drawable d in testFor.Except(exclude))
+                {
+                    if (drawable.TestCollision(d))
+                    {
+                        // entity colliding with platform - bounce it?
+                        if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                        {
+                            // complete a new collision check (must include previously collided grounds) without this platform
+                            PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable), exclude.Append(d));
+                            // enable platform bounce, test platform collision with entity without moving entity
+                            drawable.Solid = Drawable.SolidState.Ground;
+                            PointF oldPos = new PointF(drawable.X, drawable.Y);
+                            d.TestCollision(drawable);
+                            drawable.Solid = Drawable.SolidState.Entity;
+                            drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                            // no further colliison checking necessary, due to recursive call
+                            break;
+                        }
+                        collided.Add(d);
+                        // drawable moved; re-check collisions
+                        testFor = sprites.GetPotentialColliders(drawable).Except(collided);
+                        checkedAll = false;
+                        break;
+                    }
+                }
+            } while (!checkedAll);
         }
 
         public void StartGame()
