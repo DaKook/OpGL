@@ -114,6 +114,7 @@ namespace OpGL
             TexMatrix.Translate(texX, texY, 0f);
 
             Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSize, texture.TileSize), texture);
+            _old = Animation.GetFrame(0);
             Color = color ?? Color.White;
         }
 
@@ -130,6 +131,7 @@ namespace OpGL
             TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
 
             Animation = animation;
+            _old = Animation.GetFrame(0);
             Point p = Animation.GetFrame(animFrame);
             TexMatrix.Translate(p.X, p.Y, 0f);
         }
@@ -224,20 +226,31 @@ namespace OpGL
                     // check for vertical collision, if none then horizontal collision
                     // collide with top
                     if (PreviousY + Height <= testFor.PreviousY)
+                    {
                         CollideY(Y + Height - testFor.Y, testFor);
+                        return true;
+                    }
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
+                    {
                         CollideY(Y - (testFor.Y + testFor.Height), testFor);
+                        return true;
+                    }
                     else
                     {
                         // collide with left side
                         if (PreviousX + Width <= testFor.PreviousX)
+                        {
                             CollideX(X + Width - testFor.X, testFor);
+                            return true;
+                        }
                         // collide with right side
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
+                        {
                             CollideX(X - (testFor.X + testFor.Width), testFor);
+                            return true;
+                        }
                     }
-                    return true;
                 }
                 else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
                 {
@@ -270,7 +283,7 @@ namespace OpGL
                         {
                             float d = (X - (testFor.X + testFor.Width)) / 2;
                             CollideX(d, testFor);
-                            testFor.CollideY(-d, this);
+                            testFor.CollideX(-d, this);
                         }
                     }
                     return true;
@@ -286,6 +299,34 @@ namespace OpGL
             {
                 if (TestCollision(testFor)) ret = true;
             }
+            #region Test1
+            if (ret && Solid == SolidState.Entity && !Static)
+            {
+                ret = false;
+                foreach (Drawable testFor in process)
+                {
+                    if (TestCollision(testFor))
+                    {
+                        ret = true;
+                        break;
+                    }
+                }
+                if (ret)
+                {
+                    foreach (Drawable d in process)
+                    {
+                        if (d.Static) continue;
+                        if (d as Platform == null) continue;
+                        if (!IsOverlapping(d)) continue;
+                        Solid = SolidState.Ground;
+                        Static = true;
+                        d.TestCollision(this);
+                        Static = false;
+                        Solid = SolidState.Entity;
+                    }
+                }
+            }
+            #endregion
             return ret;
         }
     }

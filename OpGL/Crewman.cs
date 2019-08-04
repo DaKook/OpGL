@@ -85,6 +85,7 @@ namespace OpGL
             if (onPlatform != null)
             {
                 X += onPlatform.XVel;
+                X += onPlatform.Conveyor;
                 Y += onPlatform.YVel;
             }
         }

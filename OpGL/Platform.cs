@@ -12,14 +12,16 @@ namespace OpGL
         public float YSpeed;
         public float XVel;
         public float YVel;
+        public float Conveyor;
         public bool Disappear;
         public List<Drawable> OnTop = new List<Drawable>();
-        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, bool disappear = false) : base(x, y, texture, animation)
+        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false) : base(x, y, texture, animation)
         {
             XSpeed = xSpeed;
             YSpeed = ySpeed;
             XVel = XSpeed;
             YVel = YSpeed;
+            Conveyor = conveyor;
             Disappear = disappear;
             Solid = SolidState.Ground;
         }
@@ -55,7 +57,8 @@ namespace OpGL
                 base.CollideY(distance, collision);
                 foreach (Drawable d in OnTop)
                 {
-                    d.Y -= distance;
+                    if (!d.Static)
+                        d.Y -= distance;
                 }
                 YVel *= -1;
             }

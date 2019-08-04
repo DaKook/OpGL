@@ -7,6 +7,12 @@
 			"Frames": [ 0, 0 ],
 			"Speed": 1,
 			"Name": "platform1"
+		},
+		{
+			"Hitbox": [ 0, 0, 32, 8 ],
+			"Frames": [ 0, 1, 0, 2, 0, 3, 0, 4 ],
+			"Speed": 1,
+			"Name": "conveyor1"
 		}
 	]
 }
