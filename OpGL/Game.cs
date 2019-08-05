@@ -17,18 +17,28 @@ namespace OpGL
 {
     public class Game
     {
-        public Keys[] Left = new Keys[] { Keys.Left, Keys.A };
-        public Keys[] Right = new Keys[] { Keys.Right, Keys.D };
-        public Keys[] Jump = new Keys[] { Keys.Z, Keys.V, Keys.Space, Keys.Up, Keys.Down };
-        public Keys[] Pause = new Keys[] { Keys.Enter };
-        public Keys[] Escape = new Keys[] { Keys.Escape };
-
-        public bool KeyLeft { get; set; }
-        public bool KeyRight { get; set; }
-        public bool KeyJump { get; set; }
-        public bool KeyPause { get; set; }
-        public bool KeyEscape { get; set; }
-
+        public enum Inputs
+        {
+            Left,
+            Right,
+            Jump,
+            Pause,
+            Escape,
+            Count
+        }
+        public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
+            { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
+            { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
+            { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
+            { Keys.Enter, Inputs.Pause },
+            { Keys.Escape, Inputs.Escape }
+        };
+        private int[] inputs = new int[(int)Inputs.Count];
+        private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
+        private bool IsInputActive(Inputs input)
+        {
+            return inputs[(int)input] != 0;
+        }
 
         public Texture TextureFromName(string name)
         {
@@ -323,29 +333,19 @@ namespace OpGL
 
         private void GlControl_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Right.Contains(e.KeyCode))
-                KeyRight = true;
-            if (Left.Contains(e.KeyCode))
-                KeyLeft = true;
-            if (Jump.Contains(e.KeyCode))
-                KeyJump = true;
-            if (Pause.Contains(e.KeyCode))
-                KeyPause = true;
-            if (Escape.Contains(e.KeyCode))
-                KeyEscape = true;
+            if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
+            {
+                inputs[(int)inputMap[e.KeyCode]]++;
+                heldKeys.Add(e.KeyCode);
+            }
         }
         private void GlControl_KeyUp(object sender, KeyEventArgs e)
         {
-            if (Right.Contains(e.KeyCode))
-                KeyRight = false;
-            if (Left.Contains(e.KeyCode))
-                KeyLeft = false;
-            if (Jump.Contains(e.KeyCode))
-                KeyJump = false;
-            if (Pause.Contains(e.KeyCode))
-                KeyPause = false;
-            if (Escape.Contains(e.KeyCode))
-                KeyEscape = false;
+            if (inputMap.ContainsKey(e.KeyCode))
+            {
+                inputs[(int)inputMap[e.KeyCode]]--;
+                heldKeys.Remove(e.KeyCode);
+            }
         }
 
         private void GameLoop()
@@ -370,14 +370,14 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
-                if (KeyRight)
+                if (IsInputActive(Inputs.Right))
                     ActivePlayer.InputDirection = 1;
-                else if (KeyLeft)
+                else if (IsInputActive(Inputs.Left))
                     ActivePlayer.InputDirection = -1;
                 else
                     ActivePlayer.InputDirection = 0;
 
-                if (ActivePlayer.OnGround && KeyJump)
+                if (ActivePlayer.OnGround && IsInputActive(Inputs.Jump))
                 {
                     ActivePlayer.FlipOrJump();
                 }
