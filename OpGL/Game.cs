@@ -141,8 +141,11 @@ namespace OpGL
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
+            glControl.KeyDown += GlControl_KeyDown;
+            glControl.KeyUp += GlControl_KeyUp;
         }
-//INITIALIZE
+
+        //INITIALIZE
 
         #region "Init"
         private void InitGlProgram()
@@ -306,6 +309,7 @@ namespace OpGL
 
             Gl.ClearColor(0f, 0f, 0f, 1f);
         }
+        #endregion
 
         private void glControl_Resize(object sender, EventArgs e)
         {
@@ -316,7 +320,33 @@ namespace OpGL
             int h = (int)(RESOLUTION_HEIGHT * scaleBy);
             Gl.Viewport((glControl.Width - w) / 2, (glControl.Height - h) / 2, w, h);
         }
-        #endregion
+
+        private void GlControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (Right.Contains(e.KeyCode))
+                KeyRight = true;
+            if (Left.Contains(e.KeyCode))
+                KeyLeft = true;
+            if (Jump.Contains(e.KeyCode))
+                KeyJump = true;
+            if (Pause.Contains(e.KeyCode))
+                KeyPause = true;
+            if (Escape.Contains(e.KeyCode))
+                KeyEscape = true;
+        }
+        private void GlControl_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (Right.Contains(e.KeyCode))
+                KeyRight = false;
+            if (Left.Contains(e.KeyCode))
+                KeyLeft = false;
+            if (Jump.Contains(e.KeyCode))
+                KeyJump = false;
+            if (Pause.Contains(e.KeyCode))
+                KeyPause = false;
+            if (Escape.Contains(e.KeyCode))
+                KeyEscape = false;
+        }
 
         private void GameLoop()
         {

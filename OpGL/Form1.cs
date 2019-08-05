@@ -157,35 +157,6 @@ namespace OpGL
             game = new Game(glControl);
         }
 
-        
-        private void GlControl_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (game.Right.Contains(e.KeyCode))
-                game.KeyRight = true;
-            if (game.Left.Contains(e.KeyCode))
-                game.KeyLeft = true;
-            if (game.Jump.Contains(e.KeyCode))
-                game.KeyJump = true;
-            if (game.Pause.Contains(e.KeyCode))
-                game.KeyPause = true;
-            if (game.Escape.Contains(e.KeyCode))
-                game.KeyEscape = true;
-        }
-
-        private void GlControl_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (game.Right.Contains(e.KeyCode))
-                game.KeyRight = false;
-            if (game.Left.Contains(e.KeyCode))
-                game.KeyLeft = false;
-            if (game.Jump.Contains(e.KeyCode))
-                game.KeyJump = false;
-            if (game.Pause.Contains(e.KeyCode))
-                game.KeyPause = false;
-            if (game.Escape.Contains(e.KeyCode))
-                game.KeyEscape = false;
-        }
-
         private void GlControl_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             e.IsInputKey = true;
