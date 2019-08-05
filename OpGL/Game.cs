@@ -104,24 +104,31 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1]);
-            ActivePlayer.CanFlip = false;
-            ActivePlayer.Jump = 8;
+            //ActivePlayer.CanFlip = false;
+            //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
 
             for (int i = 8; i < 160; i += 8)
                 sprites.Add(new Tile(i, 160, tiles, 4, 4));
-            for (int i = 0; i < 160; i += 8)
+            for (int i = 8; i < 312; i += 8)
                 sprites.Add(new Tile(i, 0, tiles, 4, 6));
+            for (int i = 160; i < 312; i += 8)
+                sprites.Add(new Tile(i, 232, tiles, 4, 4));
+            for (int i = 8; i < 232; i += 8)
+                sprites.Add(new Tile(312, i, tiles, 3, 5));
+            for (int i = 8; i < 160; i += 8)
+                sprites.Add(new Tile(0, i, tiles, 5, 5));
             sprites.Add(new Tile(0, 160, tiles, 4, 3));
             sprites.Add(new Tile(160, 152, tiles, 4, 5));
             sprites.Add(new Tile(0, 152, tiles, 5, 4));
             sprites.Add(new Tile(160, 160, tiles, 5, 4));
-            sprites.Add(new Tile(160, 0, tiles, 5, 6));
+            sprites.Add(new Tile(0, 0, tiles, 4, 2));
+            sprites.Add(new Tile(312, 0, tiles, 5, 2));
+            sprites.Add(new Tile(312, 232, tiles, 5, 3));
             sprites.Add(new Platform(96, 64, platforms, platforms.Animations[0], 0, 1, 0, false));
             sprites.Add(new Platform(144, 80, platforms, platforms.Animations[0], -1, 0, 0, false));
             sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
             sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
-            sprites.Add(new Tile(0, 80, tiles, 4, 5));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
