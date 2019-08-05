@@ -50,16 +50,7 @@ namespace OpGL
             else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
             if (OnGround)
             {
-                if (XVelocity != 0 && Animation != WalkingAnimation)
-                {
-                    ResetAnimation();
-                    Animation = WalkingAnimation;
-                }
-                else if (XVelocity == 0 && Animation != StandingAnimation)
-                {
-                    ResetAnimation();
-                    Animation = StandingAnimation;
-                }
+                changeAnimationOnGround();
             }
             else
             {
@@ -69,15 +60,7 @@ namespace OpGL
                     onPlatform = null;
                 }
 
-                if (Math.Sign(YVelocity) == Math.Sign(Gravity) && Animation != FallingAnimation)
-                {
-                    ResetAnimation();
-                    Animation = FallingAnimation;
-                }
-                else if (Math.Sign(YVelocity) == -Math.Sign(Gravity) && Animation != JumpingAnimation)
-                {
-                    Animation = JumpingAnimation;
-                }
+                changeAnimationInAir();
             }
             OnGround = false;
             XVelocity += Math.Sign(InputDirection) * Acceleration;
@@ -107,6 +90,33 @@ namespace OpGL
             }
         }
 
+        private void changeAnimationOnGround()
+        {
+            if (XVelocity != 0 && Animation != WalkingAnimation)
+            {
+                ResetAnimation();
+                Animation = WalkingAnimation;
+            }
+            else if (XVelocity == 0 && Animation != StandingAnimation)
+            {
+                ResetAnimation();
+                Animation = StandingAnimation;
+            }
+        }
+
+        private void changeAnimationInAir()
+        {
+            if (Math.Sign(YVelocity) == Math.Sign(Gravity) && Animation != FallingAnimation)
+            {
+                ResetAnimation();
+                Animation = FallingAnimation;
+            }
+            else if (Math.Sign(YVelocity) == -Math.Sign(Gravity) && Animation != JumpingAnimation)
+            {
+                Animation = JumpingAnimation;
+            }
+        }
+
         public virtual void Die()
         {
             Animation = DyingAnimation;
@@ -121,6 +131,7 @@ namespace OpGL
             {
                 YVelocity = 0;
                 OnGround = true;
+                changeAnimationOnGround();
                 //Check if landing on a platform
                 if (collision as Platform != null && onPlatform != collision)
                 {
@@ -159,6 +170,7 @@ namespace OpGL
                 Gravity *= -1;
             }
             YVelocity = -Jump * Math.Sign(Gravity);
+            changeAnimationInAir();
         }
     }
 }

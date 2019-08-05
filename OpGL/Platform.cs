@@ -47,6 +47,10 @@ namespace OpGL
             else if (!collision.Static && collision.Solid == SolidState.Ground)
             {
                 collision.X += distance;
+                if (collision is Platform)
+                {
+                    (collision as Platform).XVel *= -1;
+                }
             }
         }
 
@@ -65,6 +69,10 @@ namespace OpGL
             else if (!collision.Static && collision.Solid == SolidState.Ground)
             {
                 collision.Y += distance;
+                if (collision is Platform)
+                {
+                    (collision as Platform).YVel *= -1;
+                }
             }
         }
     }

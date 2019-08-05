@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Animation.cs" />
+    <Compile Include="CollisionData.cs" />
     <Compile Include="Crewman.cs" />
     <Compile Include="Drawable.cs" />
     <Compile Include="DrawableCollection.cs" />

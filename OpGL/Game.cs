@@ -23,6 +23,7 @@ namespace OpGL
             Right,
             Jump,
             Pause,
+            Kill,
             Escape,
             Count
         }
@@ -31,6 +32,7 @@ namespace OpGL
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
             { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
             { Keys.Enter, Inputs.Pause },
+            { Keys.R, Inputs.Kill },
             { Keys.Escape, Inputs.Escape }
         };
         private int[] inputs = new int[(int)Inputs.Count];
@@ -416,44 +418,57 @@ namespace OpGL
             List<Drawable> collided = new List<Drawable>();
             List<Drawable> noDoubleCollide = new List<Drawable>();
             bool checkedAll;
+            List<CollisionData> collisionDatas = new List<CollisionData>();
             do
             {
                 checkedAll = true;
                 foreach (Drawable d in testFor)
                 {
                     PointF oldPos = new PointF(drawable.X, drawable.Y);
-                    if (drawable.TestCollision(d))
+                    CollisionData cd = drawable.TestCollision(d);
+                    if (cd.IsColliding)
                     {
-                        if (!collided.Contains(d))
-                        {
-                            collided.Add(d);
-                            if (drawable.IsOverlapping(d))
-                                noDoubleCollide.Add(d);
-                        }
-                        else
-                        {
-                            if (noDoubleCollide.Contains(d))
-                                throw new Exception("You seem to be stuck in an infinite collision loop.");
-                            noDoubleCollide.Add(d);
-                            // platform bounce?
-                            if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
-                            {
-                                // put entity back
-                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                                // enable platform bounce, test platform collision with entity without moving entity
-                                drawable.Solid = Drawable.SolidState.Ground;
-                                d.TestCollision(drawable);
-                                drawable.Solid = Drawable.SolidState.Entity;
-                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                                // test collision with platform, for case where platform was not bounced
-                                drawable.TestCollision(d);
-                            }
-                        }
-                        // drawable moved; re-check collisions
-                        testFor = sprites.GetPotentialColliders(drawable);
-                        checkedAll = false;
-                        break;
+                        //if (!collided.Contains(d))
+                        //{
+                        //    collided.Add(d);
+                        //    if (drawable.IsOverlapping(d))
+                        //        noDoubleCollide.Add(d);
+                        //}
+                        //else
+                        //{
+                        //    if (noDoubleCollide.Contains(d))
+                        //        throw new Exception("You seem to be stuck in an infinite collision loop.");
+                        //    noDoubleCollide.Add(d);
+                        //    // platform bounce?
+                        //    if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                        //    {
+                        //        // put entity back
+                        //        drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                        //        // enable platform bounce, test platform collision with entity without moving entity
+                        //        drawable.Solid = Drawable.SolidState.Ground;
+                        //        d.TestCollision(drawable);
+                        //        drawable.Solid = Drawable.SolidState.Entity;
+                        //        drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                        //        // test collision with platform, for case where platform was not bounced
+                        //        drawable.TestCollision(d);
+                        //    }
+                        //}
+
+                        collisionDatas.Add(cd);
+
+                        //// drawable moved; re-check collisions
+                        //testFor = sprites.GetPotentialColliders(drawable);
+                        //checkedAll = false;
+                        //break;
                     }
+                }
+                if (collisionDatas.Count > 0)
+                {
+                    CollisionData c = drawable.Collide(collisionDatas);
+                    collided.Add(c.CollidedWith);
+                    checkedAll = false;
+                    testFor = sprites.GetPotentialColliders(drawable);
+                    collisionDatas.Clear();
                 }
             } while (!checkedAll);
         }
