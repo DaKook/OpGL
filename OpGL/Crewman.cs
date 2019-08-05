@@ -43,6 +43,8 @@ namespace OpGL
         {
             base.Process();
             YVelocity += Gravity;
+            if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;
+            else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
             if (OnGround)
             {
                 if (XVelocity != 0 && Animation != WalkingAnimation)
@@ -134,6 +136,11 @@ namespace OpGL
         public void FlipOrJump()
         {
             OnGround = false;
+            if (onPlatform != null)
+            {
+                onPlatform.OnTop.Remove(this);
+                onPlatform = null;
+            }
             if (CanFlip)
             {
                 Gravity *= -1;
