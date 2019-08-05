@@ -303,12 +303,15 @@ namespace OpGL
             return new CollisionData(false);
         }
 
-        public virtual CollisionData Collide(List<CollisionData> data)
+        public virtual CollisionData GetCollision(List<CollisionData> data)
         {
+            if (data.Count == 0) return new CollisionData(false);
             bool vertical = true;
             float vDist = float.MaxValue;
             float hDist = float.MaxValue;
-            CollisionData c = null;
+            Drawable c = null;
+            Drawable b = null;
+            float bDist = float.MaxValue;
             foreach (CollisionData dt in data)
             {
                 if (!dt.Vertical)
@@ -316,28 +319,44 @@ namespace OpGL
                     vertical = false;
                     if (hDist == float.MaxValue || Math.Abs(dt.Distance) > Math.Abs(hDist))
                     {
-                        hDist = dt.Distance;
-                        c = dt;
+                        if (hDist != float.MaxValue && Math.Sign(hDist) != Math.Sign(dt.Distance) && Math.Abs(dt.Distance) > Math.Abs(bDist))
+                        {
+                            bDist = dt.Distance;
+                        }
+                        else
+                        {
+                            hDist = dt.Distance;
+                        }
                     }
                 }
                 else if (vertical)
                 {
                     if (vDist == float.MaxValue || Math.Abs(dt.Distance) > Math.Abs(vDist))
                     {
-                        vDist = dt.Distance;
-                        if (vertical) c = dt;
+                        if (vDist != float.MaxValue && Math.Sign(vDist) != Math.Sign(dt.Distance) && Math.Abs(dt.Distance) > Math.Abs(bDist))
+                        {
+                            bDist = dt.Distance;
+                        }
+                        else
+                        {
+                            vDist = dt.Distance;
+                            if (vertical) c = dt.CollidedWith;
+                        }
                     }
                 }
             }
-            if (vertical)
+            return new CollisionData(true, vertical, vertical ? vDist : hDist, c, b);
+        }
+
+        public void Collide(CollisionData cd)
+        {
+            if (cd.Vertical)
             {
-                CollideY(vDist, c.CollidedWith);
-                return c;
+                CollideY(cd.Distance, cd.CollidedWith);
             }
             else
             {
-                CollideX(hDist, c.CollidedWith);
-                return c;
+                CollideX(cd.Distance, cd.CollidedWith);
             }
         }
     }

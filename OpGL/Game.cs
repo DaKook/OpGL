@@ -421,10 +421,10 @@ namespace OpGL
             List<CollisionData> collisionDatas = new List<CollisionData>();
             do
             {
+                PointF oldPos = new PointF(drawable.X, drawable.Y);
                 checkedAll = true;
                 foreach (Drawable d in testFor)
                 {
-                    PointF oldPos = new PointF(drawable.X, drawable.Y);
                     CollisionData cd = drawable.TestCollision(d);
                     if (cd.IsColliding)
                     {
@@ -464,11 +464,23 @@ namespace OpGL
                 }
                 if (collisionDatas.Count > 0)
                 {
-                    CollisionData c = drawable.Collide(collisionDatas);
-                    collided.Add(c.CollidedWith);
-                    checkedAll = false;
-                    testFor = sprites.GetPotentialColliders(drawable);
-                    collisionDatas.Clear();
+
+                    CollisionData c = drawable.GetCollision(collisionDatas);
+                    if (!collided.Contains(c.CollidedWith))
+                    {
+                        drawable.Collide(c);
+                        collided.Add(c.CollidedWith);
+                        checkedAll = false;
+                        testFor = sprites.GetPotentialColliders(drawable);
+                        collisionDatas.Clear();
+                    }
+                    else
+                    {
+                        if (drawable.Solid == Drawable.SolidState.Entity && !c.CollidedWith.Static)
+                        {
+                            
+                        }
+                    }
                 }
             } while (!checkedAll);
         }
