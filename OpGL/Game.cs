@@ -374,37 +374,46 @@ namespace OpGL
             }
         }
 
-        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor, IEnumerable<Drawable> exclude = null)
+        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor)
         {
-            if (exclude == null)
-                exclude = new List<Drawable>(0);
-
             List<Drawable> collided = new List<Drawable>();
+            List<Drawable> noDoubleCollide = new List<Drawable>();
             bool checkedAll;
             do
             {
                 checkedAll = true;
-                foreach (Drawable d in testFor.Except(exclude))
+                foreach (Drawable d in testFor)
                 {
+                    PointF oldPos = new PointF(drawable.X, drawable.Y);
                     if (drawable.TestCollision(d))
                     {
-                        // entity colliding with platform - bounce it?
-                        if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                        if (!collided.Contains(d))
                         {
-                            // complete a new collision check (must include previously collided grounds) without this platform
-                            PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable), exclude.Append(d));
-                            // enable platform bounce, test platform collision with entity without moving entity
-                            drawable.Solid = Drawable.SolidState.Ground;
-                            PointF oldPos = new PointF(drawable.X, drawable.Y);
-                            d.TestCollision(drawable);
-                            drawable.Solid = Drawable.SolidState.Entity;
-                            drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                            // no further colliison checking necessary, due to recursive call
-                            break;
+                            collided.Add(d);
+                            if (drawable.IsOverlapping(d))
+                                noDoubleCollide.Add(d);
                         }
-                        collided.Add(d);
+                        else
+                        {
+                            if (noDoubleCollide.Contains(d))
+                                throw new Exception("You seem to be stuck in an infinite collision loop.");
+                            noDoubleCollide.Add(d);
+                            // platform bounce?
+                            if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                            {
+                                // put entity back
+                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                                // enable platform bounce, test platform collision with entity without moving entity
+                                drawable.Solid = Drawable.SolidState.Ground;
+                                d.TestCollision(drawable);
+                                drawable.Solid = Drawable.SolidState.Entity;
+                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                                // test collision with platform, for case where platform was not bounced
+                                drawable.TestCollision(d);
+                            }
+                        }
                         // drawable moved; re-check collisions
-                        testFor = sprites.GetPotentialColliders(drawable).Except(collided);
+                        testFor = sprites.GetPotentialColliders(drawable);
                         checkedAll = false;
                         break;
                     }
