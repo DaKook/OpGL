@@ -10,9 +10,21 @@
 		},
 		{
 			"Hitbox": [ 7, 2, 10, 21 ],
-			"Frames": [ 0, 0, 1, 0 ],
+			"Frames": [ 2, 0, 0, 0 ],
 			"Speed": 12,
 			"Name": "Walking"
+		},
+		{
+			"Hitbox": [ 7, 2, 10, 21 ],
+			"Frames": [ 4, 0 ],
+			"Speed": 1,
+			"Name": "Falling"
+		},
+		{
+			"Hitbox": [ 7, 2, 10, 21 ],
+			"Frames": [ 3, 0 ],
+			"Speed": 1,
+			"Name": "Jumping"
 		}
 	]
 }

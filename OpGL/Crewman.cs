@@ -12,6 +12,7 @@ namespace OpGL
         private Animation standingAnimation;
         private Animation walkingAnimation;
         private Animation fallingAnimation;
+        private Animation jumpingAnimation;
         private Animation dyingAnimation;
         public float YVelocity;
         public static float TerminalVelocity = 5f;
@@ -25,15 +26,17 @@ namespace OpGL
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
         public Animation FallingAnimation { get => fallingAnimation ?? defaultAnimation; set => fallingAnimation = value; }
+        public Animation JumpingAnimation { get => jumpingAnimation ?? defaultAnimation; set => jumpingAnimation = value; }
         public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
         public float XVelocity;
 
-        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation die = null) : base(x, y, texture, stand)
+        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null) : base(x, y, texture, stand)
         {
             Name = name;
             StandingAnimation = stand;
             WalkingAnimation = walk;
             FallingAnimation = fall;
+            JumpingAnimation = jump;
             DyingAnimation = die;
             defaultAnimation = StandingAnimation ?? new Animation(new System.Drawing.Point[] { new System.Drawing.Point(0, 0) }, System.Drawing.Rectangle.Empty, texture);
             Gravity = 0.6875f;
@@ -64,6 +67,16 @@ namespace OpGL
                 {
                     onPlatform.OnTop.Remove(this);
                     onPlatform = null;
+                }
+
+                if (Math.Sign(YVelocity) == Math.Sign(Gravity) && Animation != FallingAnimation)
+                {
+                    ResetAnimation();
+                    Animation = FallingAnimation;
+                }
+                else if (Math.Sign(YVelocity) == -Math.Sign(Gravity) && Animation != JumpingAnimation)
+                {
+                    Animation = JumpingAnimation;
                 }
             }
             OnGround = false;
