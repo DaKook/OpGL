@@ -177,7 +177,32 @@ namespace OpGL
             }
             return index;
         }
-
+        /// <summary>
+        /// Searches for the specified Drawable and returns the zero-based index of an occurence within the entire DrawableCollection.
+        /// </summary>
+        public new int IndexOf(Drawable d)
+        {
+            // index in the range at which d would be, by render sort
+            int index = AddIndex(d);
+            // check from this index to the end of that range
+            int i = index;
+            while (RenderCompare(this[i], d) == 0)
+            {
+                if (this[i] == d)
+                    return i;
+                i++;
+            }
+            // check to the beginning of that range
+            i = index - 1;
+            while (RenderCompare(this[i], d) == 0)
+            {
+                if (this[i] == d)
+                    return i;
+                i--;
+            }
+            // not found
+            return -1;
+        }
 
         public new void Add(Drawable d)
         {
@@ -197,7 +222,12 @@ namespace OpGL
             get => base[index];
         }
 
-        // TODO: Implement Remove and IndexOf methods using a binary search.
+        public new void Remove(Drawable d)
+        {
+            int index = IndexOf(d);
+            if (index != -1)
+                base.RemoveAt(index);
+        }
 
         /// <summary>
         /// This method is not supported.

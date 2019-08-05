@@ -17,18 +17,28 @@ namespace OpGL
 {
     public class Game
     {
-        public Keys[] Left = new Keys[] { Keys.Left, Keys.A };
-        public Keys[] Right = new Keys[] { Keys.Right, Keys.D };
-        public Keys[] Jump = new Keys[] { Keys.Z, Keys.V, Keys.Space, Keys.Up, Keys.Down };
-        public Keys[] Pause = new Keys[] { Keys.Enter };
-        public Keys[] Escape = new Keys[] { Keys.Escape };
-
-        public bool KeyLeft { get; set; }
-        public bool KeyRight { get; set; }
-        public bool KeyJump { get; set; }
-        public bool KeyPause { get; set; }
-        public bool KeyEscape { get; set; }
-
+        public enum Inputs
+        {
+            Left,
+            Right,
+            Jump,
+            Pause,
+            Escape,
+            Count
+        }
+        public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
+            { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
+            { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
+            { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
+            { Keys.Enter, Inputs.Pause },
+            { Keys.Escape, Inputs.Escape }
+        };
+        private int[] inputs = new int[(int)Inputs.Count];
+        private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
+        private bool IsInputActive(Inputs input)
+        {
+            return inputs[(int)input] != 0;
+        }
 
         public Texture TextureFromName(string name)
         {
@@ -141,8 +151,11 @@ namespace OpGL
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
+            glControl.KeyDown += GlControl_KeyDown;
+            glControl.KeyUp += GlControl_KeyUp;
         }
-//INITIALIZE
+
+        //INITIALIZE
 
         #region "Init"
         private void InitGlProgram()
@@ -306,6 +319,7 @@ namespace OpGL
 
             Gl.ClearColor(0f, 0f, 0f, 1f);
         }
+        #endregion
 
         private void glControl_Resize(object sender, EventArgs e)
         {
@@ -316,7 +330,23 @@ namespace OpGL
             int h = (int)(RESOLUTION_HEIGHT * scaleBy);
             Gl.Viewport((glControl.Width - w) / 2, (glControl.Height - h) / 2, w, h);
         }
-        #endregion
+
+        private void GlControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
+            {
+                inputs[(int)inputMap[e.KeyCode]]++;
+                heldKeys.Add(e.KeyCode);
+            }
+        }
+        private void GlControl_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (inputMap.ContainsKey(e.KeyCode))
+            {
+                inputs[(int)inputMap[e.KeyCode]]--;
+                heldKeys.Remove(e.KeyCode);
+            }
+        }
 
         private void GameLoop()
         {
@@ -340,14 +370,14 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
-                if (KeyRight)
+                if (IsInputActive(Inputs.Right))
                     ActivePlayer.InputDirection = 1;
-                else if (KeyLeft)
+                else if (IsInputActive(Inputs.Left))
                     ActivePlayer.InputDirection = -1;
                 else
                     ActivePlayer.InputDirection = 0;
 
-                if (ActivePlayer.OnGround && KeyJump)
+                if (ActivePlayer.OnGround && IsInputActive(Inputs.Jump))
                 {
                     ActivePlayer.FlipOrJump();
                 }
@@ -381,37 +411,46 @@ namespace OpGL
             }
         }
 
-        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor, IEnumerable<Drawable> exclude = null)
+        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor)
         {
-            if (exclude == null)
-                exclude = new List<Drawable>(0);
-
             List<Drawable> collided = new List<Drawable>();
+            List<Drawable> noDoubleCollide = new List<Drawable>();
             bool checkedAll;
             do
             {
                 checkedAll = true;
-                foreach (Drawable d in testFor.Except(exclude))
+                foreach (Drawable d in testFor)
                 {
+                    PointF oldPos = new PointF(drawable.X, drawable.Y);
                     if (drawable.TestCollision(d))
                     {
-                        // entity colliding with platform - bounce it?
-                        if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                        if (!collided.Contains(d))
                         {
-                            // complete a new collision check (must include previously collided grounds) without this platform
-                            PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable), exclude.Append(d));
-                            // enable platform bounce, test platform collision with entity without moving entity
-                            drawable.Solid = Drawable.SolidState.Ground;
-                            PointF oldPos = new PointF(drawable.X, drawable.Y);
-                            d.TestCollision(drawable);
-                            drawable.Solid = Drawable.SolidState.Entity;
-                            drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                            // no further colliison checking necessary, due to recursive call
-                            break;
+                            collided.Add(d);
+                            if (drawable.IsOverlapping(d))
+                                noDoubleCollide.Add(d);
                         }
-                        collided.Add(d);
+                        else
+                        {
+                            if (noDoubleCollide.Contains(d))
+                                throw new Exception("You seem to be stuck in an infinite collision loop.");
+                            noDoubleCollide.Add(d);
+                            // platform bounce?
+                            if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
+                            {
+                                // put entity back
+                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                                // enable platform bounce, test platform collision with entity without moving entity
+                                drawable.Solid = Drawable.SolidState.Ground;
+                                d.TestCollision(drawable);
+                                drawable.Solid = Drawable.SolidState.Entity;
+                                drawable.X = oldPos.X; drawable.Y = oldPos.Y;
+                                // test collision with platform, for case where platform was not bounced
+                                drawable.TestCollision(d);
+                            }
+                        }
                         // drawable moved; re-check collisions
-                        testFor = sprites.GetPotentialColliders(drawable).Except(collided);
+                        testFor = sprites.GetPotentialColliders(drawable);
                         checkedAll = false;
                         break;
                     }
