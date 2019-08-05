@@ -127,7 +127,8 @@ namespace OpGL
         public override void CollideX(float distance, Drawable collision)
         {
             base.CollideX(distance, collision);
-            XVelocity = 0;
+            if (distance > 0 == XVelocity > 0)
+                XVelocity = 0;
         }
 
         public void FlipOrJump()
