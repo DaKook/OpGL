@@ -205,15 +205,27 @@ namespace OpGL
 
         public virtual void CollideY(float distance, Drawable collision)
         {
+            if (Static)
+            {
+                collision.Y += distance;
+                return;
+            }
             Y -= distance;
         }
         public virtual void CollideX(float distance, Drawable collision)
         {
+            if (Static)
+            {
+                collision.X += distance;
+                return;
+            }
             X -= distance;
         }
 
         public virtual CollisionData TestCollision(Drawable testFor)
         {
+            //This method can be condensed
+
             // do not collide with self
             if (testFor == this) return new CollisionData(false);
 
@@ -226,16 +238,12 @@ namespace OpGL
                     // collide with top
                     if (PreviousY + Height <= testFor.PreviousY)
                     {
-                        //CollideY(Y + Height - testFor.Y, testFor);
-                        //return true;
                         return new CollisionData(true, true, Y + Height - testFor.Y, testFor);
 
                     }
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
                     {
-                        //CollideY(Y - (testFor.Y + testFor.Height), testFor);
-                        //return true;
                         return new CollisionData(true, true, Y - (testFor.Y + testFor.Height), testFor);
                     }
                     else
@@ -243,15 +251,11 @@ namespace OpGL
                         // collide with left side
                         if (PreviousX + Width <= testFor.PreviousX)
                         {
-                            //CollideX(X + Width - testFor.X, testFor);
-                            //return true;
                             return new CollisionData(true, false, X + Width - testFor.X, testFor);
                         }
                         // collide with right side
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
                         {
-                            //CollideX(X - (testFor.X + testFor.Width), testFor);
-                            //return true;
                             return new CollisionData(true, false, X - (testFor.X + testFor.Width), testFor);
                         }
                     }
@@ -265,17 +269,11 @@ namespace OpGL
                         // overlap for the two collisions is equal to distance travelled beyond what was required for collision
                         // that extra distance should go back to moving away
                         // otherwise a moving platform can be touching another for two consecutive frames during a collision
-                        //float d = (Y + Height - testFor.Y);
-                        //CollideY(d, testFor);
-                        //testFor.CollideY(-d, this);
                         return new CollisionData(true, true, Y + Height - testFor.Y, testFor);
                     }
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
                     {
-                        //float d = (Y - (testFor.Y + testFor.Height));
-                        //CollideY(d, testFor);
-                        //testFor.CollideY(-d, this);
                         return new CollisionData(true, true, Y - (testFor.Y + testFor.Height), testFor);
                     }
                     else
@@ -283,21 +281,14 @@ namespace OpGL
                         // collide with left side
                         if (PreviousX + Width <= testFor.PreviousX)
                         {
-                            //float d = (X + Width - testFor.X);
-                            //CollideX(d, testFor);
-                            //testFor.CollideX(-d, this);
                             return new CollisionData(true, false, X + Width - testFor.X, testFor);
                         }
                         // collide with right side
                         else if (PreviousX >= testFor.PreviousX + testFor.Width)
                         {
-                            //float d = (X - (testFor.X + testFor.Width));
-                            //CollideX(d, testFor);
-                            //testFor.CollideX(-d, this);
                             return new CollisionData(true, false, X - (testFor.X + testFor.Width), testFor);
                         }
                     }
-                    return new CollisionData(true, true, 0, testFor);
                 }
             }
             return new CollisionData(false);
@@ -327,6 +318,7 @@ namespace OpGL
                         {
                             hDist = dt.Distance;
                         }
+                        c = dt.CollidedWith;
                     }
                 }
                 else if (vertical)

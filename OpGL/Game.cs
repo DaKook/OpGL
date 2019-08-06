@@ -415,70 +415,84 @@ namespace OpGL
 
         private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor)
         {
-            List<Drawable> collided = new List<Drawable>();
-            List<Drawable> noDoubleCollide = new List<Drawable>();
+            //In order to check if the collision tests are finished
             bool checkedAll;
+            //To store all drawables being collided with at any given moment
             List<CollisionData> collisionDatas = new List<CollisionData>();
+            //0 means no checks were made yet. 1 means horizontal collisions have been detected, but vertical collisions have not yet been checked.
+            //2 means that vertical collisions have been handled.
+            int checks = 0;
+            //The first vertical collision
+            CollisionData vCol = null;
+            //The first horizontal collision
+            CollisionData hCol = null;
             do
             {
-                PointF oldPos = new PointF(drawable.X, drawable.Y);
                 checkedAll = true;
                 foreach (Drawable d in testFor)
                 {
+                    //Fill the list with all current collisions
                     CollisionData cd = drawable.TestCollision(d);
                     if (cd.IsColliding)
                     {
-                        //if (!collided.Contains(d))
-                        //{
-                        //    collided.Add(d);
-                        //    if (drawable.IsOverlapping(d))
-                        //        noDoubleCollide.Add(d);
-                        //}
-                        //else
-                        //{
-                        //    if (noDoubleCollide.Contains(d))
-                        //        throw new Exception("You seem to be stuck in an infinite collision loop.");
-                        //    noDoubleCollide.Add(d);
-                        //    // platform bounce?
-                        //    if (drawable.Solid == Drawable.SolidState.Entity && d is Platform)
-                        //    {
-                        //        // put entity back
-                        //        drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                        //        // enable platform bounce, test platform collision with entity without moving entity
-                        //        drawable.Solid = Drawable.SolidState.Ground;
-                        //        d.TestCollision(drawable);
-                        //        drawable.Solid = Drawable.SolidState.Entity;
-                        //        drawable.X = oldPos.X; drawable.Y = oldPos.Y;
-                        //        // test collision with platform, for case where platform was not bounced
-                        //        drawable.TestCollision(d);
-                        //    }
-                        //}
-
                         collisionDatas.Add(cd);
-
-                        //// drawable moved; re-check collisions
-                        //testFor = sprites.GetPotentialColliders(drawable);
-                        //checkedAll = false;
-                        //break;
                     }
                 }
-                if (collisionDatas.Count > 0)
+                //Get a single collision to handle
+                CollisionData c = drawable.GetCollision(collisionDatas);
+                if (c.IsColliding)
                 {
-
-                    CollisionData c = drawable.GetCollision(collisionDatas);
-                    if (!collided.Contains(c.CollidedWith))
+                    if (checks < 2)
                     {
                         drawable.Collide(c);
-                        collided.Add(c.CollidedWith);
+                        if (c.Vertical)
+                            vCol = c;
+                        else
+                            hCol = c;
+                        if (checks < 1)
+                        {
+                            if (c.Vertical)
+                                checks = 2;
+                            else
+                                checks = 1;
+                        }
+                        else
+                        {
+                            if (c.Vertical)
+                            {
+                                checks = 2;
+                            }
+                            else
+                            {
+                                //drawable is between two horizontal collisions. "Bump" both drawables that drawable is between.
+                                Drawable.SolidState ss = drawable.Solid;
+                                drawable.Solid = Drawable.SolidState.Ground;
+                                drawable.Static = true;
+                                c.CollidedWith.Collide(new CollisionData(true, c.Vertical, -c.Distance, drawable));
+                                float d = hCol.CollidedWith.TestCollision(drawable).Distance;
+                                hCol.CollidedWith.Collide(new CollisionData(true, c.Vertical, d, drawable));
+                                drawable.Static = false;
+                                drawable.Solid = ss;
+                            }
+                        }
+                        //Need to check for more collisions
                         checkedAll = false;
                         testFor = sprites.GetPotentialColliders(drawable);
                         collisionDatas.Clear();
                     }
                     else
                     {
-                        if (drawable.Solid == Drawable.SolidState.Entity && !c.CollidedWith.Static)
+                        if (c.Vertical)
                         {
-                            
+                            //drawable is between two vertical collisions. "Bump" both drawables that drawable is between.
+                            Drawable.SolidState ss = drawable.Solid;
+                            drawable.Solid = Drawable.SolidState.Ground;
+                            drawable.Static = true;
+                            c.CollidedWith.Collide(new CollisionData(true, c.Vertical, -c.Distance, drawable));
+                            float d = vCol.CollidedWith.TestCollision(drawable).Distance;
+                            vCol.CollidedWith.Collide(new CollisionData(true, c.Vertical, d, drawable));
+                            drawable.Static = false;
+                            drawable.Solid = ss;
                         }
                     }
                 }
