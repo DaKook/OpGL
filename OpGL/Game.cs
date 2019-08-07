@@ -149,6 +149,7 @@ namespace OpGL
             sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
             sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
             sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations[0], sprites32.Animations[1], false, true));
+            sprites.Add(new Enemy(96, 80, sprites32, sprites32.Animations[2], 1, 1, Color.Red));
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
