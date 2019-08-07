@@ -164,6 +164,7 @@ namespace OpGL
                 {
                     onPlatform = collision as Platform;
                     onPlatform.OnTop.Add(this);
+                    onPlatform.Disappear();
                 }
                 else if (onPlatform != null && collision as Platform == null)
                 {
