@@ -35,6 +35,8 @@ namespace OpGL
 
         public override void Process()
         {
+            //Do not process if disappeared
+            if (DisappearFrames == 0) return;
             base.Process();
             X += XVel;
             Y += YVel;

@@ -26,6 +26,8 @@ namespace OpGL
         public float CheckpointY;
         public bool CheckpointFlipX;
         public bool CheckpointFlipY;
+        public int JumpBuffer = 0;
+        public int LedgeMercy = 0;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
@@ -53,14 +55,18 @@ namespace OpGL
             if (DyingFrames == 0)
             {
                 YVelocity += Gravity;
+                if (JumpBuffer > 0) JumpBuffer -= 1;
                 if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;
                 else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
                 if (OnGround)
                 {
                     changeAnimationOnGround();
+                    LedgeMercy = 2;
                 }
                 else
                 {
+                    if (LedgeMercy > 0)
+                        LedgeMercy -= 1;
                     if (onPlatform != null)
                     {
                         onPlatform.OnTop.Remove(this);
@@ -171,6 +177,8 @@ namespace OpGL
                     onPlatform.OnTop.Remove(this);
                     onPlatform = null;
                 }
+                if (JumpBuffer > 0)
+                    FlipOrJump();
             }
             else if (Math.Sign(distance) == Math.Sign(YVelocity))
             {
@@ -187,18 +195,27 @@ namespace OpGL
 
         public void FlipOrJump()
         {
-            OnGround = false;
-            if (onPlatform != null)
+            if (OnGround || LedgeMercy > 0)
             {
-                onPlatform.OnTop.Remove(this);
-                onPlatform = null;
+                LedgeMercy = 0;
+                JumpBuffer = 0;
+                OnGround = false;
+                if (onPlatform != null)
+                {
+                    onPlatform.OnTop.Remove(this);
+                    onPlatform = null;
+                }
+                if (CanFlip)
+                {
+                    Gravity *= -1;
+                }
+                YVelocity = -Jump * Math.Sign(Gravity);
+                changeAnimationInAir();
             }
-            if (CanFlip)
+            else
             {
-                Gravity *= -1;
+                JumpBuffer = 6;
             }
-            YVelocity = -Jump * Math.Sign(Gravity);
-            changeAnimationInAir();
         }
 
         public override CollisionData TestCollision(Drawable testFor)

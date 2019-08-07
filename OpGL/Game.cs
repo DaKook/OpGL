@@ -27,6 +27,7 @@ namespace OpGL
             Escape,
             Count
         }
+        bool holdingJump = false;
         public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
             { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
@@ -142,7 +143,7 @@ namespace OpGL
             sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
             sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
-            sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
@@ -386,9 +387,17 @@ namespace OpGL
                 else
                     ActivePlayer.InputDirection = 0;
 
-                if (ActivePlayer.OnGround && IsInputActive(Inputs.Jump))
+                if (IsInputActive(Inputs.Jump))
                 {
-                    ActivePlayer.FlipOrJump();
+                    if (!holdingJump)
+                    {
+                        ActivePlayer.FlipOrJump();
+                        holdingJump = true;
+                    }
+                }
+                else if (holdingJump)
+                {
+                    holdingJump = false;
                 }
 
                 for (int i = 0; i < sprites.Count; i++)
