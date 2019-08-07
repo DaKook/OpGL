@@ -26,6 +26,7 @@ namespace OpGL
         public float CheckpointY;
         public bool CheckpointFlipX;
         public bool CheckpointFlipY;
+        public Checkpoint CurrentCheckpoint;
         public int JumpBuffer = 0;
         public int LedgeMercy = 0;
         public override bool IsCrewman { get => true; }
@@ -47,6 +48,10 @@ namespace OpGL
             DyingAnimation = die;
             defaultAnimation = StandingAnimation ?? new Animation(new System.Drawing.Point[] { new System.Drawing.Point(0, 0) }, System.Drawing.Rectangle.Empty, texture);
             Gravity = 0.6875f;
+            CheckpointX = x;
+            CheckpointY = y;
+            CheckpointFlipX = flipX;
+            CheckpointFlipY = flipY;
         }
 
         public override void Process()
@@ -107,10 +112,6 @@ namespace OpGL
                 DyingFrames -= 1;
                 if (DyingFrames == 0)
                 {
-                    X = CheckpointX;
-                    Y = CheckpointY;
-                    XVelocity = 0;
-                    YVelocity = 0;
                     ResetAnimation();
                     Animation = StandingAnimation;
                     flipX = CheckpointFlipX;
@@ -118,6 +119,12 @@ namespace OpGL
                     {
                         Gravity *= -1;
                     }
+                    X = CheckpointX;
+                    Y = CheckpointY;
+                    XVelocity = 0;
+                    YVelocity = 0;
+                    PreviousX = X;
+                    PreviousY = Y;
                 }
             }
         }
@@ -151,6 +158,11 @@ namespace OpGL
 
         public virtual void Die()
         {
+            if (onPlatform != null)
+            {
+                onPlatform.OnTop.Remove(this);
+                onPlatform = null;
+            }
             Animation = DyingAnimation;
             ResetAnimation();
             DyingFrames = 60;
@@ -195,6 +207,7 @@ namespace OpGL
 
         public void FlipOrJump()
         {
+            if (DyingFrames > 0) return;
             if (OnGround || LedgeMercy > 0)
             {
                 LedgeMercy = 0;
@@ -221,9 +234,35 @@ namespace OpGL
         public override CollisionData TestCollision(Drawable testFor)
         {
             if (DyingFrames > 0) return null;
-            if (testFor.KillCrewmen && testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
+            if (testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
             {
-                return new CollisionData(true, 0, testFor);
+                if (testFor.KillCrewmen) return new CollisionData(true, 0, testFor);
+                else
+                {
+                    if (PreviousY + Height <= testFor.PreviousY)
+                    {
+                        return new CollisionData(true, Y + Height - testFor.Y, testFor);
+
+                    }
+                    // collide with bottom
+                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
+                    {
+                        return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
+                    }
+                    else
+                    {
+                        // collide with left side
+                        if (PreviousX + Width <= testFor.PreviousX)
+                        {
+                            return new CollisionData(false, X + Width - testFor.X, testFor);
+                        }
+                        // collide with right side
+                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
+                        {
+                            return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
+                        }
+                    }
+                }
             }
             return base.TestCollision(testFor);
         }
@@ -232,13 +271,20 @@ namespace OpGL
         {
             if (cd.CollidedWith.KillCrewmen)
                 Die();
+            else if (cd.CollidedWith.Solid == SolidState.Entity)
+            {
+                cd.CollidedWith.HandleCrewmanCollision(this);
+            }
             else
                 base.Collide(cd);
         }
 
-        public override CollisionData GetFirstCollision(List<CollisionData> data)
+        public void KillSelf()
         {
-            return base.GetFirstCollision(data);
+            if (DyingFrames == 0)
+            {
+                Die();
+            }
         }
     }
 }

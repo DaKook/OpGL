@@ -116,6 +116,7 @@ namespace OpGL
             Texture viridian = TextureFromName("viridian");
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
+            Texture sprites32 = TextureFromName("sprites32");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
@@ -145,6 +146,9 @@ namespace OpGL
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
+            sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
+            sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
+            sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations[0], sprites32.Animations[1], false, true));
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
@@ -387,6 +391,11 @@ namespace OpGL
                 else
                     ActivePlayer.InputDirection = 0;
 
+                if (IsInputActive(Inputs.Kill))
+                {
+                    ActivePlayer.KillSelf();
+                }
+
                 if (IsInputActive(Inputs.Jump))
                 {
                     if (!holdingJump)
@@ -411,7 +420,7 @@ namespace OpGL
                 IEnumerable<Drawable> process = sprites;
                 foreach (Drawable drawable in process)
                 {
-                    if (!drawable.Static)
+                    if (!drawable.Static && !drawable.Immovable)
                     {
                         PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable));
                     }
@@ -454,7 +463,7 @@ namespace OpGL
                 }
                 //Get a single collision to handle
                 CollisionData c = drawable.GetFirstCollision(collisionDatas);
-                if (c != null)
+                if (c != null && c.CollidedWith.Solid == Drawable.SolidState.Ground)
                 {
                     if (checks < 2)
                     {
@@ -517,9 +526,10 @@ namespace OpGL
                     }
                 }
             } while (!checkedAll);
-            if (drawable.IsCrewman && (hCol != null || vCol != null))
+            if (drawable.IsCrewman)
             {
                 testFor = sprites.GetPotentialColliders(drawable);
+                collisionDatas.Clear();
                 foreach (Drawable d in testFor)
                 {
                     //Fill the list with all current collisions
@@ -529,9 +539,11 @@ namespace OpGL
                 }
                 if (collisionDatas.Count > 0)
                 {
-                    CollisionData c = drawable.GetFirstCollision(collisionDatas);
-                    if (c.CollidedWith.KillCrewmen)
+                    foreach (CollisionData c in collisionDatas)
+                    {
+                        if (c != null && c.CollidedWith.Solid == Drawable.SolidState.Entity)
                         drawable.Collide(c);
+                    }
                 }
             }
         }

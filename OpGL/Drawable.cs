@@ -37,8 +37,8 @@ namespace OpGL
         }
         public float X { get; set; }
         public float Y { get; set; }
-        public float PreviousX { get; private set; }
-        public float PreviousY { get; private set; }
+        public float PreviousX { get; protected set; }
+        public float PreviousY { get; protected set; }
         public float Width { get => Animation.Hitbox.Width; }
         public float Height { get => Animation.Hitbox.Height; }
 
@@ -85,6 +85,8 @@ namespace OpGL
         /// When set to true, the Drawable will not have its own collision detection. Other Drawables will still test for collision with Static Drawables.
         /// </summary>
         public bool Static { get; set; }
+
+        public bool Immovable { get; set; }
         /// <summary>
         /// Determines whether the Drawable will process even while out of the screen. Too many objects that always process could slow down the game.
         /// </summary>
@@ -232,7 +234,7 @@ namespace OpGL
             if (IsOverlapping(testFor))
             {
                 // entity colliding with ground
-                if ((Solid == SolidState.Entity || (Solid == SolidState.Ground && testFor.Static)) && testFor.Solid == SolidState.Ground)
+                if (((Solid == SolidState.Entity || (Solid == SolidState.Ground && testFor.Static)) && testFor.Solid == SolidState.Ground) || (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground))
                 {
                     // check for vertical collision, if none then horizontal collision
                     // collide with top
@@ -240,36 +242,6 @@ namespace OpGL
                     {
                         return new CollisionData(true, Y + Height - testFor.Y, testFor);
 
-                    }
-                    // collide with bottom
-                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
-                    {
-                        return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
-                    }
-                    else
-                    {
-                        // collide with left side
-                        if (PreviousX + Width <= testFor.PreviousX)
-                        {
-                            return new CollisionData(false, X + Width - testFor.X, testFor);
-                        }
-                        // collide with right side
-                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
-                        {
-                            return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
-                        }
-                    }
-                }
-                else if (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground)
-                {
-                    // check for vertical collision, if none then horizontal collision
-                    // collide with top
-                    if (PreviousY + Height <= testFor.PreviousY)
-                    {
-                        // overlap for the two collisions is equal to distance travelled beyond what was required for collision
-                        // that extra distance should go back to moving away
-                        // otherwise a moving platform can be touching another for two consecutive frames during a collision
-                        return new CollisionData(true, Y + Height - testFor.Y, testFor);
                     }
                     // collide with bottom
                     else if (PreviousY >= testFor.PreviousY + testFor.Height)
@@ -303,10 +275,13 @@ namespace OpGL
             if (collisions.Count == 0)
                 return null;
 
-            CollisionData ret = collisions[0];
-            for (int i = 1; i < collisions.Count; i++)
+            CollisionData ret = null;
+            for (int i = 0; i < collisions.Count; i++)
             {
                 CollisionData dt = collisions[i];
+                if (dt.CollidedWith.Solid == SolidState.Entity)
+                    continue;
+                if (ret == null && dt.CollidedWith.Solid == SolidState.Ground) ret = dt;
                 if (!dt.Vertical)
                 {
                     if (ret.Vertical || Math.Abs(dt.Distance) > Math.Abs(ret.Distance))
@@ -331,6 +306,11 @@ namespace OpGL
             {
                 CollideX(cd.Distance, cd.CollidedWith);
             }
+        }
+
+        public virtual void HandleCrewmanCollision(Crewman crewman)
+        {
+            //Do nothing
         }
     }
 
