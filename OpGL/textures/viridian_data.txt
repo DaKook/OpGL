@@ -25,6 +25,12 @@
 			"Frames": [ 3, 0 ],
 			"Speed": 1,
 			"Name": "Jumping"
+		},
+		{
+			"Hitbox": [7, 2, 10, 21 ],
+			"Frames": [ 0, 1, 1, 1, 2, 1, 1, 1 ],
+			"Speed": 1,
+			"Name": "Dying"
 		}
 	]
 }

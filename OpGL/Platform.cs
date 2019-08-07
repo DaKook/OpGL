@@ -14,6 +14,10 @@ namespace OpGL
         public float YVel;
         public float Conveyor;
         public bool Disappear;
+        /// <summary>
+        /// Determines whether or not the platform pushes crewmen the opposite direction on the bottom. Set to true to disable this.
+        /// </summary>
+        public bool SingleDirection;
         public List<Drawable> OnTop = new List<Drawable>();
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false) : base(x, y, texture, animation)
         {

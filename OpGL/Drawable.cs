@@ -340,7 +340,7 @@ namespace OpGL
             return new CollisionData(true, vertical, vertical ? vDist : hDist, c, b);
         }
 
-        public void Collide(CollisionData cd)
+        public virtual void Collide(CollisionData cd)
         {
             if (cd.Vertical)
             {

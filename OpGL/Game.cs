@@ -115,7 +115,7 @@ namespace OpGL
             Texture viridian = TextureFromName("viridian");
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
-            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3]);
+            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
@@ -141,13 +141,19 @@ namespace OpGL
             sprites.Add(new Platform(144, 80, platforms, platforms.Animations[0], -1, 0, 0, false));
             sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
             sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
+            sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
+            sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
             for (int i = 0; i < 160; i += 8)
                 for (int j = 168; j < 241; j += 8)
                     sprites.Add(new Tile(i, j, tiles, 3, 2));
-
+            for (int i = 168; i < 312; i += 8)
+                for (int j = 184; j < 232; j += 8)
+                    sprites.Add(new Tile(i, j, tiles, 1, 20));
+            for (int i = 168; i < 312; i += 8)
+                sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
 #endif
@@ -497,6 +503,25 @@ namespace OpGL
                     }
                 }
             } while (!checkedAll);
+            if (drawable.IsCrewman && (hCol != null || vCol != null))
+            {
+                testFor = sprites.GetPotentialColliders(drawable);
+                foreach (Drawable d in testFor)
+                {
+                    //Fill the list with all current collisions
+                    CollisionData cd = drawable.TestCollision(d);
+                    if (cd.IsColliding)
+                    {
+                        collisionDatas.Add(cd);
+                    }
+                }
+                if (collisionDatas.Count > 0)
+                {
+                    CollisionData c = drawable.GetCollision(collisionDatas);
+                    if (c.CollidedWith.KillCrewmen)
+                        drawable.Collide(c);
+                }
+            }
         }
 
         public void StartGame()

@@ -22,12 +22,17 @@ namespace OpGL
         public int InputDirection;
         public bool CanFlip = true;
         public float Jump = 1.6875f;
+        public float CheckpointX;
+        public float CheckpointY;
+        public bool CheckpointFlipX;
+        public bool CheckpointFlipY;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
         public Animation FallingAnimation { get => fallingAnimation ?? defaultAnimation; set => fallingAnimation = value; }
         public Animation JumpingAnimation { get => jumpingAnimation ?? defaultAnimation; set => jumpingAnimation = value; }
         public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
+        public int DyingFrames;
         public float XVelocity;
 
         public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null) : base(x, y, texture, stand)
@@ -45,48 +50,69 @@ namespace OpGL
         public override void Process()
         {
             base.Process();
-            YVelocity += Gravity;
-            if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;
-            else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
-            if (OnGround)
+            if (DyingFrames == 0)
             {
-                changeAnimationOnGround();
+                YVelocity += Gravity;
+                if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;
+                else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
+                if (OnGround)
+                {
+                    changeAnimationOnGround();
+                }
+                else
+                {
+                    if (onPlatform != null)
+                    {
+                        onPlatform.OnTop.Remove(this);
+                        onPlatform = null;
+                    }
+
+                    changeAnimationInAir();
+                }
+                OnGround = false;
+                XVelocity += Math.Sign(InputDirection) * Acceleration;
+                if (XVelocity > MaxSpeed)
+                    XVelocity = MaxSpeed;
+                else if (XVelocity < -MaxSpeed)
+                    XVelocity = -MaxSpeed;
+                if (InputDirection == 0)
+                {
+                    int s = Math.Sign(XVelocity);
+                    XVelocity -= s * Acceleration;
+                    if (Math.Sign(XVelocity) != s)
+                        XVelocity = 0;
+                }
+                if ((flipX && XVelocity > 0) || (!flipX && XVelocity < 0))
+                {
+                    flipX = !flipX;
+                }
+                if (Gravity >= 0 == flipY) flipY = !flipY;
+                X += XVelocity;
+                Y += YVelocity;
+                if (onPlatform != null)
+                {
+                    X += onPlatform.XVel;
+                    X += onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                    Y += onPlatform.YVel;
+                }
             }
             else
             {
-                if (onPlatform != null)
+                DyingFrames -= 1;
+                if (DyingFrames == 0)
                 {
-                    onPlatform.OnTop.Remove(this);
-                    onPlatform = null;
-                }
-
-                changeAnimationInAir();
-            }
-            OnGround = false;
-            XVelocity += Math.Sign(InputDirection) * Acceleration;
-            if (XVelocity > MaxSpeed)
-                XVelocity = MaxSpeed;
-            else if (XVelocity < -MaxSpeed)
-                XVelocity = -MaxSpeed;
-            if (InputDirection == 0)
-            {
-                int s = Math.Sign(XVelocity);
-                XVelocity -= s * Acceleration;
-                if (Math.Sign(XVelocity) != s)
+                    X = CheckpointX;
+                    Y = CheckpointY;
                     XVelocity = 0;
-            }
-            if ((flipX && XVelocity > 0) || (!flipX && XVelocity < 0))
-            {
-                flipX = !flipX;
-            }
-            if (Gravity >= 0 == flipY) flipY = !flipY;
-            X += XVelocity;
-            Y += YVelocity;
-            if (onPlatform != null)
-            {
-                X += onPlatform.XVel;
-                X += onPlatform.Conveyor;
-                Y += onPlatform.YVel;
+                    YVelocity = 0;
+                    ResetAnimation();
+                    Animation = StandingAnimation;
+                    flipX = CheckpointFlipX;
+                    if (Math.Sign(Gravity) == 1 == CheckpointFlipY)
+                    {
+                        Gravity *= -1;
+                    }
+                }
             }
         }
 
@@ -121,6 +147,7 @@ namespace OpGL
         {
             Animation = DyingAnimation;
             ResetAnimation();
+            DyingFrames = 60;
         }
 
         public override void CollideY(float distance, Drawable collision)
@@ -171,6 +198,29 @@ namespace OpGL
             }
             YVelocity = -Jump * Math.Sign(Gravity);
             changeAnimationInAir();
+        }
+
+        public override CollisionData TestCollision(Drawable testFor)
+        {
+            if (DyingFrames > 0) return new CollisionData(false);
+            if (testFor.KillCrewmen && testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
+            {
+                return new CollisionData(true, true, 0, testFor);
+            }
+            return base.TestCollision(testFor);
+        }
+
+        public override void Collide(CollisionData cd)
+        {
+            if (cd.CollidedWith.KillCrewmen)
+                Die();
+            else
+                base.Collide(cd);
+        }
+
+        public override CollisionData GetCollision(List<CollisionData> data)
+        {
+            return base.GetCollision(data);
         }
     }
 }

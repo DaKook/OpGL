@@ -13,7 +13,13 @@ namespace OpGL
         {
             if (Texture.TileSolidStates.Length > 0)
             {
-                Solid = Texture.TileSolidStates[tileX, tileY];
+                int ss = (int)Texture.TileSolidStates[tileX, tileY];
+                if (ss > (int)SolidState.NonSolid)
+                {
+                    ss -= (int)SolidState.NonSolid + 1;
+                    KillCrewmen = true;
+                }
+                Solid = (SolidState)ss;
             }
             Static = true;
         }
