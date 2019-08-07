@@ -220,10 +220,10 @@ namespace OpGL
 
         public override CollisionData TestCollision(Drawable testFor)
         {
-            if (DyingFrames > 0) return new CollisionData(false);
+            if (DyingFrames > 0) return null;
             if (testFor.KillCrewmen && testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
             {
-                return new CollisionData(true, true, 0, testFor);
+                return new CollisionData(true, 0, testFor);
             }
             return base.TestCollision(testFor);
         }
@@ -236,9 +236,9 @@ namespace OpGL
                 base.Collide(cd);
         }
 
-        public override CollisionData GetCollision(List<CollisionData> data)
+        public override CollisionData GetFirstCollision(List<CollisionData> data)
         {
-            return base.GetCollision(data);
+            return base.GetFirstCollision(data);
         }
     }
 }

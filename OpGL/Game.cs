@@ -449,14 +449,12 @@ namespace OpGL
                 {
                     //Fill the list with all current collisions
                     CollisionData cd = drawable.TestCollision(d);
-                    if (cd.IsColliding)
-                    {
+                    if (cd != null)
                         collisionDatas.Add(cd);
-                    }
                 }
                 //Get a single collision to handle
-                CollisionData c = drawable.GetCollision(collisionDatas);
-                if (c.IsColliding)
+                CollisionData c = drawable.GetFirstCollision(collisionDatas);
+                if (c != null)
                 {
                     if (checks < 2)
                     {
@@ -484,9 +482,12 @@ namespace OpGL
                                 Drawable.SolidState ss = drawable.Solid;
                                 drawable.Solid = Drawable.SolidState.Ground;
                                 drawable.Static = true;
-                                c.CollidedWith.Collide(new CollisionData(true, c.Vertical, -c.Distance, drawable));
-                                float d = hCol.CollidedWith.TestCollision(drawable).Distance;
-                                hCol.CollidedWith.Collide(new CollisionData(true, c.Vertical, d, drawable));
+                                c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
+                                CollisionData d = hCol.CollidedWith.TestCollision(drawable);
+                                if (d != null)
+                                    hCol.CollidedWith.Collide(d);
+                                else
+                                    hCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
                                 drawable.Static = false;
                                 drawable.Solid = ss;
                             }
@@ -504,9 +505,12 @@ namespace OpGL
                             Drawable.SolidState ss = drawable.Solid;
                             drawable.Solid = Drawable.SolidState.Ground;
                             drawable.Static = true;
-                            c.CollidedWith.Collide(new CollisionData(true, c.Vertical, -c.Distance, drawable));
-                            float d = vCol.CollidedWith.TestCollision(drawable).Distance;
-                            vCol.CollidedWith.Collide(new CollisionData(true, c.Vertical, d, drawable));
+                            c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
+                            CollisionData d = vCol.CollidedWith.TestCollision(drawable);
+                            if (d != null)
+                                vCol.CollidedWith.Collide(d);
+                            else
+                                vCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
                             drawable.Static = false;
                             drawable.Solid = ss;
                         }
@@ -520,14 +524,12 @@ namespace OpGL
                 {
                     //Fill the list with all current collisions
                     CollisionData cd = drawable.TestCollision(d);
-                    if (cd.IsColliding)
-                    {
+                    if (cd != null)
                         collisionDatas.Add(cd);
-                    }
                 }
                 if (collisionDatas.Count > 0)
                 {
-                    CollisionData c = drawable.GetCollision(collisionDatas);
+                    CollisionData c = drawable.GetFirstCollision(collisionDatas);
                     if (c.CollidedWith.KillCrewmen)
                         drawable.Collide(c);
                 }
