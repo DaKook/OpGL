@@ -13,20 +13,23 @@ namespace OpGL
         public float XVel;
         public float YVel;
         public float Conveyor;
-        public bool Disappear;
+        public bool CanDisappear;
+        public Animation DisappearAnimation;
+        private int DisappearFrames = -1;
         /// <summary>
         /// Determines whether or not the platform pushes crewmen the opposite direction on the bottom. Set to true to disable this.
         /// </summary>
         public bool SingleDirection;
         public List<Drawable> OnTop = new List<Drawable>();
-        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false) : base(x, y, texture, animation)
+        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null) : base(x, y, texture, animation)
         {
             XSpeed = xSpeed;
             YSpeed = ySpeed;
             XVel = XSpeed;
             YVel = YSpeed;
             Conveyor = conveyor;
-            Disappear = disappear;
+            CanDisappear = disappear;
+            DisappearAnimation = disappearAnimation;
             Solid = SolidState.Ground;
         }
 
@@ -35,6 +38,15 @@ namespace OpGL
             base.Process();
             X += XVel;
             Y += YVel;
+            if (DisappearFrames > 0)
+            {
+                DisappearFrames -= 1;
+                if (DisappearFrames == 0)
+                {
+                    Visible = false;
+                    Solid = SolidState.NonSolid;
+                }
+            }
         }
 
         public override void CollideX(float distance, Drawable collision)
@@ -77,6 +89,17 @@ namespace OpGL
                 {
                     (collision as Platform).YVel *= -1;
                 }
+            }
+        }
+
+        public void Disappear()
+        {
+            if (!CanDisappear) return;
+            if (DisappearAnimation != null)
+            {
+                ResetAnimation();
+                Animation = DisappearAnimation;
+                DisappearFrames = DisappearAnimation.FrameCount;
             }
         }
     }

@@ -142,6 +142,7 @@ namespace OpGL
             sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
             sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
+            sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0, 0, 0, true, platforms.Animations[3]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
