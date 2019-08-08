@@ -56,7 +56,10 @@ namespace OpGL
                     }
                 }
                 if (lastColor != d.Color.ToArgb())
+                {
                     Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)d.Color.R / 255, (float)d.Color.G / 255, (float)d.Color.B / 255, (float)d.Color.A / 255));
+                    lastColor = d.Color.ToArgb();
+                }
 
                 Gl.UniformMatrix4f(modelLoc, 1, false, d.LocMatrix);
                 Gl.UniformMatrix4f(texLoc, 1, false, d.TexMatrix);

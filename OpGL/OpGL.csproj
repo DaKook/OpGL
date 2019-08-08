@@ -92,9 +92,12 @@
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Room.cs" />
+    <Compile Include="Script.cs" />
     <Compile Include="StringDrawable.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="Tile.cs" />
+    <Compile Include="VTextBox.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

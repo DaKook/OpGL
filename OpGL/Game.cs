@@ -38,6 +38,9 @@ namespace OpGL
         };
         private int[] inputs = new int[(int)Inputs.Count];
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
+        public Action WaitingForAction = null;
+        public bool PlayerControl = true;
+        public bool Freeze = false;
         private bool IsInputActive(Inputs input)
         {
             return inputs[(int)input] != 0;
@@ -117,6 +120,8 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
+            Texture textbox = TextureFromName("textbox");
+            Texture font = TextureFromName("font");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
@@ -161,8 +166,9 @@ namespace OpGL
                     sprites.Add(new Tile(i, j, tiles, 1, 20));
             for (int i = 168; i < 312; i += 8)
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
-            hudSprites.Add(new StringDrawable(8, 8, textures[Textures.FONT], "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
-            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, textures[Textures.FONT], "TEST", Color.White));
+            hudSprites.Add(new StringDrawable(8, 8, font, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
+            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, font, "TEST", Color.White));
+            hudSprites.Add(new VTextBox(32, 32, textbox, font, Color.Red, "Ayy what's up Captain???"));
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
@@ -385,24 +391,36 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
-                if (IsInputActive(Inputs.Right))
-                    ActivePlayer.InputDirection = 1;
-                else if (IsInputActive(Inputs.Left))
-                    ActivePlayer.InputDirection = -1;
-                else
-                    ActivePlayer.InputDirection = 0;
-
-                if (IsInputActive(Inputs.Kill))
+                if (PlayerControl)
                 {
-                    ActivePlayer.KillSelf();
+                    if (IsInputActive(Inputs.Right))
+                        ActivePlayer.InputDirection = 1;
+                    else if (IsInputActive(Inputs.Left))
+                        ActivePlayer.InputDirection = -1;
+                    else
+                        ActivePlayer.InputDirection = 0;
+
+                    if (IsInputActive(Inputs.Kill))
+                    {
+                        ActivePlayer.KillSelf();
+                    }
                 }
 
                 if (IsInputActive(Inputs.Jump))
                 {
                     if (!holdingJump)
                     {
-                        ActivePlayer.FlipOrJump();
-                        holdingJump = true;
+                        if (WaitingForAction != null)
+                        {
+                            Action exec = WaitingForAction;
+                            WaitingForAction = null;
+                            exec();
+                        }
+                        else if (PlayerControl)
+                        {
+                            ActivePlayer.FlipOrJump();
+                            holdingJump = true;
+                        }
                     }
                 }
                 else if (holdingJump)
@@ -410,23 +428,30 @@ namespace OpGL
                     holdingJump = false;
                 }
 
-                for (int i = 0; i < sprites.Count; i++)
+                if (!Freeze)
                 {
-                    if (!sprites[i].Static)
-                        sprites[i].Process();
-                }
-
-                sprites.SortForCollisions();
-                //IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
-                IEnumerable<Drawable> process = sprites;
-                foreach (Drawable drawable in process)
-                {
-                    if (!drawable.Static && !drawable.Immovable)
+                    for (int i = 0; i < sprites.Count; i++)
                     {
-                        PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable));
+                        if (!sprites[i].Static)
+                            sprites[i].Process();
+                    }
+
+                    sprites.SortForCollisions();
+                    //IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
+                    IEnumerable<Drawable> process = sprites;
+                    foreach (Drawable drawable in process)
+                    {
+                        if (!drawable.Static && !drawable.Immovable)
+                        {
+                            PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable));
+                        }
                     }
                 }
 
+                foreach (Drawable d in hudSprites)
+                {
+                    d.Process();
+                }
                 glControl.Invalidate();
 
 #if TEST

@@ -13,6 +13,11 @@ namespace OpGL
     {
         private int visibleCharacters = 0;
 
+        private int w;
+        private int h;
+        public int GetWidth() => w;
+        public int GetHeight() => h;
+
         private string _Text;
         public string Text
         {
@@ -30,6 +35,7 @@ namespace OpGL
                     {
                         curX = 0;
                         curY += Texture.TileSize;
+                        if (curY + Texture.TileSize > h) h = (int)curY + Texture.TileSize;
                     }
                     else if (c != '\r')
                     {
@@ -40,6 +46,7 @@ namespace OpGL
                         bufferData[index++] = x;
                         bufferData[index++] = y;
                         curX += Texture.TileSize;
+                        if (curX + Texture.TileSize > w) w = (int)curX + Texture.TileSize;
                     }
                 }
                 visibleCharacters = index / 4;
@@ -85,7 +92,7 @@ namespace OpGL
         // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
         internal override void UnsafeDraw()
         {
-            if (updateBuffer)
+            //if (updateBuffer)
                 UpdateBuffer();
 
             Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
