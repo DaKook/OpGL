@@ -11,15 +11,15 @@ namespace OpGL
 {
     public class StringDrawable : Drawable
     {
-        private int visibleCharacters = 0;
+        protected int visibleCharacters = 0;
 
-        private int w;
-        private int h;
-        public int GetWidth() => w;
-        public int GetHeight() => h;
+        protected int w;
+        protected int h;
+        public virtual int GetWidth() => w;
+        public virtual int GetHeight() => h;
 
-        private string _Text;
-        public string Text
+        protected string _Text;
+        public virtual string Text
         {
             get => _Text;
             set
@@ -28,14 +28,15 @@ namespace OpGL
                 bufferData = new float[_Text.Length * 4];
                 float curX = 0, curY = 0;
                 int index = 0;
+                h = Texture.TileSize;
                 for (int i = 0; i < _Text.Length; i++)
                 {
                     int c = _Text[i];
                     if (c == '\n')
                     {
                         curX = 0;
-                        curY += Texture.TileSize;
                         if (curY + Texture.TileSize > h) h = (int)curY + Texture.TileSize;
+                        curY += Texture.TileSize;
                     }
                     else if (c != '\r')
                     {
@@ -45,8 +46,8 @@ namespace OpGL
                         bufferData[index++] = curY;
                         bufferData[index++] = x;
                         bufferData[index++] = y;
-                        curX += Texture.TileSize;
                         if (curX + Texture.TileSize > w) w = (int)curX + Texture.TileSize;
+                        curX += Texture.TileSize;
                     }
                 }
                 visibleCharacters = index / 4;
@@ -54,10 +55,10 @@ namespace OpGL
             }
         }
 
-        private float[] bufferData;
-        private uint ibo;
-        private bool updateBuffer = true;
-        private bool firstRender = true;
+        protected float[] bufferData;
+        protected uint ibo;
+        protected bool updateBuffer = true;
+        protected bool firstRender = true;
 
         internal override uint VAO { get; set; }
 
@@ -98,7 +99,7 @@ namespace OpGL
             Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
         }
 
-        private void UpdateBuffer()
+        protected void UpdateBuffer()
         {
             if (firstRender)
             {

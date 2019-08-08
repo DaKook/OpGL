@@ -37,10 +37,12 @@ namespace OpGL
         }
         public float X { get; set; }
         public float Y { get; set; }
+        public float Right { get => X + Width; set => X = value - Width; }
+        public float Bottom { get => Y + Height; set => Y = value - Height; }
         public float PreviousX { get; protected set; }
         public float PreviousY { get; protected set; }
-        public float Width { get => Animation.Hitbox.Width; }
-        public float Height { get => Animation.Hitbox.Height; }
+        public virtual float Width { get => Animation.Hitbox.Width; }
+        public virtual float Height { get => Animation.Hitbox.Height; }
 
         public virtual bool IsCrewman { get => false; }
 

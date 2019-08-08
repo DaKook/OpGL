@@ -7,6 +7,7 @@ using System.Collections;
 using Point = System.Drawing.Point;
 
 using OpenGL;
+using System.Drawing;
 
 namespace OpGL
 {
@@ -15,6 +16,7 @@ namespace OpGL
         // A smaller group size results in more tiles to check; a larger group size results in more drawables per tile.
         // I expect that group size equal to the smallest tile size is ideal, but I have not done any tests.
         const int GROUP_SIZE = 8;
+        public Color Color = Color.White;
         SortedList<Point, List<Drawable>> perTile;
         static Comparer<Point> pointComparer = Comparer<Point>.Create(TileCompare);
 
@@ -30,6 +32,7 @@ namespace OpGL
             int modelLoc = -1;
             int texLoc = -1;
             int colorLoc = -1;
+            int masterColorLoc = -1;
 
             Texture lastTex = null;
             uint lastProgram = uint.MaxValue;
@@ -52,7 +55,9 @@ namespace OpGL
                         modelLoc = Gl.GetUniformLocation(lastProgram, "model");
                         texLoc = Gl.GetUniformLocation(lastProgram, "texMatrix");
                         colorLoc = Gl.GetUniformLocation(lastProgram, "color");
+                        masterColorLoc = Gl.GetUniformLocation(lastProgram, "masterColor");
                         Gl.UseProgram(lastProgram);
+                        Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
                     }
                 }
                 if (lastColor != d.Color.ToArgb())

@@ -76,6 +76,7 @@
     <Compile Include="Animation.cs" />
     <Compile Include="Checkpoint.cs" />
     <Compile Include="CollisionData.cs" />
+    <Compile Include="Command.cs" />
     <Compile Include="Crewman.cs" />
     <Compile Include="Drawable.cs" />
     <Compile Include="DrawableCollection.cs" />

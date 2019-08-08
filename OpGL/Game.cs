@@ -120,7 +120,6 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
-            Texture textbox = TextureFromName("textbox");
             Texture font = TextureFromName("font");
             ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
             //ActivePlayer.CanFlip = false;
@@ -168,7 +167,6 @@ namespace OpGL
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(new StringDrawable(8, 8, font, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, font, "TEST", Color.White));
-            hudSprites.Add(new VTextBox(32, 32, textbox, font, Color.Red, "Ayy what's up Captain???"));
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
@@ -613,5 +611,24 @@ namespace OpGL
 #endif
         }
 
+        public Command ParseScript(string script)
+        {
+            string[] lines = script.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            Action actions = () => { };
+            int i = 0;
+            while (i < lines.Length)
+            {
+                string[] args = lines[i].Split(new char[] { ',', '(', ')' });
+                switch (args[0])
+                {
+                    case "say":
+                        
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return new Command(actions);
+        }
     }
 }
