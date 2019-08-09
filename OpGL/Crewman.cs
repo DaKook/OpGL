@@ -239,37 +239,17 @@ namespace OpGL
         public override CollisionData TestCollision(Drawable testFor)
         {
             if (DyingFrames > 0) return null;
+
+            // Crewmen can collide with entities; normal Drawables cannot
             if (testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
             {
-                if (testFor.KillCrewmen) return new CollisionData(true, 0, testFor);
+                if (testFor.KillCrewmen)
+                    return new CollisionData(true, 0, testFor);
                 else
-                {
-                    if (PreviousY + Height <= testFor.PreviousY)
-                    {
-                        return new CollisionData(true, Y + Height - testFor.Y, testFor);
-
-                    }
-                    // collide with bottom
-                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
-                    {
-                        return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
-                    }
-                    else
-                    {
-                        // collide with left side
-                        if (PreviousX + Width <= testFor.PreviousX)
-                        {
-                            return new CollisionData(false, X + Width - testFor.X, testFor);
-                        }
-                        // collide with right side
-                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
-                        {
-                            return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
-                        }
-                    }
-                }
+                    return GetCollisionData(testFor);
             }
-            return base.TestCollision(testFor);
+            else
+                return base.TestCollision(testFor);
         }
 
         public override void Collide(CollisionData cd)

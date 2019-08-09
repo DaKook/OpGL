@@ -143,10 +143,8 @@ namespace OpGL
 
         public bool Within(float x, float y, float width, float height)
         {
-            //     this.right > o.left                  this.left < o.right
-            return X + Width > x && X < x + width
-                // this.bottom > o.top                   this.top < o.bottom
-                && Y + Height > y && Y < y + height;
+            return Right > x && X < x + width
+                && Bottom > y && Y < y + height;
         }
         public bool IsOverlapping(Drawable other)
         {
@@ -230,44 +228,34 @@ namespace OpGL
 
         public virtual CollisionData TestCollision(Drawable testFor)
         {
-            //This method can be condensed
-
             // do not collide with self
             if (testFor == this) return null;
 
-            if (IsOverlapping(testFor))
+            CollisionData ret = null;
+            if ((Solid == SolidState.Entity || Solid == SolidState.Ground) && testFor.Solid == SolidState.Ground)
             {
-                // entity colliding with ground
-                if (((Solid == SolidState.Entity || (Solid == SolidState.Ground && testFor.Static)) && testFor.Solid == SolidState.Ground) || (Solid == SolidState.Ground && testFor.Solid == SolidState.Ground))
-                {
-                    // check for vertical collision, if none then horizontal collision
-                    // collide with top
-                    if (PreviousY + Height <= testFor.PreviousY)
-                    {
-                        return new CollisionData(true, Y + Height - testFor.Y, testFor);
-
-                    }
-                    // collide with bottom
-                    else if (PreviousY >= testFor.PreviousY + testFor.Height)
-                    {
-                        return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
-                    }
-                    else
-                    {
-                        // collide with left side
-                        if (PreviousX + Width <= testFor.PreviousX)
-                        {
-                            return new CollisionData(false, X + Width - testFor.X, testFor);
-                        }
-                        // collide with right side
-                        else if (PreviousX >= testFor.PreviousX + testFor.Width)
-                        {
-                            return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
-                        }
-                    }
-                }
+                if (IsOverlapping(testFor))
+                    ret = GetCollisionData(testFor);
             }
-            return null;
+            return ret;
+        }
+        protected CollisionData GetCollisionData(Drawable testFor)
+        {
+            // check for vertical collision first
+            // top
+            if (PreviousY + Height <= testFor.PreviousY)
+                return new CollisionData(true, Y + Height - testFor.Y, testFor);
+            // bottom
+            else if (PreviousY >= testFor.PreviousY + testFor.Height)
+                return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
+            // right
+            else if (PreviousX + Width <= testFor.PreviousX)
+                return new CollisionData(false, X + Width - testFor.X, testFor);
+            // left
+            else if (PreviousX >= testFor.PreviousX + testFor.Width)
+                return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
+            else
+                return null;
         }
 
         /// <summary>
