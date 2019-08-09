@@ -209,20 +209,10 @@ namespace OpGL
 
         public virtual void CollideY(float distance, Drawable collision)
         {
-            if (Static)
-            {
-                collision.Y += distance;
-                return;
-            }
             Y -= distance;
         }
         public virtual void CollideX(float distance, Drawable collision)
         {
-            if (Static)
-            {
-                collision.X += distance;
-                return;
-            }
             X -= distance;
         }
 
