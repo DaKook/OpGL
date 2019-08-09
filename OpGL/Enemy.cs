@@ -11,6 +11,7 @@ namespace OpGL
     {
         public float XVel;
         public float YVel;
+        public bool Pushable = true;
         public Enemy(float x, float y, Texture texture, Animation animation, float xSpeed, float ySpeed, Color? color = null) : base(x, y, texture, animation)
         {
             XVel = xSpeed;
@@ -29,7 +30,7 @@ namespace OpGL
 
         public override void CollideX(float distance, Drawable collision)
         {
-            if (XVel != 0)
+            if (XVel != 0 || Pushable)
             {
                 base.CollideX(distance, collision);
                 XVel *= -1;
@@ -46,7 +47,7 @@ namespace OpGL
 
         public override void CollideY(float distance, Drawable collision)
         {
-            if (YVel != 0)
+            if (YVel != 0 || Pushable)
             {
                 base.CollideY(distance, collision);
                 YVel *= -1;

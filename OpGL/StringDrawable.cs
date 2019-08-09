@@ -18,6 +18,9 @@ namespace OpGL
         public virtual int GetWidth() => w;
         public virtual int GetHeight() => h;
 
+        public override float Width => w;
+        public override float Height => h;
+
         protected string _Text;
         public virtual string Text
         {

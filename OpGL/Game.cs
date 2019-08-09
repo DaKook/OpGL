@@ -16,16 +16,19 @@ namespace OpGL
 {
     public class Game
     {
+        public Texture FontTexture;
+
         public List<Drawable> UserAccessDrawables = new List<Drawable>();
-        public Drawable GetDrawableByName(string name)
+        public Drawable GetDrawableByName(string name, bool caseSensitive = false)
         {
             foreach (Drawable drawable in UserAccessDrawables)
             {
-                if (drawable.Name == name)
+                if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
                     return drawable;
             }
             return null;
         }
+        public int DelayFrames;
         public enum Inputs
         {
             Left,
@@ -50,6 +53,7 @@ namespace OpGL
         public Action WaitingForAction = null;
         public bool PlayerControl = true;
         public bool Freeze = false;
+        public Script CurrentScript;
         private bool IsInputActive(Inputs input)
         {
             return inputs[(int)input] != 0;
@@ -59,7 +63,7 @@ namespace OpGL
         {
             foreach (Texture texture in textures)
             {
-                if (texture.Name == name) return texture;
+                if (texture.Name.ToLower() == name.ToLower()) return texture;
             }
             return null;
         }
@@ -129,11 +133,13 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
-            Texture font = TextureFromName("font");
-            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
+            FontTexture = TextureFromName("font");
+            ActivePlayer = new Player(20, 20, viridian, "Player", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
+            UserAccessDrawables.Add(ActivePlayer);
+            ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
 
             for (int i = 8; i < 160; i += 8)
                 sprites.Add(new Tile(i, 160, tiles, 4, 4));
@@ -162,7 +168,7 @@ namespace OpGL
             sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
             sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
             sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations[0], sprites32.Animations[1], false, true));
-            sprites.Add(new Enemy(96, 80, sprites32, sprites32.Animations[2], 1, 1, Color.Red));
+            sprites.Add(new Enemy(64, 80, sprites32, sprites32.Animations[2], 0, 1, Color.Red));
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
@@ -174,21 +180,37 @@ namespace OpGL
                     sprites.Add(new Tile(i, j, tiles, 1, 20));
             for (int i = 168; i < 312; i += 8)
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
-            hudSprites.Add(new StringDrawable(8, 8, font, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
-            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, font, "TEST", Color.White));
-            VTextBox vText = new VTextBox(40, 40, font, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
+            hudSprites.Add(new StringDrawable(8, 8, FontTexture, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
+            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
+            VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
             hudSprites.Add(vText);
+            Script testScript = ParseScript("playercontrol,false" + Environment.NewLine +
+                "say,1,player" + Environment.NewLine +
+                "This is Captain Viridian." + Environment.NewLine +
+                "say,1,255,255,134" + Environment.NewLine +
+                "What do you see?" + Environment.NewLine +
+                "say,1,player" + Environment.NewLine +
+                "It looks like a playground..." + Environment.NewLine +
+                "say,1,255,255,134" + Environment.NewLine +
+                "Be careful, Captain!" + Environment.NewLine +
+                "changefont,evilfont" + Environment.NewLine +
+                "say,2,180,0,0" + Environment.NewLine +
+                "Hahaha, it is too late; you" + Environment.NewLine +
+                "have already fallen into my trap!" + Environment.NewLine +
+                "changefont,font" + Environment.NewLine +
+                "delay,120" + Environment.NewLine +
+                "say,1,player" + Environment.NewLine +
+                "Professor, did you hear that?" + Environment.NewLine +
+                "say,1,255,255,134" + Environment.NewLine +
+                "Hear what?" + Environment.NewLine +
+                "say,2,player" + Environment.NewLine +
+                "Maybe it was nothing... I have" + Environment.NewLine +
+                "a bad feeling about this..." + Environment.NewLine +
+                "playercontrol,true");
             WaitingForAction = () =>
             {
-                vText.Bottom = ActivePlayer.Y - 2;
-                vText.X = ActivePlayer.X - 16;
-                PlayerControl = false;
-                vText.Appear();
-                WaitingForAction = () =>
-                {
-                    vText.Disappear();
-                    PlayerControl = true;
-                };
+                testScript.ExecuteFromBeginning();
+                CurrentScript = testScript;
             };
             
 
@@ -471,6 +493,13 @@ namespace OpGL
                     }
                 }
 
+                if (DelayFrames > 0)
+                {
+                    DelayFrames -= 1;
+                    if (DelayFrames == 0)
+                        CurrentScript.Continue();
+                }
+
                 foreach (Drawable d in hudSprites)
                 {
                     d.Process();
@@ -542,10 +571,13 @@ namespace OpGL
                                 drawable.Static = true;
                                 c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
                                 CollisionData d = hCol.CollidedWith.TestCollision(drawable);
-                                if (d != null)
-                                    hCol.CollidedWith.Collide(d);
-                                else
-                                    hCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+                                if (hCol.CollidedWith != c.CollidedWith)
+                                {
+                                    if (d != null)
+                                        hCol.CollidedWith.Collide(d);
+                                    else
+                                        hCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+                                }
                                 drawable.Static = false;
                                 drawable.Solid = ss;
                             }
@@ -565,10 +597,13 @@ namespace OpGL
                             drawable.Static = true;
                             c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
                             CollisionData d = vCol.CollidedWith.TestCollision(drawable);
-                            if (d != null)
-                                vCol.CollidedWith.Collide(d);
-                            else
-                                vCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+                            if (vCol.CollidedWith != c.CollidedWith)
+                            {
+                                if (d != null)
+                                    vCol.CollidedWith.Collide(d);
+                                else
+                                    vCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+                            }
                             drawable.Static = false;
                             drawable.Solid = ss;
                         }
@@ -647,16 +682,21 @@ namespace OpGL
                 switch (args[0].ToLower())
                 {
                     case "say":
-                        if (!int.TryParse(args.ElementAtOrDefault(1), out int sayLines)) continue;
-                        Color sayTextBoxColor = Color.Gray;
-                        Crewman sayCrewman = GetDrawableByName(args.ElementAtOrDefault(2)) as Crewman;
-                        if (sayCrewman != null)
                         {
-                            sayTextBoxColor = sayCrewman.TextBoxColor;
-                        }
-                        commands.Add(new Command(() =>
-                        {
-                            PlayerControl = false;
+                            if (!int.TryParse(args.ElementAtOrDefault(1), out int sayLines)) continue;
+                            Color sayTextBoxColor = Color.Gray;
+                            Crewman sayCrewman = GetDrawableByName(args.ElementAtOrDefault(2)) as Crewman;
+                            if (sayCrewman != null)
+                            {
+                                sayTextBoxColor = sayCrewman.TextBoxColor;
+                            }
+                            else if (args.Length == 5)
+                            {
+                                int.TryParse(args[2], out int r);
+                                int.TryParse(args[3], out int g);
+                                int.TryParse(args[4], out int b);
+                                sayTextBoxColor = Color.FromArgb(r, g, b);
+                            }
                             string sayText = "";
                             if (sayLines > 0)
                             {
@@ -666,13 +706,78 @@ namespace OpGL
                                     sayText += Environment.NewLine + lines[i++];
                                 }
                             }
-                        }, true));
+                            commands.Add(new Command(() =>
+                            {
+                                VTextBox sayTextBox = new VTextBox(0, 0, FontTexture, sayText, sayTextBoxColor);
+                                if (sayCrewman != null)
+                                {
+                                    sayTextBox.Bottom = sayCrewman.Y - 2;
+                                    sayTextBox.X = sayCrewman.X - 16;
+                                    if (sayTextBox.Right > RESOLUTION_WIDTH - 8) sayTextBox.Right = RESOLUTION_WIDTH - 8;
+                                    if (sayTextBox.Bottom > RESOLUTION_HEIGHT - 8) sayTextBox.Bottom = RESOLUTION_HEIGHT - 8;
+                                    if (sayTextBox.X < 8) sayTextBox.X = 8;
+                                    if (sayTextBox.Y < 8) sayTextBox.Y = 8;
+                                }
+                                else
+                                {
+                                    sayTextBox.CenterX = RESOLUTION_WIDTH / 2;
+                                    sayTextBox.CenterY = RESOLUTION_HEIGHT / 2;
+                                }
+                                hudSprites.Add(sayTextBox);
+                                sayTextBox.Appear();
+                                WaitingForAction = () =>
+                                {
+                                    sayTextBox.Disappear();
+                                    sayTextBox.Disappeared += () => hudSprites.Remove(sayTextBox);
+                                    CurrentScript.Continue();
+                                };
+                            }, true));
+                        }
+                        break;
+                    case "changefont":
+                        commands.Add(ChangeFontCommand(args));
+                        break;
+                    case "delay":
+                        commands.Add(WaitCommand(args));
+                        break;
+                    case "playercontrol":
+                        commands.Add(PlayerControlCommand(args));
                         break;
                     default:
                         break;
                 }
             }
             return new Script(commands.ToArray());
+        }
+
+        public Command ChangeFontCommand(string[] args)
+        {
+            string fontTexture = args.ElementAtOrDefault(1);
+            Texture newFont = TextureFromName(fontTexture);
+            Action success = () => { };
+            if (newFont != null && newFont.Width / newFont.TileSize == 16 && newFont.Height / newFont.TileSize == 16)
+            {
+                success = () => {
+                    FontTexture = newFont;
+                };
+            }
+            return new Command(success, false);
+        }
+        public Command WaitCommand(string[] args)
+        {
+            int.TryParse(args.ElementAtOrDefault(1), out int frames);
+            return new Command(() =>
+            {
+                DelayFrames = frames;
+            }, true);
+        }
+        public Command PlayerControlCommand(string[] args)
+        {
+            bool.TryParse(args.ElementAtOrDefault(1), out bool pc);
+            return new Command(() =>
+            {
+                PlayerControl = pc;
+            });
         }
     }
 }

@@ -24,7 +24,9 @@ namespace OpGL
 
         public bool Continue()
         {
-            while (currentLocation < Commands.Length && !Commands[currentLocation - 1].Wait)
+            if (currentLocation < Commands.Length)
+                Commands[currentLocation++].Execute();
+            while (currentLocation < Commands.Length && (currentLocation == 0 || !Commands[currentLocation - 1].Wait))
             {
                 Commands[currentLocation++].Execute();
             }

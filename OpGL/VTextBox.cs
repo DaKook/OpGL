@@ -16,6 +16,9 @@ namespace OpGL
         public override float Width => width;
         public override float Height => height;
 
+        public delegate void DisappearedDelegate();
+        public event DisappearedDelegate Disappeared;
+
         public override string Text
         {
             get => _Text;
@@ -89,12 +92,12 @@ namespace OpGL
             Color = Color.FromArgb(0, Color);
         }
 
-        public void Appear(int speed = 50)
+        public void Appear(int speed = 51)
         {
             appearSpeed = speed;
         }
 
-        public void Disappear(int speed = 50)
+        public void Disappear(int speed = 51)
         {
             appearSpeed = -speed;
         }
@@ -110,6 +113,7 @@ namespace OpGL
             {
                 Color = Color.FromArgb((int)Math.Max(Color.A + appearSpeed, 0), Color.R, Color.G, Color.B);
                 if (Color.A == 0) Visible = false;
+
             }
         }
     }
