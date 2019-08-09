@@ -183,6 +183,8 @@ namespace OpGL
                 //Check if landing on a platform
                 if (collision as Platform != null && onPlatform != collision)
                 {
+                    if (onPlatform != null)
+                        onPlatform.OnTop.Remove(this);
                     onPlatform = collision as Platform;
                     onPlatform.OnTop.Add(this);
                     onPlatform.Disappear();
