@@ -218,8 +218,7 @@ namespace OpGL
 
         public virtual CollisionData TestCollision(Drawable testFor)
         {
-            // do not collide with self
-            if (testFor == this) return null;
+            if (testFor == this || Immovable) return null;
 
             CollisionData ret = null;
             if ((Solid == SolidState.Entity || Solid == SolidState.Ground) && testFor.Solid == SolidState.Ground)

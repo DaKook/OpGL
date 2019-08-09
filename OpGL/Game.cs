@@ -486,11 +486,11 @@ namespace OpGL
                     }
 
                     sprites.SortForCollisions();
-                    Drawable[] process = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
-                    PointF[] endLocation = new PointF[process.Length];
-                    for (int i = 0; i < process.Length; i++)
+                    Drawable[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+                    PointF[] endLocation = new PointF[checkCollisions.Length];
+                    for (int i = 0; i < checkCollisions.Length; i++)
                     {
-                        Drawable drawable = process[i];
+                        Drawable drawable = checkCollisions[i];
                         PerformCollisionChecks(drawable);
                         endLocation[i] = new PointF(drawable.X, drawable.Y);
                     }
@@ -499,9 +499,9 @@ namespace OpGL
                     do
                     {
                         collisionPerformed = false;
-                        for (int i = 0; i < process.Length; i++)
+                        for (int i = 0; i < checkCollisions.Length; i++)
                         {
-                            Drawable drawable = process[i];
+                            Drawable drawable = checkCollisions[i];
                             if (endLocation[i] != new PointF(drawable.X, drawable.Y))
                             {
                                 collisionPerformed = true;

@@ -51,14 +51,5 @@ namespace OpGL
             ResetAnimation();
             Animation = ActivatedAnimation;
         }
-
-        public override void CollideY(float distance, Drawable collision)
-        {
-            
-        }
-        public override void CollideX(float distance, Drawable collision)
-        {
-            
-        }
     }
 }
