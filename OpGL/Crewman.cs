@@ -238,7 +238,7 @@ namespace OpGL
 
         public override CollisionData TestCollision(Drawable testFor)
         {
-            if (DyingFrames > 0) return null;
+            if (testFor == this || DyingFrames > 0) return null;
 
             // Crewmen can collide with entities; normal Drawables cannot
             if (testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
