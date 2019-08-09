@@ -279,13 +279,10 @@ namespace OpGL
             if (collisions.Count == 0)
                 return null;
 
-            CollisionData ret = null;
-            for (int i = 0; i < collisions.Count; i++)
+            CollisionData ret = collisions[0];
+            for (int i = 1; i < collisions.Count; i++)
             {
                 CollisionData dt = collisions[i];
-                if (dt.CollidedWith.Solid == SolidState.Entity)
-                    continue;
-                if (ret == null && dt.CollidedWith.Solid == SolidState.Ground) ret = dt;
                 if (!dt.Vertical)
                 {
                     if (ret.Vertical || Math.Abs(dt.Distance) > Math.Abs(ret.Distance))

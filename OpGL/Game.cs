@@ -164,6 +164,10 @@ namespace OpGL
             //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(232, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(232, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(200, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(200, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
             sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
@@ -207,11 +211,11 @@ namespace OpGL
                 "Maybe it was nothing... I have" + Environment.NewLine +
                 "a bad feeling about this..." + Environment.NewLine +
                 "playercontrol,true");
-            WaitingForAction = () =>
-            {
-                testScript.ExecuteFromBeginning();
-                CurrentScript = testScript;
-            };
+            //WaitingForAction = () =>
+            //{
+            //    testScript.ExecuteFromBeginning();
+            //    CurrentScript = testScript;
+            //};
             
 
 #endif
@@ -482,15 +486,30 @@ namespace OpGL
                     }
 
                     sprites.SortForCollisions();
-                    //IEnumerable<Drawable> process = sprites.Where((d) => d.Solid < Drawable.SolidState.NonSolid && (d.AlwaysProcess || d.Within(cameraX, cameraY, RESOLUTION_WIDTH, RESOLUTION_HEIGHT)));
-                    IEnumerable<Drawable> process = sprites;
-                    foreach (Drawable drawable in process)
+                    Drawable[] process = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+                    PointF[] endLocation = new PointF[process.Length];
+                    for (int i = 0; i < process.Length; i++)
                     {
-                        if (!drawable.Static && !drawable.Immovable)
-                        {
-                            PerformCollisionChecks(drawable, sprites.GetPotentialColliders(drawable));
-                        }
+                        Drawable drawable = process[i];
+                        PerformCollisionChecks(drawable);
+                        endLocation[i] = new PointF(drawable.X, drawable.Y);
                     }
+                    // check again any that have moved since completing their collisions
+                    bool collisionPerformed;
+                    do
+                    {
+                        collisionPerformed = false;
+                        for (int i = 0; i < process.Length; i++)
+                        {
+                            Drawable drawable = process[i];
+                            if (endLocation[i] != new PointF(drawable.X, drawable.Y))
+                            {
+                                collisionPerformed = true;
+                                PerformCollisionChecks(drawable);
+                                endLocation[i] = new PointF(drawable.X, drawable.Y);
+                            }
+                        }
+                    } while (collisionPerformed);
                 }
 
                 if (DelayFrames > 0)
@@ -516,118 +535,78 @@ namespace OpGL
             }
         }
 
-        private void PerformCollisionChecks(Drawable drawable, IEnumerable<Drawable> testFor)
+        private void PerformCollisionChecks(Drawable drawable)
         {
-            //In order to check if the collision tests are finished
-            bool checkedAll;
-            //To store all drawables being collided with at any given moment
-            List<CollisionData> collisionDatas = new List<CollisionData>();
-            //0 means no checks were made yet. 1 means horizontal collisions have been detected, but vertical collisions have not yet been checked.
-            //2 means that vertical collisions have been handled.
-            int checks = 0;
-            //The first vertical collision
-            CollisionData vCol = null;
-            //The first horizontal collision
-            CollisionData hCol = null;
-            do
+            List<CollisionData> groundCollisions = new List<CollisionData>();
+            List<CollisionData> entityCollisions = new List<CollisionData>();
+            // previously collided but not yet bounced platforms
+            CollisionData hPlatform = null;
+            CollisionData vPlatform = null;
+            while (true) // loop exits when there are no more collisions to handle
             {
-                checkedAll = true;
+                // get a collision
+                List<Drawable> testFor = sprites.GetPotentialColliders(drawable);
+                List<CollisionData> collisionDatas = new List<CollisionData>();
                 foreach (Drawable d in testFor)
                 {
-                    //Fill the list with all current collisions
                     CollisionData cd = drawable.TestCollision(d);
-                    if (cd != null)
+                    if (cd != null && !entityCollisions.Any((a) => a.CollidedWith == cd.CollidedWith))
                         collisionDatas.Add(cd);
                 }
-                //Get a single collision to handle
                 CollisionData c = drawable.GetFirstCollision(collisionDatas);
-                if (c != null && c.CollidedWith.Solid == Drawable.SolidState.Ground)
+
+                // exit condition: there is nothing to collide with
+                if (c == null) break;
+
+                // colliding with ground must be handled in a way that allows bouncing platforms
+                if (c.CollidedWith.Solid == Drawable.SolidState.Ground)
                 {
-                    if (checks < 2)
+                    groundCollisions.Add(c);
+                    CollisionData platformCollision = c.Vertical ? vPlatform : hPlatform;
+                    if (c.CollidedWith is Platform)
                     {
-                        drawable.Collide(c);
-                        if (c.Vertical)
-                            vCol = c;
-                        else
-                            hCol = c;
-                        if (checks < 1)
+                        // if a previous collision means it should be bounced
+                        if (groundCollisions.Any((a) => a.CollidedWith.Solid == Drawable.SolidState.Ground && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
                         {
-                            if (c.Vertical)
-                                checks = 2;
-                            else
-                                checks = 1;
-                        }
-                        else
-                        {
-                            if (c.Vertical)
-                            {
-                                checks = 2;
-                            }
-                            else
-                            {
-                                //drawable is between two horizontal collisions. "Bump" both drawables that drawable is between.
-                                Drawable.SolidState ss = drawable.Solid;
-                                drawable.Solid = Drawable.SolidState.Ground;
-                                drawable.Static = true;
-                                c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
-                                CollisionData d = hCol.CollidedWith.TestCollision(drawable);
-                                if (hCol.CollidedWith != c.CollidedWith)
-                                {
-                                    if (d != null)
-                                        hCol.CollidedWith.Collide(d);
-                                    else
-                                        hCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
-                                }
-                                drawable.Static = false;
-                                drawable.Solid = ss;
-                            }
-                        }
-                        //Need to check for more collisions
-                        checkedAll = false;
-                        testFor = sprites.GetPotentialColliders(drawable);
-                        collisionDatas.Clear();
-                    }
-                    else
-                    {
-                        if (c.Vertical)
-                        {
-                            //drawable is between two vertical collisions. "Bump" both drawables that drawable is between.
-                            Drawable.SolidState ss = drawable.Solid;
-                            drawable.Solid = Drawable.SolidState.Ground;
-                            drawable.Static = true;
                             c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
-                            CollisionData d = vCol.CollidedWith.TestCollision(drawable);
-                            if (vCol.CollidedWith != c.CollidedWith)
-                            {
-                                if (d != null)
-                                    vCol.CollidedWith.Collide(d);
-                                else
-                                    vCol.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
-                            }
-                            drawable.Static = false;
-                            drawable.Solid = ss;
+                            if (drawable is Platform) // undo duplicate direction flipping
+                                c.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+                        }
+                        else
+                        {
+                            if (c.Vertical)
+                                vPlatform = c;
+                            else
+                                hPlatform = c;
                         }
                     }
-                }
-            } while (!checkedAll);
-            if (drawable.IsCrewman)
-            {
-                testFor = sprites.GetPotentialColliders(drawable);
-                collisionDatas.Clear();
-                foreach (Drawable d in testFor)
-                {
-                    //Fill the list with all current collisions
-                    CollisionData cd = drawable.TestCollision(d);
-                    if (cd != null)
-                        collisionDatas.Add(cd);
-                }
-                if (collisionDatas.Count > 0)
-                {
-                    foreach (CollisionData c in collisionDatas)
+                    // collide here because (1) after distance is potentially set to 0 because platform has bounced away
+                    // (2) collision should happen before getting distance for bouncing a previously-collided platform or that will be 0
+                    drawable.Collide(c);
+                    // entity has previously collided with a platform, and this collision means it should be bounced
+                    if (platformCollision != null && Math.Sign(platformCollision.Distance) != Math.Sign(c.Distance))
                     {
-                        if (c != null && c.CollidedWith.Solid == Drawable.SolidState.Entity)
-                        drawable.Collide(c);
+                        CollisionData pcd = drawable.TestCollision(platformCollision.CollidedWith);
+                        float dist = pcd == null ? 0 : -pcd.Distance;
+                        // during this reverse collision, don't move the entity (it may on top of the platform)
+                        drawable.Static = true;
+                        platformCollision.CollidedWith.Collide(new CollisionData(c.Vertical, dist, drawable));
+                        drawable.Static = false;
+                        if (drawable is Platform) // undo duplicate direction flipping
+                            c.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
+
+                        if (c.Vertical)
+                            vPlatform = null;
+                        else
+                            hPlatform = null;
                     }
+                }
+                // otherwise, a simple collision should suffice
+                // however only Crewmen can collide with entities
+                else if (drawable.IsCrewman)
+                {
+                    entityCollisions.Add(c);
+                    drawable.Collide(c);
                 }
             }
         }
