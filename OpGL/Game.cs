@@ -164,8 +164,8 @@ namespace OpGL
             //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(232, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
-            sprites.Add(new Platform(232, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(262, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(262, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
             sprites.Add(new Platform(200, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
             sprites.Add(new Platform(200, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
@@ -558,8 +558,8 @@ namespace OpGL
                 // exit condition: there is nothing to collide with
                 if (c == null) break;
 
-                // colliding with ground must be handled in a way that allows bouncing platforms
-                if (c.CollidedWith.Solid == Drawable.SolidState.Ground)
+                // entity colliding with ground must be handled in a way that allows bouncing platforms
+                if (drawable.Solid == Drawable.SolidState.Entity && c.CollidedWith.Solid == Drawable.SolidState.Ground)
                 {
                     groundCollisions.Add(c);
                     CollisionData platformCollision = c.Vertical ? vPlatform : hPlatform;
@@ -602,11 +602,18 @@ namespace OpGL
                     }
                 }
                 // otherwise, a simple collision should suffice
-                // however only Crewmen can collide with entities
-                else if (drawable.IsCrewman)
+                else
                 {
-                    entityCollisions.Add(c);
-                    drawable.Collide(c);
+                    if (c.CollidedWith.Solid == Drawable.SolidState.Entity)
+                    {
+                        entityCollisions.Add(c);
+                        if (drawable is Platform)
+                            PerformCollisionChecks(c.CollidedWith);
+                        else
+                            drawable.Collide(c);
+                    }
+                    else // only Crewman can collide with entities, but that check is elsewhere
+                        drawable.Collide(c);
                 }
             }
         }

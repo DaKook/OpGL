@@ -51,6 +51,24 @@ namespace OpGL
             }
         }
 
+        public override CollisionData TestCollision(Drawable testFor)
+        {
+            if (testFor == this) return null;
+
+            // Platforms colliding with an entity should cause the entity to do a collision check. This collision should not be used as such. Thus, NaN.
+            CollisionData ret = null;
+            if (testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
+            {
+                ret = GetCollisionData(testFor);
+                if (ret != null)
+                    ret.Distance = float.NaN;
+            }
+            else
+                ret = base.TestCollision(testFor);
+
+            return ret;
+        }
+
         public override void CollideX(float distance, Drawable collision)
         {
             if (XVel != 0)
@@ -62,11 +80,11 @@ namespace OpGL
                 }
                 XVel *= -1;
             }
-            else if (!collision.Static && collision.Solid == SolidState.Ground)
+            else if (collision != null && !collision.Static && collision.Solid == SolidState.Ground)
                 collision.X += distance;
 
             if (collision is Platform)
-                (collision as Platform).XVel *= -1;
+                collision.CollideX(-distance, null);
         }
 
         public override void CollideY(float distance, Drawable collision)
