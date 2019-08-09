@@ -10,13 +10,22 @@ using System.Diagnostics;
 
 using OpenGL;
 using Newtonsoft.Json.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace OpGL
 {
     public class Game
     {
+        public List<Drawable> UserAccessDrawables = new List<Drawable>();
+        public Drawable GetDrawableByName(string name)
+        {
+            foreach (Drawable drawable in UserAccessDrawables)
+            {
+                if (drawable.Name == name)
+                    return drawable;
+            }
+            return null;
+        }
         public enum Inputs
         {
             Left,
@@ -145,8 +154,8 @@ namespace OpGL
             sprites.Add(new Tile(312, 232, tiles, 5, 3));
             sprites.Add(new Platform(96, 64, platforms, platforms.Animations[0], 0, 1, 0, false));
             sprites.Add(new Platform(144, 80, platforms, platforms.Animations[0], -1, 0, 0, false));
-            sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
-            sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
+            //sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
+            //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
@@ -167,6 +176,22 @@ namespace OpGL
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(new StringDrawable(8, 8, font, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, font, "TEST", Color.White));
+            VTextBox vText = new VTextBox(40, 40, font, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
+            hudSprites.Add(vText);
+            WaitingForAction = () =>
+            {
+                vText.Bottom = ActivePlayer.Y - 2;
+                vText.X = ActivePlayer.X - 16;
+                PlayerControl = false;
+                vText.Appear();
+                WaitingForAction = () =>
+                {
+                    vText.Disappear();
+                    PlayerControl = true;
+                };
+            };
+            
+
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
@@ -417,8 +442,8 @@ namespace OpGL
                         else if (PlayerControl)
                         {
                             ActivePlayer.FlipOrJump();
-                            holdingJump = true;
                         }
+                        holdingJump = true;
                     }
                 }
                 else if (holdingJump)
@@ -611,24 +636,43 @@ namespace OpGL
 #endif
         }
 
-        public Command ParseScript(string script)
+        public Script ParseScript(string script)
         {
             string[] lines = script.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            Action actions = () => { };
+            List<Command> commands = new List<Command>();
             int i = 0;
             while (i < lines.Length)
             {
-                string[] args = lines[i].Split(new char[] { ',', '(', ')' });
-                switch (args[0])
+                string[] args = lines[i++].Split(new char[] { ',', '(', ')' });
+                switch (args[0].ToLower())
                 {
                     case "say":
-                        
+                        if (!int.TryParse(args.ElementAtOrDefault(1), out int sayLines)) continue;
+                        Color sayTextBoxColor = Color.Gray;
+                        Crewman sayCrewman = GetDrawableByName(args.ElementAtOrDefault(2)) as Crewman;
+                        if (sayCrewman != null)
+                        {
+                            sayTextBoxColor = sayCrewman.TextBoxColor;
+                        }
+                        commands.Add(new Command(() =>
+                        {
+                            PlayerControl = false;
+                            string sayText = "";
+                            if (sayLines > 0)
+                            {
+                                sayText = lines[i++];
+                                for (int sayI = 1; sayI < sayLines; sayI++)
+                                {
+                                    sayText += Environment.NewLine + lines[i++];
+                                }
+                            }
+                        }, true));
                         break;
                     default:
                         break;
                 }
             }
-            return new Command(actions);
+            return new Script(commands.ToArray());
         }
     }
 }

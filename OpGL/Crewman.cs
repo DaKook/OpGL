@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace OpGL
         public Checkpoint CurrentCheckpoint;
         public int JumpBuffer = 0;
         public int LedgeMercy = 0;
+        public Color TextBoxColor;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
@@ -38,7 +40,7 @@ namespace OpGL
         public int DyingFrames;
         public float XVelocity;
 
-        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null) : base(x, y, texture, stand)
+        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null, Color? textBoxColor = null) : base(x, y, texture, stand)
         {
             Name = name;
             StandingAnimation = stand;
@@ -52,6 +54,7 @@ namespace OpGL
             CheckpointY = y;
             CheckpointFlipX = flipX;
             CheckpointFlipY = flipY;
+            TextBoxColor = textBoxColor ?? Color.White;
         }
 
         public override void Process()

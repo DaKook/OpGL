@@ -8,18 +8,18 @@ namespace OpGL
 {
     public class Command
     {
-        public Action Action;
+        private Action action;
         public bool Wait;
 
         public Command(Action action, bool wait = false)
         {
-            Action = action;
+            this.action = action;
             Wait = wait;
         }
 
         public void Execute()
         {
-            Action();
+            action();
         }
     }
 }

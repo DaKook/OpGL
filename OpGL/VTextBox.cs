@@ -11,6 +11,10 @@ namespace OpGL
     public class VTextBox : StringDrawable
     {
         private float appearSpeed;
+        private int height;
+        private int width;
+        public override float Width => width;
+        public override float Height => height;
 
         public override string Text
         {
@@ -50,6 +54,9 @@ namespace OpGL
                 //Box
                 int wch = w / Texture.TileSize;
                 int hch = h / Texture.TileSize;
+                width = w + 2 * Texture.TileSize;
+                height = h + 2 * Texture.TileSize;
+
                 float[] boxData = new float[(wch + 2) * (hch + 2) * 4];
 
                 for (int i = 0; i < hch + 2; i++)
