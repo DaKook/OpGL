@@ -63,13 +63,10 @@ namespace OpGL
                 XVel *= -1;
             }
             else if (!collision.Static && collision.Solid == SolidState.Ground)
-            {
                 collision.X += distance;
-                if (collision is Platform)
-                {
-                    (collision as Platform).XVel *= -1;
-                }
-            }
+
+            if (collision is Platform)
+                (collision as Platform).XVel *= -1;
         }
 
         public override void CollideY(float distance, Drawable collision)
@@ -85,13 +82,10 @@ namespace OpGL
                 YVel *= -1;
             }
             else if (!collision.Static && collision.Solid == SolidState.Ground)
-            {
                 collision.Y += distance;
-                if (collision is Platform)
-                {
-                    (collision as Platform).YVel *= -1;
-                }
-            }
+
+            if (collision is Platform)
+                (collision as Platform).YVel *= -1;
         }
 
         public void Disappear()
