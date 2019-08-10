@@ -27,6 +27,7 @@ namespace OpGL
             Count
         }
         private int[] inputs = new int[(int)Inputs.Count];
+        private int[] lastPressed = new int[(int)Inputs.Count];
         public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
             { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
@@ -36,10 +37,13 @@ namespace OpGL
         };
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
 
-        bool holdingJump = false;
         private bool IsInputActive(Inputs input)
         {
             return inputs[(int)input] != 0;
+        }
+        private bool IsInputNew(Inputs input)
+        {
+            return lastPressed[(int)input] == FrameCount;
         }
 
         // Scripts
@@ -117,7 +121,7 @@ namespace OpGL
 
         Player ActivePlayer;
         public bool IsPlaying { get; private set; } = false;
-        private int FrameCount = 0;
+        private int FrameCount = 1; // start at 1 so inputs aren't "new" at start
 
         public Game(GlControl control)
         {
@@ -409,6 +413,7 @@ namespace OpGL
             if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
             {
                 inputs[(int)inputMap[e.KeyCode]]++;
+                lastPressed[(int)inputMap[e.KeyCode]] = FrameCount;
                 heldKeys.Add(e.KeyCode);
             }
         }
@@ -490,7 +495,7 @@ namespace OpGL
 
             if (IsInputActive(Inputs.Jump))
             {
-                if (!holdingJump)
+                if (IsInputNew(Inputs.Jump))
                 {
                     if (WaitingForAction != null)
                     {
@@ -500,11 +505,8 @@ namespace OpGL
                     }
                     else if (PlayerControl)
                         ActivePlayer.FlipOrJump();
-                    holdingJump = true;
                 }
             }
-            else if (holdingJump)
-                holdingJump = false;
         }
         private void ProcessWorld()
         {
