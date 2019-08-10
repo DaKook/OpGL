@@ -15,8 +15,6 @@ namespace OpGL
 
         protected int w;
         protected int h;
-        public virtual int GetWidth() => w;
-        public virtual int GetHeight() => h;
 
         public override float Width => w;
         public override float Height => h;
@@ -29,16 +27,16 @@ namespace OpGL
             {
                 _Text = value.Replace(Environment.NewLine, "\n");
                 bufferData = new float[_Text.Length * 4];
+                w = 0;
                 float curX = 0, curY = 0;
                 int index = 0;
-                h = Texture.TileSize;
                 for (int i = 0; i < _Text.Length; i++)
                 {
                     int c = _Text[i];
                     if (c == '\n')
                     {
+                        if (curX > w) w = (int)curX;
                         curX = 0;
-                        if (curY + Texture.TileSize > h) h = (int)curY + Texture.TileSize;
                         curY += Texture.TileSize;
                     }
                     else
@@ -49,12 +47,15 @@ namespace OpGL
                         bufferData[index++] = curY;
                         bufferData[index++] = x;
                         bufferData[index++] = y;
-                        if (curX + Texture.TileSize > w) w = (int)curX + Texture.TileSize;
                         curX += Texture.TileSize;
                     }
                 }
                 visibleCharacters = index / 4;
                 Array.Resize(ref bufferData, index);
+
+                h = (int)curY + Texture.TileSize;
+                if (curX > w) w = (int)curX;
+
                 updateBuffer = true;
             }
         }

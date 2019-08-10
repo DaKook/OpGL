@@ -11,10 +11,6 @@ namespace OpGL
     public class VTextBox : StringDrawable
     {
         private float appearSpeed;
-        private int height;
-        private int width;
-        public override float Width => width;
-        public override float Height => height;
 
         public delegate void DisappearedDelegate();
         public event DisappearedDelegate Disappeared;
@@ -24,65 +20,35 @@ namespace OpGL
             get => _Text;
             set
             {
-                _Text = value.Replace(Environment.NewLine, "\n");
-                float[] textData = new float[_Text.Length * 4];
-                float curX = Texture.TileSize, curY = Texture.TileSize;
+                base.Text = value;
+
+                // box
+                w += 2 * Texture.TileSize;
+                h += 2 * Texture.TileSize;
+                int tilesW = w / Texture.TileSize;
+                int tilesH = h / Texture.TileSize;
+                // textbox must be rendered first
+                int stringLength = bufferData.Length;
+                int boxLength = tilesW * tilesH * 4;
+                Array.Resize(ref bufferData, bufferData.Length + boxLength);
+                Array.Copy(bufferData, 0, bufferData, boxLength, stringLength);
+                // this is used to determine how many instances to draw
+                visibleCharacters = bufferData.Length / 4;
+
                 int index = 0;
-                h = Texture.TileSize;
-                //Text
-                for (int i = 0; i < _Text.Length; i++)
+                for (int i = -1; i < tilesH - 1; i++)
                 {
-                    int c = _Text[i];
-                    if (c == '\n')
+                    for (int j = -1; j < tilesW - 1; j++)
                     {
-                        curX = Texture.TileSize;
-                        if (curY + Texture.TileSize > h) h = (int)curY + Texture.TileSize;
-                        curY += Texture.TileSize;
-                    }
-                    else
-                    {
-                        int x = c % 16;
-                        int y = (c - x) / 16;
-                        textData[index++] = curX;
-                        textData[index++] = curY;
-                        textData[index++] = x;
-                        textData[index++] = y;
-                        if (curX + Texture.TileSize > w) w = (int)curX;
-                        curX += Texture.TileSize;
+                        bufferData[index++] = j * Texture.TileSize;
+                        bufferData[index++] = i * Texture.TileSize;
+                        //       (j + tilesW - 2) / (tilesW - 2) = 0 on first loop, 2 on last, 1 on others
+                        int tx = (j + tilesW - 2) / (tilesW - 2) + (i + tilesH - 2) / (tilesH - 2) * 3;
+                        bufferData[index++] = tx;
+                        bufferData[index++] = 0;
                     }
                 }
-                visibleCharacters = index / 4;
-                Array.Resize(ref textData, index);
-                index = 0;
-                //Box
-                int wch = w / Texture.TileSize;
-                int hch = h / Texture.TileSize;
-                width = w + 2 * Texture.TileSize;
-                height = h + 2 * Texture.TileSize;
 
-                float[] boxData = new float[(wch + 2) * (hch + 2) * 4];
-
-                for (int i = 0; i < hch + 2; i++)
-                {
-                    for (int j = 0; j < wch + 2; j++)
-                    {
-                        boxData[index++] = j * Texture.TileSize;
-                        boxData[index++] = i * Texture.TileSize;
-                        int tx = 0;
-                        if (j > 0) tx += 1;
-                        if (j == wch + 1) tx += 1;
-                        if (i > 0) tx += 3;
-                        if (i == hch + 1) tx += 3;
-
-                        boxData[index++] = tx;
-                        boxData[index++] = 0;
-                    }
-                }
-                visibleCharacters += index / 4;
-
-                bufferData = new float[boxData.Length + textData.Length];
-                boxData.CopyTo(bufferData, 0);
-                textData.CopyTo(bufferData, boxData.Length);
                 updateBuffer = true;
             }
         }
@@ -91,6 +57,16 @@ namespace OpGL
         {
             Visible = false;
             Color = Color.FromArgb(0, Color);
+        }
+
+        internal override void RenderPrep()
+        {
+            // Offset render location because the textbox top-left is -TileSize of location
+            X += Texture.TileSize;
+            Y += Texture.TileSize;
+            base.RenderPrep();
+            X -= Texture.TileSize;
+            Y -= Texture.TileSize;
         }
 
         public void Appear(int speed = 51)
