@@ -10,6 +10,9 @@ namespace OpGL
     {
         private int currentLocation = 0;
 
+        public delegate void FinishedDelegate(Script script);
+        public event FinishedDelegate Finished;
+
         public Command[] Commands;
         public Script(Command[] commands)
         {
@@ -23,7 +26,7 @@ namespace OpGL
             return this;
         }
 
-        public bool Continue()
+        public void Continue()
         {
             if (currentLocation < Commands.Length)
                 Commands[currentLocation++].Execute();
@@ -31,7 +34,8 @@ namespace OpGL
             {
                 Commands[currentLocation++].Execute();
             }
-            return currentLocation >= Commands.Length;
+            if (Finished != null && currentLocation >= Commands.Length) Finished(this);
+            return ;
         }
     }
 }

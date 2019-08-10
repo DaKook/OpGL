@@ -136,6 +136,7 @@ namespace OpGL
             sprites = new DrawableCollection();
             hudSprites = new DrawableCollection();
 #if TEST
+
             Texture viridian = TextureFromName("viridian");
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
@@ -147,6 +148,12 @@ namespace OpGL
             sprites.Add(ActivePlayer);
             UserAccessDrawables.Add(ActivePlayer);
             ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
+
+            //This will probably be moved somewhere else and might be customizeable per-level
+            Terminal.TextBox = new VTextBox(0, 0, FontTexture, " Press ENTER to activate terminal ", Color.FromArgb(255, 130, 20));
+            Terminal.TextBox.CenterX = RESOLUTION_WIDTH / 2;
+            Terminal.TextBox.Y = 4;
+            hudSprites.Add(Terminal.TextBox);
 
             for (int i = 8; i < 160; i += 8)
                 sprites.Add(new Tile(i, 160, tiles, 4, 4));
@@ -204,7 +211,7 @@ namespace OpGL
                 "Oh no! Now I'm\n" +
                 "depressed!\n" +
                 "playercontrol,true");
-            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations[3], sprites32.Animations[4], testScript, false);
+            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations[3], sprites32.Animations[4], testScript, true);
             sprites.Add(terminal);
 
 
@@ -475,9 +482,15 @@ namespace OpGL
                 if (IsInputActive(Inputs.Kill))
                     ActivePlayer.KillSelf();
 
-                if (ActivePlayer.CurrentTerminal != null && IsInputActive(Inputs.Pause))
+                if (ActivePlayer.CurrentTerminal != null && !ActivePlayer.CurrentTerminal.AlreadyUsed && IsInputActive(Inputs.Pause))
                 {
-                    CurrentScript = ActivePlayer.CurrentTerminal.Script.ExecuteFromBeginning();
+                    ActivePlayer.CurrentTerminal.AlreadyUsed = true;
+                    Terminal t = ActivePlayer.CurrentTerminal;
+                    ActivePlayer.CurrentTerminal = null;
+                    Terminal.TextBox.Disappear();
+                    CurrentScript = t.Script.ExecuteFromBeginning();
+                    if (t.Repeat)
+                        CurrentScript.Finished += (script) => { t.AlreadyUsed = false; };
                 }
             }
 
@@ -532,6 +545,7 @@ namespace OpGL
             if (ActivePlayer.CurrentTerminal != null && !ActivePlayer.IsOverlapping(ActivePlayer.CurrentTerminal))
             {
                 ActivePlayer.CurrentTerminal = null;
+                Terminal.TextBox.Disappear();
             }
         }
         private void PerformCollisionChecks(Drawable drawable)

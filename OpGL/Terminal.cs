@@ -8,16 +8,19 @@ namespace OpGL
 {
     public class Terminal : Drawable
     {
+        public static VTextBox TextBox;
         public Animation DeactivatedAnimation;
         public Animation ActivatedAnimation;
         public Script Script;
         public bool Repeat;
+        public bool AlreadyUsed;
         public Terminal(float x, float y, Texture texture, Animation deactivated, Animation activated, Script script, bool repeat) : base(x, y, texture, deactivated)
         {
             DeactivatedAnimation = deactivated;
             ActivatedAnimation = activated;
             Script = script;
             Repeat = repeat;
+            AlreadyUsed = false;
         }
 
         public override void HandleCrewmanCollision(Crewman crewman)
@@ -30,6 +33,7 @@ namespace OpGL
             if (crewman.CurrentTerminal == null || (crewman.CurrentTerminal != this && (Math.Abs(crewman.CurrentTerminal.CenterX - crewman.CenterX) > Math.Abs(CenterX - crewman.CenterX))))
             {
                 crewman.CurrentTerminal = this;
+                TextBox.Appear();
             }
         }
     }
