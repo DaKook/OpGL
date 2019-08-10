@@ -16,19 +16,7 @@ namespace OpGL
 {
     public class Game
     {
-        public Texture FontTexture;
-
-        public List<Drawable> UserAccessDrawables = new List<Drawable>();
-        public Drawable GetDrawableByName(string name, bool caseSensitive = false)
-        {
-            foreach (Drawable drawable in UserAccessDrawables)
-            {
-                if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
-                    return drawable;
-            }
-            return null;
-        }
-        public int DelayFrames;
+        // Input
         public enum Inputs
         {
             Left,
@@ -39,7 +27,7 @@ namespace OpGL
             Escape,
             Count
         }
-        bool holdingJump = false;
+        private int[] inputs = new int[(int)Inputs.Count];
         public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
             { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
@@ -48,17 +36,28 @@ namespace OpGL
             { Keys.R, Inputs.Kill },
             { Keys.Escape, Inputs.Escape }
         };
-        private int[] inputs = new int[(int)Inputs.Count];
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
-        public Action WaitingForAction = null;
-        public bool PlayerControl = true;
-        public bool Freeze = false;
-        public Script CurrentScript;
+
+        bool holdingJump = false;
         private bool IsInputActive(Inputs input)
         {
             return inputs[(int)input] != 0;
         }
 
+        // Scripts
+        public Action WaitingForAction = null;
+        public int DelayFrames;
+        public bool PlayerControl = true;
+        public bool Freeze = false;
+        public Script CurrentScript;
+
+        // OpenGL
+        private GlControl glControl;
+        private uint program;
+
+        // Textures
+        public Texture FontTexture;
+        private List<Texture> textures;
         public Texture TextureFromName(string name)
         {
             foreach (Texture texture in textures)
@@ -69,6 +68,7 @@ namespace OpGL
         }
 
 #if TEST
+        // Test
         const int avgOver = 60;
         float[] renderTimes = new float[avgOver];
         float rtTotal = 0f;
@@ -76,16 +76,10 @@ namespace OpGL
         float[] frameTimes = new float[avgOver];
         float ftTotal = 0f;
         int ftIndex = 0;
+        private StringDrawable timerSprite;
 #endif
 
-        const int RESOLUTION_WIDTH = 320;
-        const int RESOLUTION_HEIGHT = 240;
-
-        Player ActivePlayer;
-
-        private GlControl glControl;
-        private uint program;
-
+        // Camera
         private Matrix4x4f camera, hudView;
         private float _camX;
         private float _camY;
@@ -107,13 +101,24 @@ namespace OpGL
                 _camY = value;
             }
         }
-        private List<Texture> textures;
+        const int RESOLUTION_WIDTH = 320;
+        const int RESOLUTION_HEIGHT = 240;
 
+        // Drawables
         private DrawableCollection sprites;
         private DrawableCollection hudSprites;
-#if TEST
-        private StringDrawable timerSprite;
-#endif
+        public List<Drawable> UserAccessDrawables = new List<Drawable>();
+        public Drawable GetDrawableByName(string name, bool caseSensitive = false)
+        {
+            foreach (Drawable drawable in UserAccessDrawables)
+            {
+                if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
+                    return drawable;
+            }
+            return null;
+        }
+
+        Player ActivePlayer;
         public bool IsPlaying { get; private set; } = false;
 
         public Game(GlControl control)
