@@ -22,12 +22,15 @@ namespace OpGL
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
         private int _animFrame;
         private Point _old = new Point(0, 0);
+        protected Point animationOffset = new Point(0, 0);
         private int animFrame
         {
             get => _animFrame;
             set
             {
                 Point n = Animation.GetFrame(_animFrame = value);
+                n.X += animationOffset.X;
+                n.Y += animationOffset.Y;
                 if (n != _old)
                 {
                     TexMatrix.Translate((n.X - _old.X), (n.Y - _old.Y), 0f);

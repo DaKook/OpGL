@@ -30,7 +30,25 @@ namespace OpGL
         public Checkpoint CurrentCheckpoint;
         public int JumpBuffer = 0;
         public int LedgeMercy = 0;
+        private bool _sad = false;
+        public bool Sad
+        {
+            get => _sad;
+            set
+            {
+                if (value != _sad)
+                {
+                    _sad = value;
+                    if (value)
+                        animationOffset.Y += 1;
+                    else
+                        animationOffset.Y -= 1;
+                }
+            }
+        }
         public Color TextBoxColor;
+        //Squeak sound
+        public Terminal CurrentTerminal = null;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }

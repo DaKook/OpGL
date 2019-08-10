@@ -97,6 +97,7 @@
     <Compile Include="Room.cs" />
     <Compile Include="Script.cs" />
     <Compile Include="StringDrawable.cs" />
+    <Compile Include="Terminal.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="Tile.cs" />
     <Compile Include="VTextBox.cs" />

@@ -16,10 +16,11 @@ namespace OpGL
             Commands = commands;
         }
 
-        public void ExecuteFromBeginning()
+        public Script ExecuteFromBeginning()
         {
             currentLocation = 0;
             Continue();
+            return this;
         }
 
         public bool Continue()

@@ -196,33 +196,16 @@ namespace OpGL
             VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
             hudSprites.Add(vText);
             Script testScript = ParseScript("playercontrol,false\n" +
-                "say,1,player\n" +
-                "This is Captain Viridian.\n" +
-                "say,1,255,255,134\n" +
-                "What do you see?\n" +
-                "say,1,player\n" +
-                "It looks like a playground...\n" +
-                "say,1,255,255,134\n" +
-                "Be careful, Captain!\n" +
-                "changefont,evilfont\n" +
-                "say,2,180,0,0\n" +
-                "Hahaha, it is too late; you\n" +
-                "have already fallen into my trap!\n" +
-                "changefont,font\n" +
-                "delay,120\n" +
-                "say,1,player\n" +
-                "Professor, did you hear that?\n" +
-                "say,1,255,255,134\n" +
-                "Hear what?\n" +
+                "say,2,140,140,140\n" +
+                "You have activated this terminal.\n" +
+                "Congratulations! You have depression.\n" +
+                "mood,player,sad\n" +
                 "say,2,player\n" +
-                "Maybe it was nothing... I have\n" +
-                "a bad feeling about this...\n" +
+                "Oh no! Now I'm\n" +
+                "depressed!\n" +
                 "playercontrol,true");
-            WaitingForAction = () =>
-            {
-                testScript.ExecuteFromBeginning();
-                CurrentScript = testScript;
-            };
+            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations[3], sprites32.Animations[4], testScript, false);
+            sprites.Add(terminal);
 
 
 #endif
@@ -491,6 +474,11 @@ namespace OpGL
 
                 if (IsInputActive(Inputs.Kill))
                     ActivePlayer.KillSelf();
+
+                if (ActivePlayer.CurrentTerminal != null && IsInputActive(Inputs.Pause))
+                {
+                    CurrentScript = ActivePlayer.CurrentTerminal.Script.ExecuteFromBeginning();
+                }
             }
 
             if (IsInputActive(Inputs.Jump))
@@ -541,6 +529,10 @@ namespace OpGL
                     }
                 }
             } while (collisionPerformed);
+            if (ActivePlayer.CurrentTerminal != null && !ActivePlayer.IsOverlapping(ActivePlayer.CurrentTerminal))
+            {
+                ActivePlayer.CurrentTerminal = null;
+            }
         }
         private void PerformCollisionChecks(Drawable drawable)
         {
@@ -736,6 +728,9 @@ namespace OpGL
                     case "playercontrol":
                         commands.Add(PlayerControlCommand(args));
                         break;
+                    case "mood":
+                        commands.Add(MoodCommand(args));
+                        break;
                     default:
                         break;
                 }
@@ -770,6 +765,16 @@ namespace OpGL
             return new Command(() =>
             {
                 PlayerControl = pc;
+            });
+        }
+        public Command MoodCommand(string[] args)
+        {
+            Crewman crewman = GetDrawableByName(args[1]) as Crewman;
+            if (crewman == null) crewman = ActivePlayer;
+            bool sad = (args[2].ToLower() == "sad" || args[2] == "1");
+            return new Command(() =>
+            {
+                crewman.Sad = sad;
             });
         }
     }
