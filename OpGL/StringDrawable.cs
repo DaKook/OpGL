@@ -27,7 +27,7 @@ namespace OpGL
             get => _Text;
             set
             {
-                _Text = value;
+                _Text = value.Replace(Environment.NewLine, "\n");
                 bufferData = new float[_Text.Length * 4];
                 float curX = 0, curY = 0;
                 int index = 0;
@@ -41,7 +41,7 @@ namespace OpGL
                         if (curY + Texture.TileSize > h) h = (int)curY + Texture.TileSize;
                         curY += Texture.TileSize;
                     }
-                    else if (c != '\r')
+                    else
                     {
                         int x = c % 16;
                         int y = (c - x) / 16;

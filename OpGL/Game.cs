@@ -191,39 +191,39 @@ namespace OpGL
                     sprites.Add(new Tile(i, j, tiles, 1, 20));
             for (int i = 168; i < 312; i += 8)
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
-            hudSprites.Add(new StringDrawable(8, 8, FontTexture, "Welcome to VVVVVVV!" + Environment.NewLine + "You will enjoy...", Color.Red));
+            hudSprites.Add(new StringDrawable(8, 8, FontTexture, "Welcome to VVVVVVV!\nYou will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
             VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
             hudSprites.Add(vText);
-            Script testScript = ParseScript("playercontrol,false" + Environment.NewLine +
-                "say,1,player" + Environment.NewLine +
-                "This is Captain Viridian." + Environment.NewLine +
-                "say,1,255,255,134" + Environment.NewLine +
-                "What do you see?" + Environment.NewLine +
-                "say,1,player" + Environment.NewLine +
-                "It looks like a playground..." + Environment.NewLine +
-                "say,1,255,255,134" + Environment.NewLine +
-                "Be careful, Captain!" + Environment.NewLine +
-                "changefont,evilfont" + Environment.NewLine +
-                "say,2,180,0,0" + Environment.NewLine +
-                "Hahaha, it is too late; you" + Environment.NewLine +
-                "have already fallen into my trap!" + Environment.NewLine +
-                "changefont,font" + Environment.NewLine +
-                "delay,120" + Environment.NewLine +
-                "say,1,player" + Environment.NewLine +
-                "Professor, did you hear that?" + Environment.NewLine +
-                "say,1,255,255,134" + Environment.NewLine +
-                "Hear what?" + Environment.NewLine +
-                "say,2,player" + Environment.NewLine +
-                "Maybe it was nothing... I have" + Environment.NewLine +
-                "a bad feeling about this..." + Environment.NewLine +
+            Script testScript = ParseScript("playercontrol,false\n" +
+                "say,1,player\n" +
+                "This is Captain Viridian.\n" +
+                "say,1,255,255,134\n" +
+                "What do you see?\n" +
+                "say,1,player\n" +
+                "It looks like a playground...\n" +
+                "say,1,255,255,134\n" +
+                "Be careful, Captain!\n" +
+                "changefont,evilfont\n" +
+                "say,2,180,0,0\n" +
+                "Hahaha, it is too late; you\n" +
+                "have already fallen into my trap!\n" +
+                "changefont,font\n" +
+                "delay,120\n" +
+                "say,1,player\n" +
+                "Professor, did you hear that?\n" +
+                "say,1,255,255,134\n" +
+                "Hear what?\n" +
+                "say,2,player\n" +
+                "Maybe it was nothing... I have\n" +
+                "a bad feeling about this...\n" +
                 "playercontrol,true");
-            //WaitingForAction = () =>
-            //{
-            //    testScript.ExecuteFromBeginning();
-            //    CurrentScript = testScript;
-            //};
-            
+            WaitingForAction = () =>
+            {
+                testScript.ExecuteFromBeginning();
+                CurrentScript = testScript;
+            };
+
 
 #endif
             glControl.Render += glControl_Render;
@@ -666,7 +666,7 @@ namespace OpGL
 
         public Script ParseScript(string script)
         {
-            string[] lines = script.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             List<Command> commands = new List<Command>();
             int i = 0;
             while (i < lines.Length)
@@ -696,7 +696,7 @@ namespace OpGL
                                 sayText = lines[i++];
                                 for (int sayI = 1; sayI < sayLines; sayI++)
                                 {
-                                    sayText += Environment.NewLine + lines[i++];
+                                    sayText += "\n" + lines[i++];
                                 }
                             }
                             commands.Add(new Command(() =>
