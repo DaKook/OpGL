@@ -118,12 +118,14 @@ namespace OpGL
                     ResetAnimation();
                     Animation = StandingAnimation;
                     flipX = CheckpointFlipX;
-                    if (Math.Sign(Gravity) == 1 == CheckpointFlipY)
+                    if (Math.Sign(Gravity) == 1 == (flipY = CheckpointFlipY))
                     {
                         Gravity *= -1;
                     }
-                    X = CheckpointX;
-                    Y = CheckpointY;
+                    CenterX = CheckpointX;
+                    if (flipY) Y = CheckpointY;
+                    else Bottom = CheckpointY;
+
                     XVelocity = 0;
                     YVelocity = 0;
                     PreviousX = X;
