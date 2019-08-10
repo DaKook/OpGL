@@ -55,6 +55,7 @@ namespace OpGL
                 }
                 visibleCharacters = index / 4;
                 Array.Resize(ref bufferData, index);
+                updateBuffer = true;
             }
         }
 
@@ -96,7 +97,7 @@ namespace OpGL
         // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
         internal override void UnsafeDraw()
         {
-            //if (updateBuffer)
+            if (updateBuffer)
                 UpdateBuffer();
 
             Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
@@ -129,6 +130,7 @@ namespace OpGL
 
             Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
             Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
+            updateBuffer = false;
         }
 
         public override void Process()

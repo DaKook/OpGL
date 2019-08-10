@@ -83,6 +83,7 @@ namespace OpGL
                 bufferData = new float[boxData.Length + textData.Length];
                 boxData.CopyTo(bufferData, 0);
                 textData.CopyTo(bufferData, boxData.Length);
+                updateBuffer = true;
             }
         }
 
