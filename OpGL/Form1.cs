@@ -26,41 +26,6 @@ namespace OpGL
         {
             if (!game.IsPlaying)
             {
-                //if (e.KeyCode == Keys.W)
-                //{
-                //    currentY -= 1;
-                //    updatePreview();
-                //}
-                //else if (e.KeyCode == Keys.A)
-                //{
-                //    currentX -= 1;
-                //    updatePreview();
-                //}
-                //else if (e.KeyCode == Keys.S)
-                //{
-                //    currentY += 1;
-                //    updatePreview();
-                //}
-                //else if (e.KeyCode == Keys.D)
-                //{
-                //    currentX += 1;
-                //    updatePreview();
-                //}
-                //else if (e.KeyCode == Keys.Q)
-                //{
-                //    currentTexture -= 1;
-                //    if (currentTexture < 0)
-                //        currentTexture = Textures.Count - 1;
-                //    updatePreview();
-                //}
-                //else if (e.KeyCode == Keys.E)
-                //{
-                //    currentTexture += 1;
-                //    if (currentTexture > Textures.Count - 1)
-                //        currentTexture = 0;
-                //    updatePreview();
-                //}
-                //else
                 if (e.KeyCode == Keys.Escape)
                 {
                     game.StartGame();

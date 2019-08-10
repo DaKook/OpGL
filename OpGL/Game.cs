@@ -24,7 +24,6 @@ namespace OpGL
             Jump,
             Pause,
             Kill,
-            Escape,
             Count
         }
         private int[] inputs = new int[(int)Inputs.Count];
@@ -33,8 +32,7 @@ namespace OpGL
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
             { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
             { Keys.Enter, Inputs.Pause },
-            { Keys.R, Inputs.Kill },
-            { Keys.Escape, Inputs.Escape }
+            { Keys.R, Inputs.Kill }
         };
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
 
@@ -432,6 +430,7 @@ namespace OpGL
 
             while (IsPlaying)
             {
+                // frame rate limiting
                 while (stp.ElapsedTicks < nextFrame)
                 {
                     int msToSleep = (int)((float)(nextFrame - stp.ElapsedTicks) / Stopwatch.Frequency - 0.5f);
@@ -445,77 +444,11 @@ namespace OpGL
                 long fStart = stp.ElapsedTicks;
 #endif
 
-                if (PlayerControl)
-                {
-                    if (IsInputActive(Inputs.Right))
-                        ActivePlayer.InputDirection = 1;
-                    else if (IsInputActive(Inputs.Left))
-                        ActivePlayer.InputDirection = -1;
-                    else
-                        ActivePlayer.InputDirection = 0;
-
-                    if (IsInputActive(Inputs.Kill))
-                    {
-                        ActivePlayer.KillSelf();
-                    }
-                }
-
-                if (IsInputActive(Inputs.Jump))
-                {
-                    if (!holdingJump)
-                    {
-                        if (WaitingForAction != null)
-                        {
-                            Action exec = WaitingForAction;
-                            WaitingForAction = null;
-                            exec();
-                        }
-                        else if (PlayerControl)
-                        {
-                            ActivePlayer.FlipOrJump();
-                        }
-                        holdingJump = true;
-                    }
-                }
-                else if (holdingJump)
-                {
-                    holdingJump = false;
-                }
+                // begin frame
+                HandleUserInputs();
 
                 if (!Freeze)
-                {
-                    for (int i = 0; i < sprites.Count; i++)
-                    {
-                        if (!sprites[i].Static)
-                            sprites[i].Process();
-                    }
-
-                    sprites.SortForCollisions();
-                    Drawable[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
-                    PointF[] endLocation = new PointF[checkCollisions.Length];
-                    for (int i = 0; i < checkCollisions.Length; i++)
-                    {
-                        Drawable drawable = checkCollisions[i];
-                        PerformCollisionChecks(drawable);
-                        endLocation[i] = new PointF(drawable.X, drawable.Y);
-                    }
-                    // check again any that have moved since completing their collisions
-                    bool collisionPerformed;
-                    do
-                    {
-                        collisionPerformed = false;
-                        for (int i = 0; i < checkCollisions.Length; i++)
-                        {
-                            Drawable drawable = checkCollisions[i];
-                            if (endLocation[i] != new PointF(drawable.X, drawable.Y))
-                            {
-                                collisionPerformed = true;
-                                PerformCollisionChecks(drawable);
-                                endLocation[i] = new PointF(drawable.X, drawable.Y);
-                            }
-                        }
-                    } while (collisionPerformed);
-                }
+                    ProcessWorld();
 
                 if (DelayFrames > 0)
                 {
@@ -525,9 +458,7 @@ namespace OpGL
                 }
 
                 foreach (Drawable d in hudSprites)
-                {
                     d.Process();
-                }
 
                 FrameCount++;
 
@@ -542,6 +473,73 @@ namespace OpGL
             }
         }
 
+        private void HandleUserInputs()
+        {
+            if (PlayerControl)
+            {
+                if (IsInputActive(Inputs.Right))
+                    ActivePlayer.InputDirection = 1;
+                else if (IsInputActive(Inputs.Left))
+                    ActivePlayer.InputDirection = -1;
+                else
+                    ActivePlayer.InputDirection = 0;
+
+                if (IsInputActive(Inputs.Kill))
+                    ActivePlayer.KillSelf();
+            }
+
+            if (IsInputActive(Inputs.Jump))
+            {
+                if (!holdingJump)
+                {
+                    if (WaitingForAction != null)
+                    {
+                        Action exec = WaitingForAction;
+                        WaitingForAction = null;
+                        exec();
+                    }
+                    else if (PlayerControl)
+                        ActivePlayer.FlipOrJump();
+                    holdingJump = true;
+                }
+            }
+            else if (holdingJump)
+                holdingJump = false;
+        }
+        private void ProcessWorld()
+        {
+            for (int i = 0; i < sprites.Count; i++)
+            {
+                if (!sprites[i].Static)
+                    sprites[i].Process();
+            }
+
+            sprites.SortForCollisions();
+            Drawable[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+            PointF[] endLocation = new PointF[checkCollisions.Length];
+            for (int i = 0; i < checkCollisions.Length; i++)
+            {
+                Drawable drawable = checkCollisions[i];
+                PerformCollisionChecks(drawable);
+                endLocation[i] = new PointF(drawable.X, drawable.Y);
+            }
+            // check again any that have moved since completing their collisions
+            bool collisionPerformed;
+            do
+            {
+                collisionPerformed = false;
+                for (int i = 0; i < checkCollisions.Length; i++)
+                {
+                    Drawable drawable = checkCollisions[i];
+                    if (endLocation[i] != new PointF(drawable.X, drawable.Y))
+                    {
+                        collisionPerformed = true;
+                        PerformCollisionChecks(drawable);
+                        endLocation[i] = new PointF(drawable.X, drawable.Y);
+                    }
+                }
+            } while (collisionPerformed);
+        }
         private void PerformCollisionChecks(Drawable drawable)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
