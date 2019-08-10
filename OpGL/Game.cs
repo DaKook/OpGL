@@ -75,7 +75,6 @@ namespace OpGL
         int rtIndex = 0;
         float[] frameTimes = new float[avgOver];
         float ftTotal = 0f;
-        int ftIndex = 0;
         private StringDrawable timerSprite;
 #endif
 
@@ -120,6 +119,7 @@ namespace OpGL
 
         Player ActivePlayer;
         public bool IsPlaying { get; private set; } = false;
+        private int FrameCount = 0;
 
         public Game(GlControl control)
         {
@@ -528,14 +528,16 @@ namespace OpGL
                 {
                     d.Process();
                 }
+
+                FrameCount++;
+
                 glControl.Invalidate();
 
 #if TEST
                 float ms = (float)(stp.ElapsedTicks - fStart) / Stopwatch.Frequency * 1000f;
                 ftTotal += ms;
-                ftTotal -= frameTimes[ftIndex];
-                frameTimes[ftIndex] = ms;
-                ftIndex = (ftIndex + 1) % 60;
+                ftTotal -= frameTimes[FrameCount % 60];
+                frameTimes[FrameCount % 60] = ms;
 #endif
             }
         }
