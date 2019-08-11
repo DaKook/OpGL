@@ -11,18 +11,18 @@ using System.Drawing;
 
 namespace OpGL
 {
-    class DrawableCollection : List<Drawable>
+    public class SpriteCollection : List<Sprite>
     {
         // A smaller group size results in more tiles to check; a larger group size results in more drawables per tile.
         // I expect that group size equal to the smallest tile size is ideal, but I have not done any tests.
         const int GROUP_SIZE = 8;
         public Color Color = Color.White;
-        SortedList<Point, List<Drawable>> perTile;
+        SortedList<Point, List<Sprite>> perTile;
         static Comparer<Point> pointComparer = Comparer<Point>.Create(TileCompare);
 
-        public DrawableCollection() : base() { }
-        public DrawableCollection(int capacity) : base(capacity) { }
-        public DrawableCollection(IEnumerable<Drawable> drawables) : base()
+        public SpriteCollection() : base() { }
+        public SpriteCollection(int capacity) : base(capacity) { }
+        public SpriteCollection(IEnumerable<Sprite> drawables) : base()
         {
             AddRange(drawables);
         }
@@ -39,7 +39,7 @@ namespace OpGL
             long lastColor = long.MinValue;
             for (int i = 0; i < Count; i++)
             {
-                Drawable d = this[i];
+                Sprite d = this[i];
                 if (!d.Visible)
                     continue;
 
@@ -76,7 +76,7 @@ namespace OpGL
         {
             int minX, maxX, minY, maxY;
             int cX, cY;
-            public TileEnumerator(Drawable d)
+            public TileEnumerator(Sprite d)
             {
                 minX = (int)d.X / GROUP_SIZE;
                 minY = (int)d.Y / GROUP_SIZE;
@@ -117,21 +117,21 @@ namespace OpGL
         }
         public void SortForCollisions()
         {
-            perTile = new SortedList<Point, List<Drawable>>(pointComparer);
-            foreach (Drawable d in this)
+            perTile = new SortedList<Point, List<Sprite>>(pointComparer);
+            foreach (Sprite d in this)
             {
                 TileEnumerator te = new TileEnumerator(d);
                 do
                 {
                     if (!perTile.ContainsKey(te.Current))
-                        perTile.Add(te.Current, new List<Drawable>());
+                        perTile.Add(te.Current, new List<Sprite>());
                     perTile[te.Current].Add(d);
                 } while (te.MoveNext());
             }
         }
-        public List<Drawable> GetPotentialColliders(Drawable d)
+        public List<Sprite> GetPotentialColliders(Sprite d)
         {
-            List<Drawable> colliders = new List<Drawable>();
+            List<Sprite> colliders = new List<Sprite>();
 
             TileEnumerator te = new TileEnumerator(d);
             do
@@ -143,7 +143,7 @@ namespace OpGL
             return colliders;
         }
 
-        private int RenderCompare(Drawable d1, Drawable d2)
+        private int RenderCompare(Sprite d1, Sprite d2)
         {
             int t = d1.Texture.ID.CompareTo(d2.Texture.ID);
             if (t == 0)
@@ -163,7 +163,7 @@ namespace OpGL
         /// <summary>
         /// Returns an index at which a drawable can be inserted while keeping the list sorted.
         /// </summary>
-        private int AddIndex(Drawable d)
+        private int AddIndex(Sprite d)
         {
             int min = 0, max = Count - 1;
             int index = (max - min) / 2 + min;
@@ -188,7 +188,7 @@ namespace OpGL
         /// <summary>
         /// Searches for the specified Drawable and returns the zero-based index of an occurence within the entire DrawableCollection.
         /// </summary>
-        public new int IndexOf(Drawable d)
+        public new int IndexOf(Sprite d)
         {
             // index in the range at which d would be, by render sort
             int index = AddIndex(d);
@@ -212,25 +212,25 @@ namespace OpGL
             return -1;
         }
 
-        public new void Add(Drawable d)
+        public new void Add(Sprite d)
         {
             base.Insert(AddIndex(d), d);
         }
-        public new void AddRange(IEnumerable<Drawable> drawables)
+        public new void AddRange(IEnumerable<Sprite> drawables)
         {
-            foreach (Drawable d in drawables)
+            foreach (Sprite d in drawables)
                 Add(d);
         }
 
         /// <summary>
         /// Do not support setting an element.
         /// </summary>
-        public new Drawable this[int index]
+        public new Sprite this[int index]
         {
             get => base[index];
         }
 
-        public new void Remove(Drawable d)
+        public new void Remove(Sprite d)
         {
             int index = IndexOf(d);
             if (index != -1)
@@ -240,12 +240,12 @@ namespace OpGL
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public new void Insert(int index, Drawable d)
+        public new void Insert(int index, Sprite d)
         { throw new NotSupportedException("DrawableCollection is a sorted list."); }
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public new void InsertRange(int index, IEnumerable<Drawable> drawables)
+        public new void InsertRange(int index, IEnumerable<Sprite> drawables)
         { throw new NotSupportedException("DrawableCollection is a sorted list."); }
         /// <summary>
         /// This method is not supported.
@@ -264,17 +264,17 @@ namespace OpGL
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public new void Sort(Comparison<Drawable> comparison)
+        public new void Sort(Comparison<Sprite> comparison)
         { throw new NotSupportedException("DrawableCollection is a sorted list."); }
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public new void Sort(IComparer<Drawable> comparer)
+        public new void Sort(IComparer<Sprite> comparer)
         { throw new NotSupportedException("DrawableCollection is a sorted list."); }
         /// <summary>
         /// This method is not supported.
         /// </summary>
-        public new void Sort(int index, int count, IComparer<Drawable> comparer)
+        public new void Sort(int index, int count, IComparer<Sprite> comparer)
         { throw new NotSupportedException("DrawableCollection is a sorted list."); }
     }
 }

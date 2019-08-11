@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Crewman : Drawable
+    public class Crewman : Sprite
     {
         private Animation defaultAnimation;
         private Animation standingAnimation;
@@ -191,7 +191,7 @@ namespace OpGL
             DyingFrames = 60;
         }
 
-        public override void CollideY(float distance, Drawable collision)
+        public override void CollideY(float distance, Sprite collision)
         {
             base.CollideY(distance, collision);
             //Check if landing on ground
@@ -223,7 +223,7 @@ namespace OpGL
             }
         }
 
-        public override void CollideX(float distance, Drawable collision)
+        public override void CollideX(float distance, Sprite collision)
         {
             base.CollideX(distance, collision);
             if (distance > 0 == XVelocity > 0)
@@ -256,7 +256,7 @@ namespace OpGL
             }
         }
 
-        public override CollisionData TestCollision(Drawable testFor)
+        public override CollisionData TestCollision(Sprite testFor)
         {
             if (testFor == this || DyingFrames > 0) return null;
 

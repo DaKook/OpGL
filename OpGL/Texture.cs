@@ -8,7 +8,7 @@ namespace OpGL
 {
     public class Texture
     {
-        public Drawable.SolidState[,] TileSolidStates { get; internal set; }
+        public Sprite.SolidState[,] TileSolidStates { get; internal set; }
         public List<Animation> Animations { get; set; }
         public string Name { get; internal set; }
         public uint ID { get; internal set; }

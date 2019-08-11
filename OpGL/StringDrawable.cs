@@ -9,7 +9,7 @@ using OpenGL;
 
 namespace OpGL
 {
-    public class StringDrawable : Drawable
+    public class StringDrawable : Sprite
     {
         protected int visibleCharacters = 0;
 

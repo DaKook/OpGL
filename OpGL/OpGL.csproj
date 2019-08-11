@@ -78,8 +78,8 @@
     <Compile Include="CollisionData.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Crewman.cs" />
-    <Compile Include="Drawable.cs" />
-    <Compile Include="DrawableCollection.cs" />
+    <Compile Include="Sprite.cs" />
+    <Compile Include="SpriteCollection.cs" />
     <Compile Include="Enemy.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

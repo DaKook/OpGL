@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Tile : Drawable
+    public class Tile : Sprite
     {
         public Tile(int x, int y, Texture texture, int tileX, int tileY) : base(x, y, texture, tileX, tileY)
         {

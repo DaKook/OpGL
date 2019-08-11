@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Terminal : Drawable
+    public class Terminal : Sprite
     {
         public static VTextBox TextBox;
         public Animation DeactivatedAnimation;

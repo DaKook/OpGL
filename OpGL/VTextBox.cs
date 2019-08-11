@@ -12,7 +12,7 @@ namespace OpGL
     {
         private float appearSpeed;
 
-        public delegate void DisappearedDelegate();
+        public delegate void DisappearedDelegate(VTextBox textBox);
         public event DisappearedDelegate Disappeared;
 
         public override string Text
@@ -90,7 +90,7 @@ namespace OpGL
             {
                 Color = Color.FromArgb((int)Math.Max(Color.A + appearSpeed, 0), Color.R, Color.G, Color.B);
                 if (Color.A == 0) Visible = false;
-
+                Disappeared?.Invoke(this);
             }
         }
     }

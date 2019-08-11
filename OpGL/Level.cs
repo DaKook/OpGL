@@ -8,7 +8,7 @@ namespace OpGL
 {
     public class Level
     {
-        public List<Drawable> Objects = new List<Drawable>();
+        public List<Sprite> Objects = new List<Sprite>();
         public List<Room> Rooms = new List<Room>();
     }
 }

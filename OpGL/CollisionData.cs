@@ -10,9 +10,9 @@ namespace OpGL
     {
         public bool Vertical;
         public float Distance;
-        public Drawable CollidedWith;
+        public Sprite CollidedWith;
 
-        public CollisionData(bool vertical, float distance, Drawable collidedWith)
+        public CollisionData(bool vertical, float distance, Sprite collidedWith)
         {
             Vertical = vertical;
             Distance = distance;

@@ -9,7 +9,7 @@ using OpenGL;
 
 namespace OpGL
 {
-    public class Drawable
+    public class Sprite
     {
         protected bool flipX;
         protected bool flipY;
@@ -97,7 +97,7 @@ namespace OpGL
         /// <summary>
         /// Determines whether the Drawable will process even while out of the screen. Too many objects that always process could slow down the game.
         /// </summary>
-        public bool AlwaysProcess { get; set; } = false;
+        //public bool AlwaysProcess { get; set; } = false;
         public bool KillCrewmen { get; set; } = false;
         public Texture Texture { get; internal set; }
         internal virtual uint VAO { get => Texture.baseVAO; set { } }
@@ -105,12 +105,12 @@ namespace OpGL
         internal Matrix4x4f LocMatrix;
         internal Matrix4x4f TexMatrix;
 
-        internal Drawable()
+        internal Sprite()
         {
 
         }
 
-        public Drawable(float x, float y, Texture texture, int texX, int texY, Color? color = null)
+        public Sprite(float x, float y, Texture texture, int texX, int texY, Color? color = null)
         {
             X = x;
             Y = y;
@@ -126,7 +126,7 @@ namespace OpGL
             Color = color ?? Color.White;
         }
 
-        public Drawable(float x, float y, Texture texture, Animation animation)
+        public Sprite(float x, float y, Texture texture, Animation animation)
         {
             X = x;
             Y = y;
@@ -149,7 +149,7 @@ namespace OpGL
             return Right > x && X < x + width
                 && Bottom > y && Y < y + height;
         }
-        public bool IsOverlapping(Drawable other)
+        public bool IsOverlapping(Sprite other)
         {
             return Within(other.X, other.Y, other.Width, other.Height);
         }
@@ -210,16 +210,16 @@ namespace OpGL
             PreviousY = Y;
         }
 
-        public virtual void CollideY(float distance, Drawable collision)
+        public virtual void CollideY(float distance, Sprite collision)
         {
             Y -= distance;
         }
-        public virtual void CollideX(float distance, Drawable collision)
+        public virtual void CollideX(float distance, Sprite collision)
         {
             X -= distance;
         }
 
-        public virtual CollisionData TestCollision(Drawable testFor)
+        public virtual CollisionData TestCollision(Sprite testFor)
         {
             if (testFor == this || Immovable) return null;
 
@@ -231,7 +231,7 @@ namespace OpGL
             }
             return ret;
         }
-        protected CollisionData GetCollisionData(Drawable testFor)
+        protected CollisionData GetCollisionData(Sprite testFor)
         {
             // check for vertical collision first
             // top

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Checkpoint : Drawable
+    public class Checkpoint : Sprite
     {
         public Animation ActivatedAnimation = null;
         public Animation DeactevatedAnimation = null;

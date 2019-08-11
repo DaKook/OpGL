@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Platform : Drawable
+    public class Platform : Sprite
     {
         public float XSpeed;
         public float YSpeed;
@@ -20,7 +20,7 @@ namespace OpGL
         /// Determines whether or not the platform pushes crewmen the opposite direction on the bottom. Set to true to disable this.
         /// </summary>
         public bool SingleDirection;
-        public List<Drawable> OnTop = new List<Drawable>();
+        public List<Sprite> OnTop = new List<Sprite>();
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null) : base(x, y, texture, animation)
         {
             XSpeed = xSpeed;
@@ -51,7 +51,7 @@ namespace OpGL
             }
         }
 
-        public override CollisionData TestCollision(Drawable testFor)
+        public override CollisionData TestCollision(Sprite testFor)
         {
             if (testFor == this) return null;
 
@@ -69,12 +69,12 @@ namespace OpGL
             return ret;
         }
 
-        public override void CollideX(float distance, Drawable collision)
+        public override void CollideX(float distance, Sprite collision)
         {
             if (XVel != 0)
             {
                 base.CollideX(distance, collision);
-                foreach (Drawable d in OnTop)
+                foreach (Sprite d in OnTop)
                 {
                     d.X -= distance;
                 }
@@ -87,12 +87,12 @@ namespace OpGL
                 collision.CollideX(-distance, null);
         }
 
-        public override void CollideY(float distance, Drawable collision)
+        public override void CollideY(float distance, Sprite collision)
         {
             if (YVel != 0)
             {
                 base.CollideY(distance, collision);
-                foreach (Drawable d in OnTop)
+                foreach (Sprite d in OnTop)
                 {
                     if (!d.Static)
                         d.Y -= distance;

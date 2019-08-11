@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Enemy : Drawable
+    public class Enemy : Sprite
     {
         public float XVel;
         public float YVel;
@@ -28,7 +28,7 @@ namespace OpGL
             Y += YVel;
         }
 
-        public override void CollideX(float distance, Drawable collision)
+        public override void CollideX(float distance, Sprite collision)
         {
             if (XVel != 0 || Pushable)
             {
@@ -45,7 +45,7 @@ namespace OpGL
             //}
         }
 
-        public override void CollideY(float distance, Drawable collision)
+        public override void CollideY(float distance, Sprite collision)
         {
             if (YVel != 0 || Pushable)
             {

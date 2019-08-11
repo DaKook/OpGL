@@ -106,16 +106,17 @@ namespace OpGL
         const int RESOLUTION_HEIGHT = 240;
 
         // Drawables
-        private DrawableCollection sprites;
-        private DrawableCollection hudSprites;
-        public List<Drawable> UserAccessDrawables = new List<Drawable>();
-        public Drawable GetDrawableByName(string name, bool caseSensitive = false)
+        private SpriteCollection sprites;
+        private SpriteCollection hudSprites;
+        public SortedList<string, Sprite> UserAccessDrawables = new SortedList<string, Sprite>();
+        public Sprite GetDrawableByName(string name, bool caseSensitive = false)
         {
-            foreach (Drawable drawable in UserAccessDrawables)
-            {
-                if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
-                    return drawable;
-            }
+            //foreach (Sprite drawable in UserAccessDrawables)
+            //{
+            //    if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
+            //        return drawable;
+            //}
+            return UserAccessDrawables[name.ToLower()];
             return null;
         }
 
@@ -133,8 +134,8 @@ namespace OpGL
             textures = new List<Texture>();
             LoadTextures();
 
-            sprites = new DrawableCollection();
-            hudSprites = new DrawableCollection();
+            sprites = new SpriteCollection();
+            hudSprites = new SpriteCollection();
 #if TEST
 
             Texture viridian = TextureFromName("viridian");
@@ -146,7 +147,7 @@ namespace OpGL
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
-            UserAccessDrawables.Add(ActivePlayer);
+            UserAccessDrawables.Add(ActivePlayer.Name, ActivePlayer);
             ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
 
             //This will probably be moved somewhere else and might be customizeable per-level
@@ -178,10 +179,10 @@ namespace OpGL
             //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
             sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
             sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(262, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
-            sprites.Add(new Platform(262, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
-            sprites.Add(new Platform(200, 216, platforms, platforms.Animations[0], -1f, 0, 0, false));
-            sprites.Add(new Platform(200, 224, platforms, platforms.Animations[0], -1f, 0, 0, false));
+            sprites.Add(new Platform(262, 216, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(262, 224, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(200, 216, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(200, 224, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
             sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
             sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
@@ -207,7 +208,7 @@ namespace OpGL
                 "You have activated this terminal.\n" +
                 "Congratulations! You have depression.\n" +
                 "mood,player,sad\n" +
-                "say,2,player\n" +
+                "say,2,poopoo\n" +
                 "Oh no! Now I'm\n" +
                 "depressed!\n" +
                 "playercontrol,true");
@@ -297,7 +298,7 @@ namespace OpGL
                         JArray tls = (JArray)jObject["Tiles"];
                         if (tls != null)
                         {
-                            Drawable.SolidState[,] states = new Drawable.SolidState[(int)(tex.Width / tex.TileSize), (int)(tex.Height / tex.TileSize)];
+                            Sprite.SolidState[,] states = new Sprite.SolidState[(int)(tex.Width / tex.TileSize), (int)(tex.Height / tex.TileSize)];
                             int i = 0;
                             int x = 0;
                             int y = 0;
@@ -306,7 +307,7 @@ namespace OpGL
                                 int count = (int)tls[i];
                                 for (int j = 0; j < count; j++)
                                 {
-                                    states[x, y] = (Drawable.SolidState)(int)tls[i + 1];
+                                    states[x, y] = (Sprite.SolidState)(int)tls[i + 1];
                                     x += 1;
                                     if (x >= states.GetLength(0))
                                     {
@@ -452,8 +453,11 @@ namespace OpGL
                         CurrentScript.Continue();
                 }
 
-                foreach (Drawable d in hudSprites)
+                for (int i = hudSprites.Count - 1; i >= 0; i--)
+                {
+                    Sprite d = hudSprites[i];
                     d.Process();
+                }
 
                 FrameCount++;
 
@@ -518,11 +522,11 @@ namespace OpGL
             }
 
             sprites.SortForCollisions();
-            Drawable[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+            Sprite[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
             PointF[] endLocation = new PointF[checkCollisions.Length];
             for (int i = 0; i < checkCollisions.Length; i++)
             {
-                Drawable drawable = checkCollisions[i];
+                Sprite drawable = checkCollisions[i];
                 PerformCollisionChecks(drawable);
                 endLocation[i] = new PointF(drawable.X, drawable.Y);
             }
@@ -533,7 +537,7 @@ namespace OpGL
                 collisionPerformed = false;
                 for (int i = 0; i < checkCollisions.Length; i++)
                 {
-                    Drawable drawable = checkCollisions[i];
+                    Sprite drawable = checkCollisions[i];
                     if (endLocation[i] != new PointF(drawable.X, drawable.Y))
                     {
                         collisionPerformed = true;
@@ -548,7 +552,7 @@ namespace OpGL
                 Terminal.TextBox.Disappear();
             }
         }
-        private void PerformCollisionChecks(Drawable drawable)
+        private void PerformCollisionChecks(Sprite drawable)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
             List<CollisionData> entityCollisions = new List<CollisionData>();
@@ -558,9 +562,9 @@ namespace OpGL
             while (true) // loop exits when there are no more collisions to handle
             {
                 // get a collision
-                List<Drawable> testFor = sprites.GetPotentialColliders(drawable);
+                List<Sprite> testFor = sprites.GetPotentialColliders(drawable);
                 List<CollisionData> collisionDatas = new List<CollisionData>();
-                foreach (Drawable d in testFor)
+                foreach (Sprite d in testFor)
                 {
                     CollisionData cd = drawable.TestCollision(d);
                     if (cd != null && !entityCollisions.Any((a) => a.CollidedWith == cd.CollidedWith))
@@ -572,14 +576,14 @@ namespace OpGL
                 if (c == null) break;
 
                 // entity colliding with ground must be handled in a way that allows bouncing platforms
-                if (drawable.Solid == Drawable.SolidState.Entity && c.CollidedWith.Solid == Drawable.SolidState.Ground)
+                if (drawable.Solid == Sprite.SolidState.Entity && c.CollidedWith.Solid == Sprite.SolidState.Ground)
                 {
                     groundCollisions.Add(c);
                     CollisionData platformCollision = c.Vertical ? vPlatform : hPlatform;
                     if (c.CollidedWith is Platform)
                     {
                         // if a previous collision means it should be bounced
-                        if (groundCollisions.Any((a) => a.CollidedWith.Solid == Drawable.SolidState.Ground && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
+                        if (groundCollisions.Any((a) => a.CollidedWith.Solid == Sprite.SolidState.Ground && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
                         {
                             c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
                             if (drawable is Platform) // undo duplicate direction flipping
@@ -617,7 +621,7 @@ namespace OpGL
                 // otherwise, a simple collision should suffice
                 else
                 {
-                    if (c.CollidedWith.Solid == Drawable.SolidState.Entity)
+                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity)
                     {
                         entityCollisions.Add(c);
                         if (drawable is Platform)
@@ -727,7 +731,7 @@ namespace OpGL
                                 WaitingForAction = () =>
                                 {
                                     sayTextBox.Disappear();
-                                    sayTextBox.Disappeared += () => hudSprites.Remove(sayTextBox);
+                                    sayTextBox.Disappeared += (textBox) => hudSprites.Remove(textBox);
                                     CurrentScript.Continue();
                                 };
                             }, true));
