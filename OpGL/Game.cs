@@ -145,7 +145,7 @@ namespace OpGL
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
             FontTexture = TextureFromName("font");
-            ActivePlayer = new Player(20, 20, viridian, "Player", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
+            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
@@ -212,7 +212,7 @@ namespace OpGL
                 "You have activated this terminal.\n" +
                 "Congratulations! You have depression.\n" +
                 "mood,player,sad\n" +
-                "say,2,poopoo\n" +
+                "say,2,player\n" +
                 "Oh no! Now I'm\n" +
                 "depressed!\n" +
                 "playercontrol,true");
@@ -819,6 +819,11 @@ namespace OpGL
                             }
                             commands.Add(new Command(() =>
                             {
+                                if (sayCrewman == null && args.ElementAtOrDefault(2).ToLower() == "player")
+                                {
+                                    sayCrewman = ActivePlayer;
+                                    sayTextBoxColor = ActivePlayer.TextBoxColor;
+                                }
                                 VTextBox sayTextBox = new VTextBox(0, 0, FontTexture, sayText, sayTextBoxColor);
                                 if (sayCrewman != null)
                                 {
@@ -900,7 +905,9 @@ namespace OpGL
             bool sad = (args[2].ToLower() == "sad" || args[2] == "1");
             return new Command(() =>
             {
-                crewman.Sad = sad;
+                if (crewman == null && args.ElementAtOrDefault(1).ToLower() == "player") crewman = ActivePlayer;
+                if (crewman != null)
+                    crewman.Sad = sad;
             });
         }
     }
