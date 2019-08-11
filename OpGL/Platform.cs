@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace OpGL
         /// </summary>
         public bool SingleDirection;
         public List<Sprite> OnTop = new List<Sprite>();
+        public Rectangle Bounds;
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null) : base(x, y, texture, animation)
         {
             XSpeed = xSpeed;
@@ -40,6 +42,7 @@ namespace OpGL
             base.Process();
             X += XVel;
             Y += YVel;
+            CheckBounds();
             if (DisappearFrames > 0)
             {
                 DisappearFrames -= 1;
@@ -47,6 +50,33 @@ namespace OpGL
                 {
                     Visible = false;
                     Solid = SolidState.NonSolid;
+                }
+            }
+        }
+
+        public void CheckBounds()
+        {
+            if (Bounds.Width > 0 && Bounds.Height > 0)
+            {
+                if (Right > Bounds.X + Bounds.Width)
+                {
+                    Right = Bounds.X + Bounds.Width;
+                    XVel *= -1;
+                }
+                else if (X < Bounds.X)
+                {
+                    X = Bounds.X;
+                    XVel *= -1;
+                }
+                else if (Bottom > Bounds.Y + Bounds.Height)
+                {
+                    Bottom = Bounds.Y + Bounds.Height;
+                    YVel *= -1;
+                }
+                else if (Y < Bounds.Y)
+                {
+                    Y = Bounds.Y;
+                    YVel *= -1;
                 }
             }
         }
@@ -85,6 +115,8 @@ namespace OpGL
 
             if (collision is Platform)
                 collision.CollideX(-distance, null);
+
+            CheckBounds();
         }
 
         public override void CollideY(float distance, Sprite collision)
@@ -104,6 +136,8 @@ namespace OpGL
 
             if (collision is Platform)
                 (collision as Platform).YVel *= -1;
+
+            CheckBounds();
         }
 
         public void Disappear()

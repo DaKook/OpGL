@@ -31,6 +31,10 @@ namespace OpGL
         public int JumpBuffer = 0;
         public int LedgeMercy = 0;
         private bool _sad = false;
+        public AIStates AIState = AIStates.Stand;
+        public enum AIStates { Follow, Face, Stand };
+        public Crewman Target;
+        public string Tag;
         public bool Sad
         {
             get => _sad;
@@ -80,6 +84,23 @@ namespace OpGL
             base.Process();
             if (DyingFrames == 0)
             {
+                if (Target != null)
+                {
+                    if (AIState == AIStates.Follow)
+                    {
+                        if (Target.X > Right + 16) InputDirection = 1;
+                        else if (Target.Right < X - 16) InputDirection = -1;
+                        else InputDirection = 0;
+                        if (Target.CenterX > CenterX) flipX = false;
+                        else if (Target.CenterX < CenterX) flipX = true;
+                    }
+                    else if (AIState == AIStates.Face)
+                    {
+                        if (Target.CenterX > CenterX) flipX = false;
+                        else if (Target.CenterX < CenterX) flipX = true;
+                    }
+                }
+
                 YVelocity += Gravity;
                 if (JumpBuffer > 0) JumpBuffer -= 1;
                 if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;

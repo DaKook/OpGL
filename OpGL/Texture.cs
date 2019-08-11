@@ -9,7 +9,7 @@ namespace OpGL
     public class Texture
     {
         public Sprite.SolidState[,] TileSolidStates { get; internal set; }
-        public List<Animation> Animations { get; set; }
+        public SortedList<string,Animation> Animations { get; set; }
         public string Name { get; internal set; }
         public uint ID { get; internal set; }
         public float Width { get; internal set; }
@@ -18,6 +18,12 @@ namespace OpGL
         public uint Program { get; internal set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
+
+        public Animation AnimationFromName(string name)
+        {
+            Animations.TryGetValue(name, out Animation anim);
+            return anim;
+        }
 
         public Texture(uint id, float width, float height, int tileSize, string name, uint program, uint vao, uint vbo)
         {

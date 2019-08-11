@@ -198,6 +198,9 @@ namespace OpGL
             animFrame = 0;
         }
 
+        public virtual void FlipX() => flipX = !flipX;
+        public virtual void FlipY() => flipY = !flipY;
+
         public virtual void Process()
         {
             //Advance animation frame and change TextureX and TextureY accordingly

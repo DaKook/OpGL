@@ -47,6 +47,13 @@ namespace OpGL
         }
 
         // Scripts
+        public SortedList<string, Script> Scripts = new SortedList<string, Script>();
+        public Script ScriptFromName(string name)
+        {
+            Scripts.TryGetValue(name, out Script script);
+            return script;
+        }
+
         public Action WaitingForAction = null;
         public int DelayFrames;
         public bool PlayerControl = true;
@@ -109,15 +116,10 @@ namespace OpGL
         private SpriteCollection sprites;
         private SpriteCollection hudSprites;
         public SortedList<string, Sprite> UserAccessDrawables = new SortedList<string, Sprite>();
-        public Sprite GetDrawableByName(string name, bool caseSensitive = false)
+        public Sprite SpriteFromName(string name)
         {
-            //foreach (Sprite drawable in UserAccessDrawables)
-            //{
-            //    if ((!caseSensitive && drawable.Name.ToLower() == name.ToLower()) || drawable.Name == name)
-            //        return drawable;
-            //}
-            return UserAccessDrawables[name.ToLower()];
-            return null;
+            UserAccessDrawables.TryGetValue(name, out Sprite sprite);
+            return sprite;
         }
 
         Player ActivePlayer;
@@ -143,7 +145,7 @@ namespace OpGL
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
             FontTexture = TextureFromName("font");
-            ActivePlayer = new Player(20, 20, viridian, "Player", viridian.Animations[0], viridian.Animations[1], viridian.Animations[2], viridian.Animations[3], viridian.Animations[4]);
+            ActivePlayer = new Player(20, 20, viridian, "Player", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
             //ActivePlayer.CanFlip = false;
             //ActivePlayer.Jump = 8;
             sprites.Add(ActivePlayer);
@@ -173,21 +175,23 @@ namespace OpGL
             sprites.Add(new Tile(0, 0, tiles, 4, 2));
             sprites.Add(new Tile(312, 0, tiles, 5, 2));
             sprites.Add(new Tile(312, 232, tiles, 5, 3));
-            sprites.Add(new Platform(96, 64, platforms, platforms.Animations[0], 0, 1, 0, false));
-            sprites.Add(new Platform(144, 80, platforms, platforms.Animations[0], -1, 0, 0, false));
+            sprites.Add(new Platform(96, 64, platforms, platforms.Animations["platform1"], 0, 1, 0, false));
+            sprites.Add(new Platform(144, 80, platforms, platforms.Animations["platform1"], -1, 0, 0, false));
             //sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
             //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
-            sprites.Add(new Platform(168, 80, platforms, platforms.Animations[1], 0f, 0f, 1, false));
-            sprites.Add(new Platform(280, 184, platforms, platforms.Animations[0], 0.5f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(262, 216, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(262, 224, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(200, 216, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
-            sprites.Add(new Platform(200, 224, platforms, platforms.Animations[0], -1f, 0, 0, true, platforms.Animations[3]));
+            sprites.Add(new Platform(168, 80, platforms, platforms.Animations["conveyor1r"], 0f, 0f, 1, false));
+            sprites.Add(new Platform(280, 184, platforms, platforms.Animations["platform1"], 0.5f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(262, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(262, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(200, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(200, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
             sprites.Add(new Tile(200, 80, tiles, 4, 5));
-            sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations[0], sprites32.Animations[1]));
-            sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations[0], sprites32.Animations[1], true));
-            sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations[0], sprites32.Animations[1], false, true));
-            sprites.Add(new Enemy(64, 80, sprites32, sprites32.Animations[2], 0, 1, Color.Red));
+            sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"]));
+            sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], true));
+            sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], false, true));
+            Enemy en = new Enemy(64, 41, sprites32, sprites32.Animations["Enemy1"], 0, 1, Color.Red);
+            en.Bounds = new Rectangle(65, 41, 14, 79);
+            sprites.Add(en);
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
                 sprites.Add(new Tile(160, i, tiles, 5, 5));
@@ -212,7 +216,7 @@ namespace OpGL
                 "Oh no! Now I'm\n" +
                 "depressed!\n" +
                 "playercontrol,true");
-            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations[3], sprites32.Animations[4], testScript, true);
+            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
             sprites.Add(terminal);
 
 
@@ -224,7 +228,6 @@ namespace OpGL
         }
 
         //INITIALIZE
-
         #region "Init"
         private void InitGlProgram()
         {
@@ -257,13 +260,14 @@ namespace OpGL
                     {
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fName + "_data.txt"));
                         Texture tex = CreateTexture(fName, (int)jObject["GridSize"]);
+                        string test = (string)jObject["Trololol"];
                         textures.Add(tex);
 
                         // Animations
                         JArray arr = (JArray)jObject["Animations"];
                         if (arr != null)
                         {
-                            List<Animation> anims = new List<Animation>();
+                            SortedList<string,Animation> anims = new SortedList<string,Animation>();
                             foreach (JObject anim in arr)
                             {
                                 JArray frms = (JArray)anim["Frames"];
@@ -289,7 +293,9 @@ namespace OpGL
                                 }
                                 JArray hitbox = (JArray)anim["Hitbox"];
                                 Rectangle r = hitbox.Count == 4 ? new Rectangle((int)hitbox[0], (int)hitbox[1], (int)hitbox[2], (int)hitbox[3]) : Rectangle.Empty;
-                                anims.Add(new Animation(frames.ToArray(), r, tex));
+                                Animation animation = new Animation(frames.ToArray(), r, tex);
+                                animation.Name = (string)anim["Name"] ?? "";
+                                anims.Add(animation.Name, animation);
                             }
                             tex.Animations = anims;
                         }
@@ -323,7 +329,7 @@ namespace OpGL
                     else // no _data file, create with default grid size
                     {
                         textures.Add(CreateTexture(fName, 32));
-                        textures.Last().Animations = new List<Animation>();
+                        textures.Last().Animations = new SortedList<string,Animation>();
                     }
                 }
             }
@@ -459,6 +465,7 @@ namespace OpGL
                     d.Process();
                 }
 
+                FrameCount %= int.MaxValue;
                 FrameCount++;
 
                 glControl.Invalidate();
@@ -674,6 +681,107 @@ namespace OpGL
 #endif
         }
 
+        public Room Load(JObject loadFrom)
+        {
+            JArray sArr = loadFrom["Sprites"] as JArray;
+            Room ret = new Room(new SpriteCollection(), null, null);
+            foreach (JToken sprite in sArr)
+            {
+                string type = (string)sprite["Type"];
+                //Type t = typeof(Sprite);
+                Sprite s;
+                float x = (float)sprite["X"];
+                float y = (float)sprite["Y"];
+                string textureName = (string)sprite["Texture"];
+                Texture texture = TextureFromName(textureName);
+                if (type == "Tile")
+                {
+                    int tileX = (int)sprite["TileX"];
+                    int tileY = (int)sprite["TileY"];
+                    s = new Tile((int)x, (int)y, texture, tileX, tileY);
+                }
+                else if (type == "Enemy")
+                {
+                    string animationName = (string)sprite["Animation"];
+                    float xSpeed = (float)sprite["XSpeed"];
+                    float ySpeed = (float)sprite["YSpeed"];
+                    string name = (string)sprite["Name"];
+                    int color = (int)sprite["Color"];
+                    int boundX = (int)sprite["BoundsX"];
+                    int boundY = (int)sprite["BoundsY"];
+                    int boundW = (int)sprite["BoundsWidth"];
+                    int boundH = (int)sprite["BoundsHeight"];
+                    s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, Color.FromArgb(color));
+                    s.Name = name;
+                    (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+                }
+                else if (type == "Crewman")
+                {
+                    string standName = (string)sprite["Standing"];
+                    string walkName = (string)sprite["Walking"];
+                    string fallName = (string)sprite["Falling"];
+                    string jumpName = (string)sprite["Jumping"];
+                    string dieName = (string)sprite["Dying"];
+                    string name = (string)sprite["Name"];
+                    int textBoxColor = (int)sprite["TextBox"];
+                    bool sad = (bool)sprite["Sad"];
+                    int aiState = (int)sprite["AI"];
+                    string targetName = (string)sprite["Target"];
+                    s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
+                    (s as Crewman).Sad = sad;
+                    (s as Crewman).AIState = (Crewman.AIStates)aiState;
+                    (s as Crewman).Tag = targetName;
+                }
+                else if (type == "Checkpoint")
+                {
+                    string deactivatedName = (string)sprite["Deactivated"];
+                    string activatedName = (string)sprite["Activated"];
+                    bool flipX = (bool)sprite["FlipX"];
+                    bool flipY = (bool)sprite["FlipY"];
+                    s = new Checkpoint(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), flipX, flipY);
+                }
+                else if (type == "Platform")
+                {
+                    string animationName = (string)sprite["Animation"];
+                    string disappearName = (string)sprite["DisappearAnimation"];
+                    float xSpeed = (float)sprite["XSpeed"];
+                    float ySpeed = (float)sprite["YSpeed"];
+                    float conveyor = (float)sprite["Conveyor"];
+                    string name = (string)sprite["Name"];
+                    bool disappear = (bool)sprite["Disappear"];
+                    int color = (int)sprite["Color"];
+                    int boundX = (int)sprite["BoundsX"];
+                    int boundY = (int)sprite["BoundsY"];
+                    int boundW = (int)sprite["BoundsWidth"];
+                    int boundH = (int)sprite["BoundsHeight"];
+                    s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
+                    s.Name = name;
+                    s.Color = Color.FromArgb(color);
+                    (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+                }
+                else if (type == "Terminal")
+                {
+                    string deactivatedName = (string)sprite["Deactivated"];
+                    string activatedName = (string)sprite["Activated"];
+                    string script = (string)sprite["Script"];
+                    bool repeat = (bool)sprite["Repeat"];
+                    bool flipX = (bool)sprite["FlipX"];
+                    bool flipY = (bool)sprite["FlipY"];
+                    s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), ScriptFromName(script), repeat);
+                    if (flipX) s.FlipX();
+                    if (flipY) s.FlipY();
+                }
+
+                else s = null;
+                if (s != null)
+                    ret.Objects.Add(s);
+            }
+            ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]);
+            ret.ExitScript = ScriptFromName((string)loadFrom["ExitScript"]);
+
+            return ret;
+        }
+
         public Script ParseScript(string script)
         {
             string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -688,7 +796,7 @@ namespace OpGL
                         {
                             if (!int.TryParse(args.ElementAtOrDefault(1), out int sayLines)) continue;
                             Color sayTextBoxColor = Color.Gray;
-                            Crewman sayCrewman = GetDrawableByName(args.ElementAtOrDefault(2)) as Crewman;
+                            Crewman sayCrewman = SpriteFromName(args.ElementAtOrDefault(2)) as Crewman;
                             if (sayCrewman != null)
                             {
                                 sayTextBoxColor = sayCrewman.TextBoxColor;
@@ -787,7 +895,7 @@ namespace OpGL
         }
         public Command MoodCommand(string[] args)
         {
-            Crewman crewman = GetDrawableByName(args[1]) as Crewman;
+            Crewman crewman = SpriteFromName(args[1]) as Crewman;
             if (crewman == null) crewman = ActivePlayer;
             bool sad = (args[2].ToLower() == "sad" || args[2] == "1");
             return new Command(() =>

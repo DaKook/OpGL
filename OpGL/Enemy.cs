@@ -12,6 +12,7 @@ namespace OpGL
         public float XVel;
         public float YVel;
         public bool Pushable = true;
+        public Rectangle Bounds;
         public Enemy(float x, float y, Texture texture, Animation animation, float xSpeed, float ySpeed, Color? color = null) : base(x, y, texture, animation)
         {
             XVel = xSpeed;
@@ -26,6 +27,34 @@ namespace OpGL
             base.Process();
             X += XVel;
             Y += YVel;
+            CheckBounds();
+        }
+
+        public void CheckBounds()
+        {
+            if (Bounds.Width > 0 && Bounds.Height > 0)
+            {
+                if (Right > Bounds.X + Bounds.Width)
+                {
+                    Right = Bounds.X + Bounds.Width;
+                    XVel *= -1;
+                }
+                else if (X < Bounds.X)
+                {
+                    X = Bounds.X;
+                    XVel *= -1;
+                }
+                else if (Bottom > Bounds.Y + Bounds.Height)
+                {
+                    Bottom = Bounds.Y + Bounds.Height;
+                    YVel *= -1;
+                }
+                else if (Y < Bounds.Y)
+                {
+                    Y = Bounds.Y;
+                    YVel *= -1;
+                }
+            }
         }
 
         public override void CollideX(float distance, Sprite collision)
@@ -35,14 +64,7 @@ namespace OpGL
                 base.CollideX(distance, collision);
                 XVel *= -1;
             }
-            //else if (!collision.Static && collision.Solid == SolidState.Ground)
-            //{
-            //    collision.X += distance;
-            //    if (collision is Platform)
-            //    {
-            //        (collision as Platform).XVel *= -1;
-            //    }
-            //}
+            //CheckBounds();
         }
 
         public override void CollideY(float distance, Sprite collision)
@@ -52,14 +74,7 @@ namespace OpGL
                 base.CollideY(distance, collision);
                 YVel *= -1;
             }
-            //else if (!collision.Static && collision.Solid == SolidState.Ground)
-            //{
-            //    collision.Y += distance;
-            //    if (collision is Platform)
-            //    {
-            //        (collision as Platform).YVel *= -1;
-            //    }
-            //}
+            //CheckBounds();
         }
     }
 }
