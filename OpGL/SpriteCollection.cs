@@ -194,7 +194,7 @@ namespace OpGL
             int index = AddIndex(d);
             // check from this index to the end of that range
             int i = index;
-            while (RenderCompare(this[i], d) == 0)
+            while (i < Count && RenderCompare(this[i], d) == 0)
             {
                 if (this[i] == d)
                     return i;
@@ -202,7 +202,7 @@ namespace OpGL
             }
             // check to the beginning of that range
             i = index - 1;
-            while (RenderCompare(this[i], d) == 0)
+            while (i >= 0 && RenderCompare(this[i], d) == 0)
             {
                 if (this[i] == d)
                     return i;
