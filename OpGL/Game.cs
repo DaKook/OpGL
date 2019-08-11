@@ -215,6 +215,10 @@ namespace OpGL
                 "say,2,player\n" +
                 "Oh no! Now I'm\n" +
                 "depressed!\n" +
+                "say,2,gray\n" +
+                "Also, your checkpoint\n" +
+                "has been set.\n" +
+                "checkpoint\n" +
                 "playercontrol,true");
             Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
             sprites.Add(terminal);
@@ -501,7 +505,14 @@ namespace OpGL
                     Terminal.TextBox.Disappear();
                     CurrentScript = t.Script.ExecuteFromBeginning();
                     if (t.Repeat)
-                        CurrentScript.Finished += (script) => { t.AlreadyUsed = false; };
+                        CurrentScript.Finished += (script) => {
+                            t.AlreadyUsed = false;
+                            if (t.IsOverlapping(ActivePlayer))
+                            {
+                                ActivePlayer.CurrentTerminal = t;
+                                Terminal.TextBox.Appear();
+                            }
+                        };
                 }
             }
 
@@ -768,8 +779,8 @@ namespace OpGL
                     bool flipX = (bool)sprite["FlipX"];
                     bool flipY = (bool)sprite["FlipY"];
                     s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), ScriptFromName(script), repeat);
-                    if (flipX) s.FlipX();
-                    if (flipY) s.FlipY();
+                    s.FlipX = flipX;
+                    s.FlipY = flipY;
                 }
 
                 else s = null;
@@ -862,6 +873,9 @@ namespace OpGL
                     case "mood":
                         commands.Add(MoodCommand(args));
                         break;
+                    case "checkpoint":
+                        commands.Add(CheckpointCommand());
+                        break;
                     default:
                         break;
                 }
@@ -908,6 +922,21 @@ namespace OpGL
                 if (crewman == null && args.ElementAtOrDefault(1).ToLower() == "player") crewman = ActivePlayer;
                 if (crewman != null)
                     crewman.Sad = sad;
+            });
+        }
+        public Command CheckpointCommand()
+        {
+            return new Command(() =>
+            {
+                ActivePlayer.CheckpointFlipX = ActivePlayer.FlipX;
+                ActivePlayer.CheckpointFlipY = ActivePlayer.FlipY;
+                ActivePlayer.CheckpointX = ActivePlayer.CenterX;
+                ActivePlayer.CheckpointY = ActivePlayer.FlipY ? ActivePlayer.Y : ActivePlayer.Bottom;
+                if (ActivePlayer.CurrentCheckpoint != null)
+                {
+                    ActivePlayer.CurrentCheckpoint.Deactivate();
+                    ActivePlayer.CurrentCheckpoint = null;
+                }
             });
         }
     }

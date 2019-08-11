@@ -198,8 +198,8 @@ namespace OpGL
             animFrame = 0;
         }
 
-        public virtual void FlipX() => flipX = !flipX;
-        public virtual void FlipY() => flipY = !flipY;
+        public virtual bool FlipX { get => flipX; set => flipX = value; }
+        public virtual bool FlipY { get => flipY; set => flipY = value; }
 
         public virtual void Process()
         {
