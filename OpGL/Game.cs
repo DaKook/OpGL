@@ -205,22 +205,25 @@ namespace OpGL
                     sprites.Add(new Tile(i, j, tiles, 1, 20));
             for (int i = 168; i < 312; i += 8)
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
-            hudSprites.Add(new StringDrawable(8, 8, FontTexture, "Welcome to VVVVVVV!\nYou will enjoy...", Color.Red));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
             VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
             hudSprites.Add(vText);
             Script testScript = ParseScript("playercontrol,false\n" +
-                "say,2,gray\n" +
-                "You have activated this terminal.\n" +
-                "Congratulations! You have depression.\n" +
-                "mood,player,sad\n" +
-                "say,2,player\n" +
-                "Oh no! Now I'm\n" +
-                "depressed!\n" +
-                "say,2,gray\n" +
-                "Also, your checkpoint\n" +
-                "has been set.\n" +
-                "checkpoint\n" +
+                "text,gray,8,8,1\n" +
+                "Hello\n" +
+                "speak\n" +
+                "text,gray,48,144,1\n" +
+                "Hello\n" +
+                "speak\n" +
+                "text,gray,0,0,1\n" +
+                "Hello\n" +
+                "position,player,above\n" +
+                "speak\n" +
+                "text,red,0,0,1\n" +
+                "Haha lol\n" +
+                "position,center\n" +
+                "speak_active\n" +
+                "endtext\n" +
                 "playercontrol,true");
             Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
             sprites.Add(terminal);
@@ -909,9 +912,9 @@ namespace OpGL
                                 int.TryParse(args[4], out int b);
                                 txTextBoxColor = Color.FromArgb(r, g, b);
                             }
-                            else if (presetcolors.Contains(args.ElementAtOrDefault(2)))
+                            else if (presetcolors.Contains(args.ElementAtOrDefault(1)))
                             {
-                                switch (args[2])
+                                switch (args[1])
                                 {
                                     case "cyan":
                                         txTextBoxColor = Color.FromArgb(164, 164, 255);
@@ -950,7 +953,9 @@ namespace OpGL
                             int.TryParse(args.ElementAtOrDefault(3 + txArgOffset), out int txY);
                             commands.Add(new Command(() =>
                             {
-                                TextBoxes.Add(new VTextBox(txX, txY, FontTexture, txText, txTextBoxColor));
+                                VTextBox tb = new VTextBox(txX, txY, FontTexture, txText, txTextBoxColor);
+                                TextBoxes.Add(tb);
+                                hudSprites.Add(tb);
                             }));
                         }
                         break;
@@ -971,6 +976,15 @@ namespace OpGL
                         break;
                     case "position":
                         commands.Add(PositionCommand(args));
+                        break;
+                    case "speak":
+                        commands.Add(SpeakCommand());
+                        break;
+                    case "speak_active":
+                        commands.Add(SpeakActiveCommand());
+                        break;
+                    case "endtext":
+                        commands.Add(EndTextCommand());
                         break;
                     default:
                         break;
@@ -1037,21 +1051,20 @@ namespace OpGL
         }
         public Command PositionCommand(string[] args)
         {
-            string p = args.ElementAtOrDefault(1);
-            string c = args.FirstOrDefault();
+            string p = args.ElementAtOrDefault(2);
+            string c = args.ElementAtOrDefault(1);
 
             return new Command(() =>
             {
                 if (TextBoxes.Count > 0)
                 {
                     VTextBox tb = TextBoxes.Last();
-                    int x = 0;
-                    int y = 0;
                     if (c.ToLower() == "centerx" || c.ToLower() == "center")
                         tb.CenterX = RESOLUTION_WIDTH / 2;
                     if (c.ToLower() == "centery" || c.ToLower() == "center")
                         tb.CenterY = RESOLUTION_HEIGHT / 2;
                     Crewman crewman = SpriteFromName(c) as Crewman;
+                    if (c.ToLower() == "player") crewman = ActivePlayer;
                     if (crewman != null)
                     {
                         if (p == "above")
@@ -1065,6 +1078,53 @@ namespace OpGL
                             tb.X = crewman.X - 16;
                         }
                     }
+                }
+            });
+        }
+        public Command SpeakCommand()
+        {
+            return new Command(() =>
+            {
+                if (TextBoxes.Count > 0)
+                {
+                    VTextBox tb = TextBoxes.Last();
+                    tb.Appear();
+                    WaitingForAction = () =>
+                    {
+                        CurrentScript.Continue();
+                    };
+                }
+            }, true);
+        }
+        public Command SpeakActiveCommand()
+        {
+            return new Command(() =>
+            {
+                if (TextBoxes.Count > 0)
+                {
+                    VTextBox tb = TextBoxes.Last();
+                    for (int i = TextBoxes.Count - 2; i >= 0 ; i--)
+                    {
+                        TextBoxes[i].Disappear();
+                        TextBoxes[i].Disappeared += (textBox) => hudSprites.Remove(textBox);
+                    }
+                    tb.Appear();
+                    WaitingForAction = () =>
+                    {
+                        CurrentScript.Continue();
+                    };
+                }
+
+            }, true);
+        }
+        public Command EndTextCommand()
+        {
+            return new Command(() =>
+            {
+                for (int i = TextBoxes.Count - 1; i >= 0; i--)
+                {
+                    TextBoxes[i].Disappear();
+                    TextBoxes[i].Disappeared += (textBox) => hudSprites.Remove(textBox);
                 }
             });
         }
