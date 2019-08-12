@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
@@ -82,6 +83,24 @@ namespace OpGL
             base.Collide(cd);
             if (!Pushable)
                 cd.CollidedWith.Collide(new CollisionData(cd.Vertical, -cd.Distance, this));
+        }
+
+        public override JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("Animation", Animation.Name, ret);
+            write("XSpeed", XVel, ret);
+            write("YSpeed", YVel, ret);
+            write("Name", Name, ret);
+            write("Color", Color.ToArgb(), ret);
+            write("BoundsX", Bounds.X, ret);
+            write("BoundsY", Bounds.Y, ret);
+            write("BoundsWidth", Bounds.Width, ret);
+            write("BoundsHeight", Bounds.Height, ret);
+            return ret.Token;
         }
     }
 }

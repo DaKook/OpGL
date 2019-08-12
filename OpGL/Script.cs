@@ -13,10 +13,13 @@ namespace OpGL
         public delegate void FinishedDelegate(Script script);
         public event FinishedDelegate Finished;
 
+        public string Name;
+
         public Command[] Commands;
-        public Script(Command[] commands)
+        public Script(Command[] commands, string name = "")
         {
             Commands = commands;
+            Name = name;
         }
 
         public Script ExecuteFromBeginning()

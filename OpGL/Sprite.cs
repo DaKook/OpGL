@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json.Linq;
 using OpenGL;
 
 namespace OpGL
@@ -295,6 +295,22 @@ namespace OpGL
         public virtual void HandleCrewmanCollision(Crewman crewman)
         {
             //Do nothing
+        }
+
+        protected void write(string name, object s, JTokenWriter writer)
+        {
+            writer.WritePropertyName(name);
+            writer.WriteValue(s);
+        }
+
+        public virtual JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("Animation", Animation.Name, ret);
+            return ret.Token;
         }
     }
 

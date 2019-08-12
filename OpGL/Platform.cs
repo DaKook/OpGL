@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -149,6 +150,27 @@ namespace OpGL
                 Animation = DisappearAnimation;
                 DisappearFrames = DisappearAnimation.FrameCount;
             }
+        }
+
+        public override JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("Animation", Animation.Name, ret);
+            write("DisappearAnimation", DisappearAnimation.Name, ret);
+            write("XSpeed", XVel, ret);
+            write("YSpeed", YVel, ret);
+            write("Conveyor", Conveyor, ret);
+            write("Name", Name, ret);
+            write("Disappear", CanDisappear, ret);
+            write("Color", Color.ToArgb(), ret);
+            write("BoundsX", Bounds.X, ret);
+            write("BoundsY", Bounds.Y, ret);
+            write("BoundsWidth", Bounds.Width, ret);
+            write("BoundsHeight", Bounds.Height, ret);
+            return ret.Token;
         }
     }
 }

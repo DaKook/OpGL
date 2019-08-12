@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
@@ -22,6 +23,17 @@ namespace OpGL
                 Solid = (SolidState)ss;
             }
             Static = true;
+        }
+
+        public override JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("TileX", TextureX, ret);
+            write("TileY", TextureY, ret);
+            return ret.Token;
         }
     }
 }

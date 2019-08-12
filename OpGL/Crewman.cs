@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
@@ -311,6 +312,27 @@ namespace OpGL
             {
                 Die();
             }
+        }
+
+        public override JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("Standing", StandingAnimation.Name, ret);
+            write("Walking", WalkingAnimation.Name, ret);
+            write("Falling", FallingAnimation.Name, ret);
+            write("Jumping", JumpingAnimation.Name, ret);
+            write("Dying", DyingAnimation.Name, ret);
+            write("Name", Name, ret);
+            write("TextBox", TextBoxColor.ToArgb(), ret);
+            write("FlipX", flipX, ret);
+            write("Gravity", Gravity, ret);
+            //Probably don't want to save these because when loading, the target may not have been loaded yet.
+            write("AI", (int)AIState, ret);
+            write("Target", Target.Name, ret);
+            return ret.Token;
         }
     }
 }

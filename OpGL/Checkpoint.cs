@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,6 +51,19 @@ namespace OpGL
             Activated = true;
             ResetAnimation();
             Animation = ActivatedAnimation;
+        }
+
+        public override JToken Save()
+        {
+            JTokenWriter ret = new JTokenWriter();
+            write("X", X, ret);
+            write("Y", Y, ret);
+            write("Texture", Texture.Name, ret);
+            write("Deactivated", DeactevatedAnimation.Name, ret);
+            write("Activated", ActivatedAnimation.Name, ret);
+            write("FlipX", flipX, ret);
+            write("FlipY", flipY, ret);
+            return ret.Token;
         }
     }
 }

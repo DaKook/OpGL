@@ -1,0 +1,58 @@
+{
+	"Width": 1,
+	"Height": 1,
+	"StartRoomX": 0,
+	"StartRoomY": 0,
+	"StartX": 24,
+	"StartY": 24,
+	"Player":
+	{
+		"Type": "Crewman",
+		"X": 0,
+		"Y": 0,
+		"Texture": "viridian",
+		"Standing": "Standing",
+		"Walking": "Walking",
+		"Falling": "Falling",
+		"Jumping": "Jumping",
+		"Dying": "Dying",
+		"Name": "Viridian",
+		"TextBox": -5987073,
+		"Sad": false,
+		"Gravity": 0.6875,
+		"FlipX": false,
+		"AI": 2,
+		"Target": ""
+	},
+	"Scripts":
+	[
+		{
+			"Name": "script1",
+			"Contents": "say,1,player\nIt works!"
+		}
+	],
+	"Objects":
+	[
+		
+	],
+	"Rooms":
+	[
+		{
+			"Objects":
+			[
+				{
+					"Type": "Tile",
+					"X": 24,
+					"Y": 160,
+					"Texture": "tiles",
+					"TileX": 3,
+					"TileY": 4
+				}
+			],
+			"X": 0,
+			"Y": 0,
+			"EnterScript": "",
+			"ExitScript": ""
+		}
+	]
+}
