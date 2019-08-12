@@ -76,5 +76,12 @@ namespace OpGL
             }
             //CheckBounds();
         }
+
+        public override void Collide(CollisionData cd)
+        {
+            base.Collide(cd);
+            if (!Pushable)
+                cd.CollidedWith.Collide(new CollisionData(cd.Vertical, -cd.Distance, this));
+        }
     }
 }
