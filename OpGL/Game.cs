@@ -59,6 +59,8 @@ namespace OpGL
         public bool PlayerControl = true;
         public bool Freeze = false;
         public Script CurrentScript;
+        private string[] presetcolors = new string[] { "cyan", "red", "yellow", "green", "purple", "blue", "gray", "terminal" };
+        public List<VTextBox> TextBoxes = new List<VTextBox>();
 
         // OpenGL
         private GlControl glControl;
@@ -139,7 +141,6 @@ namespace OpGL
             sprites = new SpriteCollection();
             hudSprites = new SpriteCollection();
 #if TEST
-
             Texture viridian = TextureFromName("viridian");
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
@@ -208,7 +209,7 @@ namespace OpGL
             VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
             hudSprites.Add(vText);
             Script testScript = ParseScript("playercontrol,false\n" +
-                "say,2,140,140,140\n" +
+                "say,2,gray\n" +
                 "You have activated this terminal.\n" +
                 "Congratulations! You have depression.\n" +
                 "mood,player,sad\n" +
@@ -819,6 +820,34 @@ namespace OpGL
                                 int.TryParse(args[4], out int b);
                                 sayTextBoxColor = Color.FromArgb(r, g, b);
                             }
+                            else if (presetcolors.Contains(args.ElementAtOrDefault(2)))
+                            {
+                                switch (args[2])
+                                {
+                                    case "cyan":
+                                        sayTextBoxColor = Color.FromArgb(164, 164, 255);
+                                        break;
+                                    case "red":
+                                        sayTextBoxColor = Color.FromArgb(255, 60, 60);
+                                        break;
+                                    case "yellow":
+                                        sayTextBoxColor = Color.FromArgb(255, 255, 134);
+                                        break;
+                                    case "green":
+                                        sayTextBoxColor = Color.FromArgb(144, 255, 144);
+                                        break;
+                                    case "purple":
+                                        sayTextBoxColor = Color.FromArgb(255, 134, 255);
+                                        break;
+                                    case "blue":
+                                        sayTextBoxColor = Color.FromArgb(95, 95, 255);
+                                        break;
+                                    case "gray":
+                                    case "terminal":
+                                        sayTextBoxColor = Color.FromArgb(174, 174, 174);
+                                        break;
+                                }
+                            }
                             string sayText = "";
                             if (sayLines > 0)
                             {
@@ -861,6 +890,69 @@ namespace OpGL
                             }, true));
                         }
                         break;
+                    case "text":
+                        {
+                            if (!int.TryParse(args.LastOrDefault(), out int txLines)) continue;
+                            Color txTextBoxColor = Color.Gray;
+                            Crewman sayCrewman = SpriteFromName(args.ElementAtOrDefault(1)) as Crewman;
+                            int txArgOffset = 0;
+                            if (sayCrewman != null)
+                            {
+                                txTextBoxColor = sayCrewman.TextBoxColor;
+                            }
+                            else if (args.Length == 7)
+                            {
+                                txArgOffset = 2;
+                                int.TryParse(args[2], out int r);
+                                int.TryParse(args[3], out int g);
+                                int.TryParse(args[4], out int b);
+                                txTextBoxColor = Color.FromArgb(r, g, b);
+                            }
+                            else if (presetcolors.Contains(args.ElementAtOrDefault(2)))
+                            {
+                                switch (args[2])
+                                {
+                                    case "cyan":
+                                        txTextBoxColor = Color.FromArgb(164, 164, 255);
+                                        break;
+                                    case "red":
+                                        txTextBoxColor = Color.FromArgb(255, 60, 60);
+                                        break;
+                                    case "yellow":
+                                        txTextBoxColor = Color.FromArgb(255, 255, 134);
+                                        break;
+                                    case "green":
+                                        txTextBoxColor = Color.FromArgb(144, 255, 144);
+                                        break;
+                                    case "purple":
+                                        txTextBoxColor = Color.FromArgb(255, 134, 255);
+                                        break;
+                                    case "blue":
+                                        txTextBoxColor = Color.FromArgb(95, 95, 255);
+                                        break;
+                                    case "gray":
+                                    case "terminal":
+                                        txTextBoxColor = Color.FromArgb(174, 174, 174);
+                                        break;
+                                }
+                            }
+                            string txText = "";
+                            if (txLines > 0)
+                            {
+                                txText = lines[i++];
+                                for (int sayI = 1; sayI < txLines; sayI++)
+                                {
+                                    txText += "\n" + lines[i++];
+                                }
+                            }
+                            int.TryParse(args.ElementAtOrDefault(2 + txArgOffset), out int txX);
+                            int.TryParse(args.ElementAtOrDefault(3 + txArgOffset), out int txY);
+                            commands.Add(new Command(() =>
+                            {
+                                TextBoxes.Add(new VTextBox(txX, txY, FontTexture, txText, txTextBoxColor));
+                            }));
+                        }
+                        break;
                     case "changefont":
                         commands.Add(ChangeFontCommand(args));
                         break;
@@ -875,6 +967,9 @@ namespace OpGL
                         break;
                     case "checkpoint":
                         commands.Add(CheckpointCommand());
+                        break;
+                    case "position":
+                        commands.Add(PositionCommand(args));
                         break;
                     default:
                         break;
@@ -936,6 +1031,39 @@ namespace OpGL
                 {
                     ActivePlayer.CurrentCheckpoint.Deactivate();
                     ActivePlayer.CurrentCheckpoint = null;
+                }
+            });
+        }
+        public Command PositionCommand(string[] args)
+        {
+            string p = args.ElementAtOrDefault(1);
+            string c = args.FirstOrDefault();
+
+            return new Command(() =>
+            {
+                if (TextBoxes.Count > 0)
+                {
+                    VTextBox tb = TextBoxes.Last();
+                    int x = 0;
+                    int y = 0;
+                    if (c.ToLower() == "centerx" || c.ToLower() == "center")
+                        tb.CenterX = RESOLUTION_WIDTH / 2;
+                    if (c.ToLower() == "centery" || c.ToLower() == "center")
+                        tb.CenterY = RESOLUTION_HEIGHT / 2;
+                    Crewman crewman = SpriteFromName(c) as Crewman;
+                    if (crewman != null)
+                    {
+                        if (p == "above")
+                        {
+                            tb.Bottom = crewman.Y - 2;
+                            tb.X = crewman.X - 16;
+                        }
+                        else
+                        {
+                            tb.Y = crewman.Bottom + 2;
+                            tb.X = crewman.X - 16;
+                        }
+                    }
                 }
             });
         }
