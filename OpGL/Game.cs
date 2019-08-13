@@ -21,9 +21,12 @@ namespace OpGL
         {
             Left,
             Right,
+            Up,
+            Down,
             Jump,
             Pause,
             Kill,
+            Click,
             Count
         }
         private int[] inputs = new int[(int)Inputs.Count];
@@ -31,6 +34,8 @@ namespace OpGL
         public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
             { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
             { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
+            //{ Keys.Up, Inputs.Up }, { Keys.W, Inputs.Up },
+            //{ Keys.Down, Inputs.Down }, { Keys.S, Inputs.Down },
             { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
             { Keys.Enter, Inputs.Pause },
             { Keys.R, Inputs.Kill }
@@ -38,6 +43,7 @@ namespace OpGL
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
         private int mouseX = -1;
         private int mouseY = -1;
+        private bool mouseDown = false;
 
         private bool IsInputActive(Inputs input)
         {
@@ -144,6 +150,8 @@ namespace OpGL
         Crewman ActivePlayer;
         public bool IsPlaying { get; private set; } = false;
         private int FrameCount = 1; // start at 1 so inputs aren't "new" at start
+        public enum GameStates { Playing, Editing, Menu }
+        public GameStates CurrentState = GameStates.Menu;
 
         public Game(GlControl control)
         {
@@ -252,12 +260,38 @@ namespace OpGL
             ActivePlayer.Layer = 1;
             fi.Size = 0.5f;
             sprites.Add(fi);
+            CurrentState = GameStates.Editing;
 
 #endif
             glControl.Render += glControl_Render;
             glControl.Resize += glControl_Resize;
             glControl.KeyDown += GlControl_KeyDown;
             glControl.KeyUp += GlControl_KeyUp;
+            glControl.MouseMove += GlControl_MouseMove;
+            glControl.MouseDown += GlControl_MouseDown;
+            glControl.MouseUp += GlControl_MouseUp;
+        }
+
+        private void GlControl_MouseUp(object sender, MouseEventArgs e)
+        {
+            inputs[(int)Inputs.Click]--;
+            mouseDown = false;
+        }
+
+        private void GlControl_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (!mouseDown)
+            {
+                inputs[(int)Inputs.Click]++;
+                lastPressed[(int)Inputs.Click] = FrameCount;
+                mouseDown = true;
+            }
+        }
+
+        private void GlControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            mouseX = e.X;
+            mouseY = e.Y;
         }
 
         //INITIALIZE
@@ -480,22 +514,29 @@ namespace OpGL
 #endif
 
                 // begin frame
-                HandleUserInputs();
-
-                if (!Freeze)
-                    ProcessWorld();
-
-                if (DelayFrames > 0)
+                if (CurrentState == GameStates.Playing)
                 {
-                    DelayFrames -= 1;
-                    if (DelayFrames == 0)
-                        CurrentScript.Continue();
+                    HandleUserInputs();
+
+                    if (!Freeze)
+                        ProcessWorld();
+
+                    if (DelayFrames > 0)
+                    {
+                        DelayFrames -= 1;
+                        if (DelayFrames == 0)
+                            CurrentScript.Continue();
+                    }
+
+                    for (int i = hudSprites.Count - 1; i >= 0; i--)
+                    {
+                        Sprite d = hudSprites[i];
+                        d.Process();
+                    }
                 }
-
-                for (int i = hudSprites.Count - 1; i >= 0; i--)
+                else if (CurrentState == GameStates.Editing)
                 {
-                    Sprite d = hudSprites[i];
-                    d.Process();
+                    HandleEditingInputs();
                 }
 
                 // end frame
@@ -511,6 +552,11 @@ namespace OpGL
                 frameTimes[FrameCount % 60] = ms;
 #endif
             }
+        }
+
+        private void HandleEditingInputs()
+        {
+
         }
 
         private void HandleUserInputs()
