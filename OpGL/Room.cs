@@ -27,18 +27,20 @@ namespace OpGL
             ExitScript = leave;
         }
 
-        public JToken Save()
+        public JObject Save()
         {
-            JsonSerializer js = new JsonSerializer();
-            
-            JTokenWriter ret = new JTokenWriter();
-            ret.WritePropertyName("Objects");
-            ret.WriteStartArray();
+            JObject ret = new JObject();
+            ret.Add("EnterScript", EnterScript.Name);
+            ret.Add("ExitScript", ExitScript.Name);
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            JObject[] objs = new JObject[Objects.Count];
             for (int i = 0; i < Objects.Count; i++)
             {
-                
+                objs[i] = Objects[i].Save();
             }
-            return ret.Token;
+            ret.Add("Objects", new JArray(objs));
+            return ret;
         }
     }
 }

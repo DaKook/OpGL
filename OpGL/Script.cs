@@ -14,12 +14,14 @@ namespace OpGL
         public event FinishedDelegate Finished;
 
         public string Name;
+        public string Contents;
 
         public Command[] Commands;
-        public Script(Command[] commands, string name = "")
+        public Script(Command[] commands, string name = "", string contents = "")
         {
             Commands = commands;
             Name = name;
+            Contents = contents;
         }
 
         public Script ExecuteFromBeginning()

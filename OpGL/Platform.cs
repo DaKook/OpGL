@@ -152,25 +152,25 @@ namespace OpGL
             }
         }
 
-        public override JToken Save()
+        public override JObject Save()
         {
-            JTokenWriter ret = new JTokenWriter();
-            write("X", X, ret);
-            write("Y", Y, ret);
-            write("Texture", Texture.Name, ret);
-            write("Animation", Animation.Name, ret);
-            write("DisappearAnimation", DisappearAnimation.Name, ret);
-            write("XSpeed", XVel, ret);
-            write("YSpeed", YVel, ret);
-            write("Conveyor", Conveyor, ret);
-            write("Name", Name, ret);
-            write("Disappear", CanDisappear, ret);
-            write("Color", Color.ToArgb(), ret);
-            write("BoundsX", Bounds.X, ret);
-            write("BoundsY", Bounds.Y, ret);
-            write("BoundsWidth", Bounds.Width, ret);
-            write("BoundsHeight", Bounds.Height, ret);
-            return ret.Token;
+            JObject ret = new JObject();
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            ret.Add("Animation", Animation.Name);
+            ret.Add("DisappearAnimation", DisappearAnimation.Name);
+            ret.Add("XSpeed", XVel);
+            ret.Add("YSpeed", YVel);
+            ret.Add("Conveyor", Conveyor);
+            ret.Add("Name", Name);
+            ret.Add("Disappear", CanDisappear);
+            ret.Add("Color", Color.ToArgb());
+            ret.Add("BoundsX", Bounds.X);
+            ret.Add("BoundsY", Bounds.Y);
+            ret.Add("BoundsWidth", Bounds.Width);
+            ret.Add("BoundsHeight", Bounds.Height);
+            return ret;
         }
     }
 }

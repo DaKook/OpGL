@@ -78,6 +78,7 @@
     <Compile Include="CollisionData.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Crewman.cs" />
+    <Compile Include="FullImage.cs" />
     <Compile Include="Sprite.cs" />
     <Compile Include="SpriteCollection.cs" />
     <Compile Include="Enemy.cs" />

@@ -53,17 +53,17 @@ namespace OpGL
             Animation = ActivatedAnimation;
         }
 
-        public override JToken Save()
+        public override JObject Save()
         {
-            JTokenWriter ret = new JTokenWriter();
-            write("X", X, ret);
-            write("Y", Y, ret);
-            write("Texture", Texture.Name, ret);
-            write("Deactivated", DeactevatedAnimation.Name, ret);
-            write("Activated", ActivatedAnimation.Name, ret);
-            write("FlipX", flipX, ret);
-            write("FlipY", flipY, ret);
-            return ret.Token;
+            JObject ret = new JObject();
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            ret.Add("Deactivated", DeactevatedAnimation.Name);
+            ret.Add("Activated", ActivatedAnimation.Name);
+            ret.Add("FlipX", flipX);
+            ret.Add("FlipY", flipY);
+            return ret;
         }
     }
 }

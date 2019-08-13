@@ -32,8 +32,6 @@ namespace OpGL
             int modelLoc = -1;
             int texLoc = -1;
             int colorLoc = -1;
-            int masterColorLoc = -1;
-
             Texture lastTex = null;
             uint lastProgram = uint.MaxValue;
             long lastColor = long.MinValue;
@@ -55,7 +53,7 @@ namespace OpGL
                         modelLoc = Gl.GetUniformLocation(lastProgram, "model");
                         texLoc = Gl.GetUniformLocation(lastProgram, "texMatrix");
                         colorLoc = Gl.GetUniformLocation(lastProgram, "color");
-                        masterColorLoc = Gl.GetUniformLocation(lastProgram, "masterColor");
+                        int masterColorLoc = Gl.GetUniformLocation(lastProgram, "masterColor");
                         Gl.UseProgram(lastProgram);
                         Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
                     }
@@ -145,11 +143,17 @@ namespace OpGL
 
         private int RenderCompare(Sprite d1, Sprite d2)
         {
-            int t = d1.Texture.ID.CompareTo(d2.Texture.ID);
-            if (t == 0)
-                return d1.Color.ToArgb().CompareTo(d2.Color.ToArgb());
+            int c = d1.Layer.CompareTo(d2.Layer);
+            if (c == 0)
+            {
+                int t = d1.Texture.ID.CompareTo(d2.Texture.ID);
+                if (t == 0)
+                    return d1.Color.ToArgb().CompareTo(d2.Color.ToArgb());
+                else
+                    return t;
+            }
             else
-                return t;
+                return c;
         }
         static int TileCompare(Point p1, Point p2)
         {
@@ -165,19 +169,19 @@ namespace OpGL
         /// </summary>
         private int AddIndex(Sprite d)
         {
-            int min = 0, max = Count - 1;
+            int min = 0, max = Count;
             int index = (max - min) / 2 + min;
             while (min < max)
             {
                 int r = RenderCompare(d, this[index]);
                 if (r == -1)
                 {
-                    min = index + 1;
+                    max = index;
                     index = (max - min) / 2 + min;
                 }
                 else if (r == 1)
                 {
-                    max = index - 1;
+                    min = index + 1;
                     index = (max - min) / 2 + min;
                 }
                 else

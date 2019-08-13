@@ -36,6 +36,8 @@ namespace OpGL
             { Keys.R, Inputs.Kill }
         };
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
+        private int mouseX = -1;
+        private int mouseY = -1;
 
         private bool IsInputActive(Inputs input)
         {
@@ -81,8 +83,14 @@ namespace OpGL
         //Rooms
         public SortedList<int, Room> CurrentRooms = new SortedList<int, Room>();
         public SortedList<int, JToken> RoomDatas = new SortedList<int, JToken>();
+        public int FocusedRoom;
         public int WidthRooms;
         public int HeightRooms;
+
+        public int StartX;
+        public int StartY;
+        public int StartRoomX;
+        public int StartRoomY;
 
 #if TEST
         // Test
@@ -120,8 +128,11 @@ namespace OpGL
         const int RESOLUTION_WIDTH = 320;
         const int RESOLUTION_HEIGHT = 240;
 
-        // Drawables
-        private SpriteCollection sprites;
+        // Sprites
+        private SpriteCollection sprites
+        {
+            get => CurrentRooms[FocusedRoom].Objects;
+        }
         private SpriteCollection hudSprites;
         public SortedList<string, Sprite> UserAccessSprites = new SortedList<string, Sprite>();
         public Sprite SpriteFromName(string name)
@@ -144,7 +155,6 @@ namespace OpGL
             textures = new List<Texture>();
             LoadTextures();
 
-            sprites = new SpriteCollection();
             hudSprites = new SpriteCollection();
 #if TEST
             Texture viridian = TextureFromName("viridian");
@@ -152,12 +162,12 @@ namespace OpGL
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
             FontTexture = TextureFromName("font");
-            ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
-            //ActivePlayer.CanFlip = false;
-            //ActivePlayer.Jump = 8;
-            sprites.Add(ActivePlayer);
-            UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
-            ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
+            //ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
+            ////ActivePlayer.CanFlip = false;
+            ////ActivePlayer.Jump = 8;
+            //sprites.Add(ActivePlayer);
+            //UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
+            //ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
 
             //This will probably be moved somewhere else and might be customizeable per-level
             Terminal.TextBox = new VTextBox(0, 0, FontTexture, " Press ENTER to activate terminal ", Color.FromArgb(255, 130, 20));
@@ -236,8 +246,12 @@ namespace OpGL
 
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
-            sprites = CurrentRooms[0].Objects;
             sprites.Add(ActivePlayer);
+            FullImage fi = new FullImage(0, 0, tiles);
+            fi.Layer = -1;
+            ActivePlayer.Layer = 1;
+            fi.Size = 0.5f;
+            sprites.Add(fi);
 
 #endif
             glControl.Render += glControl_Render;
@@ -484,6 +498,7 @@ namespace OpGL
                     d.Process();
                 }
 
+                // end frame
                 FrameCount %= int.MaxValue;
                 FrameCount++;
 
@@ -546,6 +561,25 @@ namespace OpGL
                 }
             }
         }
+
+        public void LoadRoom(int x, int y)
+        {
+            CurrentRooms.Clear();
+            FocusedRoom = x + y * WidthRooms;
+            for (int yy = y - 1; yy < y + 2; yy++)
+            {
+                for (int xx = x - 1; xx < x + 2; xx++)
+                {
+                    int key = xx + yy * WidthRooms;
+                    RoomDatas.TryGetValue(key, out JToken loadRoom);
+                    if (loadRoom != null)
+                    {
+                        CurrentRooms.Add(key, LoadRoom(loadRoom));
+                    }
+                }
+            }
+        }
+
         private void ProcessWorld()
         {
             for (int i = 0; i < sprites.Count; i++)
@@ -585,6 +619,25 @@ namespace OpGL
                 Terminal.TextBox.Disappear();
             }
         }
+
+        //private List<Sprite> GetCollidersForRooms(Sprite sp)
+        //{
+        //    List<Sprite> ret = new List<Sprite>();
+        //    int srx = (int)(sp.X - (sp.X % Room.ROOM_WIDTH)) / Room.ROOM_WIDTH;
+        //    int sry = (int)(sp.Y - (sp.Y % Room.ROOM_HEIGHT)) / Room.ROOM_HEIGHT;
+        //    int srx2 = (int)(sp.Right - (sp.Right % Room.ROOM_WIDTH)) / Room.ROOM_WIDTH;
+        //    int sry2 = (int)(sp.Bottom - (sp.Bottom % Room.ROOM_HEIGHT)) / Room.ROOM_HEIGHT;
+        //    for (int y = sry; y <= sry2; y++)
+        //    {
+        //        for (int x = srx; x <= srx2; x++)
+        //        {
+        //            if (CurrentRooms.ContainsKey(x + y * WidthRooms))
+        //                ret.AddRange(CurrentRooms[x + y * WidthRooms].Objects.GetPotentialColliders(sp));
+        //        }
+        //    }
+        //    return ret;
+        //}
+
         private void PerformCollisionChecks(Sprite drawable)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
@@ -707,9 +760,44 @@ namespace OpGL
 #endif
         }
 
-        public Level LoadLevel(JObject loadFrom)
+        public JObject SaveLevel()
         {
-            Level ret = new Level();
+            JObject ret = new JObject();
+            //Settings
+            ret.Add("Width", WidthRooms);
+            ret.Add("Height", HeightRooms);
+            ret.Add("StartX", StartX);
+            ret.Add("StartY", StartY);
+            ret.Add("StartRoomX", StartRoomX);
+            ret.Add("StartRoomY", StartRoomY);
+            JObject[] jarr = new JObject[Scripts.Count];
+            for (int i = 0; i < Scripts.Count; i++)
+            {
+                JObject scr = new JObject();
+                scr.Add("Name", Scripts.Values[i].Name);
+                scr.Add("Contents", Scripts.Values[i].Contents);
+                jarr[i] = scr;
+            }
+            JArray arr = new JArray(jarr);
+            ret.Add("Scripts", arr);
+            jarr = new JObject[UserAccessSprites.Count];
+            for (int i = 0; i < UserAccessSprites.Count; i++)
+            {
+                JObject obj = UserAccessSprites.Values[i].Save();
+                jarr[i] = obj;
+            }
+            arr = new JArray(jarr);
+            ret.Add("Objects", arr);
+            jarr = (JObject[])RoomDatas.Values.ToArray();
+            arr = new JArray(jarr);
+            ret.Add("Rooms", arr);
+            JObject player = ActivePlayer.Save();
+            ret.Add("Player", player);
+            return ret;
+        }
+
+        public void LoadLevel(JObject loadFrom)
+        {
             Scripts.Clear();
             //Settings
             WidthRooms = (int)loadFrom["Width"];
@@ -757,6 +845,7 @@ namespace OpGL
                     string name = Scripts.Keys[i];
                     string contents = scriptContents[name];
                     Scripts.Values[i].Commands = ParseScript(contents).Commands;
+                    Scripts.Values[i].Contents = contents;
                 }
             }
             //Load Player
@@ -768,8 +857,8 @@ namespace OpGL
                 CurrentRooms.Clear();
                 int id = startRoomX + startRoomY * WidthRooms;
                 CurrentRooms.Add(id, LoadRoom(RoomDatas[id]));
+                FocusedRoom = id;
             }
-            return ret;
         }
 
         public Room LoadRoom(JToken loadFrom)
@@ -886,7 +975,7 @@ namespace OpGL
             return s;
         }
 
-        public Script ParseScript(string script)
+        public Script ParseScript(string script, string name = "")
         {
             string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             List<Command> commands = new List<Command>();
@@ -1078,7 +1167,7 @@ namespace OpGL
                         break;
                 }
             }
-            return new Script(commands.ToArray());
+            return new Script(commands.ToArray(), name, script);
         }
 
         public Command ChangeFontCommand(string[] args)

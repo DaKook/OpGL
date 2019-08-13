@@ -23,6 +23,8 @@ namespace OpGL
         private int _animFrame;
         private Point _old = new Point(0, 0);
         protected Point animationOffset = new Point(0, 0);
+
+        public int Layer = 0;
         private int animFrame
         {
             get => _animFrame;
@@ -303,14 +305,14 @@ namespace OpGL
             writer.WriteValue(s);
         }
 
-        public virtual JToken Save()
+        public virtual JObject Save()
         {
-            JTokenWriter ret = new JTokenWriter();
-            write("X", X, ret);
-            write("Y", Y, ret);
-            write("Texture", Texture.Name, ret);
-            write("Animation", Animation.Name, ret);
-            return ret.Token;
+            JObject ret = new JObject();
+            ret.Add("Type", "Sprite");
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            return ret;
         }
     }
 

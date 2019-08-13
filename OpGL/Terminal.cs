@@ -38,19 +38,19 @@ namespace OpGL
             }
         }
 
-        public override JToken Save()
+        public override JObject Save()
         {
-            JTokenWriter ret = new JTokenWriter();
-            write("X", X, ret);
-            write("Y", Y, ret);
-            write("Texture", Texture.Name, ret);
-            write("Deactivated", DeactivatedAnimation.Name, ret);
-            write("Activated", ActivatedAnimation.Name, ret);
-            write("Script", Script.Name, ret);
-            write("Repeat", Repeat, ret);
-            write("FlipX", flipX, ret);
-            write("FlipY", flipY, ret);
-            return ret.Token;
+            JObject ret = new JObject();
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            ret.Add("Deactivated", DeactivatedAnimation.Name);
+            ret.Add("Activated", ActivatedAnimation.Name);
+            ret.Add("Script", Script.Name);
+            ret.Add("Repeat", Repeat);
+            ret.Add("FlipX", flipX);
+            ret.Add("FlipY", flipY);
+            return ret;
         }
     }
 }

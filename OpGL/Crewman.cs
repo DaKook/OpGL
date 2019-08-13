@@ -314,25 +314,25 @@ namespace OpGL
             }
         }
 
-        public override JToken Save()
+        public override JObject Save()
         {
-            JTokenWriter ret = new JTokenWriter();
-            write("X", X, ret);
-            write("Y", Y, ret);
-            write("Texture", Texture.Name, ret);
-            write("Standing", StandingAnimation.Name, ret);
-            write("Walking", WalkingAnimation.Name, ret);
-            write("Falling", FallingAnimation.Name, ret);
-            write("Jumping", JumpingAnimation.Name, ret);
-            write("Dying", DyingAnimation.Name, ret);
-            write("Name", Name, ret);
-            write("TextBox", TextBoxColor.ToArgb(), ret);
-            write("FlipX", flipX, ret);
-            write("Gravity", Gravity, ret);
+            JObject ret = new JObject();
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            ret.Add("Standing", StandingAnimation.Name);
+            ret.Add("Walking", WalkingAnimation.Name);
+            ret.Add("Falling", FallingAnimation.Name);
+            ret.Add("Jumping", JumpingAnimation.Name);
+            ret.Add("Dying", DyingAnimation.Name);
+            ret.Add("Name", Name);
+            ret.Add("TextBox", TextBoxColor.ToArgb());
+            ret.Add("FlipX", flipX);
+            ret.Add("Gravity", Gravity);
             //Probably don't want to save these because when loading, the target may not have been loaded yet.
-            write("AI", (int)AIState, ret);
-            write("Target", Target.Name, ret);
-            return ret.Token;
+            ret.Add("AI", (int)AIState);
+            ret.Add("Target", Target.Name);
+            return ret;
         }
     }
 }
