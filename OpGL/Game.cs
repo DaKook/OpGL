@@ -92,6 +92,8 @@ namespace OpGL
         private enum Tools { Ground, Background, Tiles, Checkpoint, Enemy, Platform, Terminal }
         private Tools tool = Tools.Ground;
         private BoxSprite selection;
+        private Point currentTile = new Point(0, 0);
+        private Texture currentTexture;
 
         // Rooms
         public Room CurrentRoom;
@@ -178,8 +180,9 @@ namespace OpGL
             Texture sprites32 = TextureFromName("sprites32");
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
-            selection = new BoxSprite(0, 0, BoxTexture, 3, 3, Color.Blue);
+            selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
+            currentTexture = tiles;
             //ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
             ////ActivePlayer.CanFlip = false;
             ////ActivePlayer.Jump = 8;
@@ -265,12 +268,10 @@ namespace OpGL
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
             sprites.Add(ActivePlayer);
-            FullImage fi = new FullImage(0, 0, tiles);
-            fi.Layer = -1;
             ActivePlayer.Layer = 1;
-            fi.Size = 0.5f;
-            sprites.Add(fi);
+            ActivePlayer.Visible = false;
             CurrentState = GameStates.Editing;
+            tool = Tools.Tiles;
 
 #endif
             glControl.Render += glControl_Render;
@@ -302,11 +303,27 @@ namespace OpGL
         private void GlControl_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
+            {
                 leftMouse = true;
+                TriggerLeftClick();
+            }
             else if (e.Button == MouseButtons.Right)
+            {
                 rightMouse = true;
+            }
             else if (e.Button == MouseButtons.Middle)
                 middleMouse = true;
+        }
+
+        private void TriggerLeftClick()
+        {
+            if (CurrentState == GameStates.Editing)
+            {
+                if (tool == Tools.Tiles)
+                {
+                    sprites.Add(new Tile((int)(selection.X + cameraX), (int)(selection.Y + cameraY), currentTexture, currentTile.X, currentTile.Y));
+                }
+            }
         }
 
         private void GlControl_MouseMove(object sender, MouseEventArgs e)
@@ -523,6 +540,24 @@ namespace OpGL
                     if (y < 0) y = HeightRooms - 1;
                     LoadRoom(CurrentRoom.X, y);
                 }
+                else if (e.KeyCode == Keys.S)
+                {
+                    currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSize);
+                }
+                else if (e.KeyCode == Keys.W)
+                {
+                    currentTile.Y -= 1;
+                    if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSize;
+                }
+                else if (e.KeyCode == Keys.D)
+                {
+                    currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSize);
+                }
+                else if (e.KeyCode == Keys.A)
+                {
+                    currentTile.X -= 1;
+                    if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSize;
+                }
             }
         }
         private void GlControl_KeyUp(object sender, KeyEventArgs e)
@@ -671,6 +706,7 @@ namespace OpGL
             CurrentRoom = LoadRoom(RoomDatas[FocusedRoom]);
             cameraX = CurrentRoom.X * Room.ROOM_WIDTH;
             cameraY = CurrentRoom.Y * Room.ROOM_HEIGHT;
+            CurrentRoom.Objects.Add(ActivePlayer);
         }
 
         private void ProcessWorld()
