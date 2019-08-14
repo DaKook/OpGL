@@ -24,6 +24,8 @@ namespace OpGL
             Contents = contents;
         }
 
+        public static Script Empty => new Script(new Command[] { }, "", "");
+
         public Script ExecuteFromBeginning()
         {
             currentLocation = 0;

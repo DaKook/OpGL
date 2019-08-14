@@ -159,7 +159,7 @@ namespace OpGL
         public bool IsPlaying { get; private set; } = false;
         private int FrameCount = 1; // start at 1 so inputs aren't "new" at start
         public enum GameStates { Playing, Editing, Menu }
-        public GameStates CurrentState = GameStates.Menu;
+        public GameStates CurrentState = GameStates.Playing;
 
         public Game(GlControl control)
         {
@@ -179,15 +179,15 @@ namespace OpGL
             Texture sprites32 = TextureFromName("sprites32");
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
+            ActivePlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
+            //ActivePlayer.CanFlip = false;
+            //ActivePlayer.Jump = 8;
+            UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
+            ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
+            LoadRoom(0, 0);
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
             currentTexture = tiles;
-            //ActivePlayer = new Player(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
-            ////ActivePlayer.CanFlip = false;
-            ////ActivePlayer.Jump = 8;
-            //sprites.Add(ActivePlayer);
-            //UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
-            //ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
 
             //This will probably be moved somewhere else and might be customizeable per-level
             Terminal.TextBox = new VTextBox(0, 0, FontTexture, " Press ENTER to activate terminal ", Color.FromArgb(255, 130, 20));
@@ -195,81 +195,86 @@ namespace OpGL
             Terminal.TextBox.Y = 4;
             hudSprites.Add(Terminal.TextBox);
 
-            //for (int i = 8; i < 160; i += 8)
-            //    sprites.Add(new Tile(i, 160, tiles, 4, 4));
-            //for (int i = 8; i < 312; i += 8)
-            //    sprites.Add(new Tile(i, 0, tiles, 4, 6));
-            //for (int i = 160; i < 312; i += 8)
-            //    sprites.Add(new Tile(i, 232, tiles, 4, 4));
-            //for (int i = 8; i < 232; i += 8)
-            //    sprites.Add(new Tile(312, i, tiles, 3, 5));
-            //for (int i = 8; i < 160; i += 8)
-            //    sprites.Add(new Tile(0, i, tiles, 5, 5));
-            //sprites.Add(new Tile(0, 160, tiles, 4, 3));
-            //sprites.Add(new Tile(160, 152, tiles, 4, 5));
-            //sprites.Add(new Tile(0, 152, tiles, 5, 4));
-            //sprites.Add(new Tile(160, 160, tiles, 5, 4));
-            //sprites.Add(new Tile(0, 0, tiles, 4, 2));
-            //sprites.Add(new Tile(312, 0, tiles, 5, 2));
-            //sprites.Add(new Tile(312, 232, tiles, 5, 3));
-            //sprites.Add(new Platform(96, 64, platforms, platforms.Animations["platform1"], 0, 1, 0, false));
-            //sprites.Add(new Platform(144, 80, platforms, platforms.Animations["platform1"], -1, 0, 0, false));
-            ////sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
-            ////sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
-            //sprites.Add(new Platform(168, 80, platforms, platforms.Animations["conveyor1r"], 0f, 0f, 1, false));
-            //sprites.Add(new Platform(280, 184, platforms, platforms.Animations["platform1"], 0.5f, 0, 0, true, platforms.Animations["disappear"]));
-            //sprites.Add(new Platform(262, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            //sprites.Add(new Platform(262, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            //sprites.Add(new Platform(200, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            //sprites.Add(new Platform(200, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            //sprites.Add(new Tile(200, 80, tiles, 4, 5));
-            //sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"]));
-            //sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], true));
-            //sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], false, true));
-            //Enemy en = new Enemy(64, 50, sprites32, sprites32.Animations["Enemy1"], 0, 1, Color.Red);
-            //en.Bounds = new Rectangle(65, 50, 14, 70);
-            //en.Pushable = false;
-            //sprites.Add(en);
-            //sprites.Add(new Tile(304, 8, tiles, 9, 0));
-            //for (int i = 168; i < 241; i += 8)
-            //    sprites.Add(new Tile(160, i, tiles, 5, 5));
-            //for (int i = 0; i < 160; i += 8)
-            //    for (int j = 168; j < 241; j += 8)
-            //        sprites.Add(new Tile(i, j, tiles, 3, 2));
-            //for (int i = 168; i < 312; i += 8)
-            //    for (int j = 184; j < 232; j += 8)
-            //        sprites.Add(new Tile(i, j, tiles, 1, 20));
-            //for (int i = 168; i < 312; i += 8)
-            //    sprites.Add(new Tile(i, 176, tiles, 1, 19));
+            for (int i = 8; i < 160; i += 8)
+                sprites.Add(new Tile(i, 160, tiles, 4, 4));
+            for (int i = 8; i < 312; i += 8)
+                sprites.Add(new Tile(i, 0, tiles, 4, 6));
+            for (int i = 160; i < 312; i += 8)
+                sprites.Add(new Tile(i, 232, tiles, 4, 4));
+            for (int i = 8; i < 232; i += 8)
+                sprites.Add(new Tile(312, i, tiles, 3, 5));
+            for (int i = 8; i < 160; i += 8)
+                sprites.Add(new Tile(0, i, tiles, 5, 5));
+            sprites.Add(new Tile(0, 160, tiles, 4, 3));
+            sprites.Add(new Tile(160, 152, tiles, 4, 5));
+            sprites.Add(new Tile(0, 152, tiles, 5, 4));
+            sprites.Add(new Tile(160, 160, tiles, 5, 4));
+            sprites.Add(new Tile(0, 0, tiles, 4, 2));
+            sprites.Add(new Tile(312, 0, tiles, 5, 2));
+            sprites.Add(new Tile(312, 232, tiles, 5, 3));
+            sprites.Add(new Platform(96, 64, platforms, platforms.Animations["platform1"], 0, 1, 0, false));
+            sprites.Add(new Platform(144, 80, platforms, platforms.Animations["platform1"], -1, 0, 0, false));
+            //sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
+            //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
+            sprites.Add(new Platform(168, 80, platforms, platforms.Animations["conveyor1r"], 0f, 0f, 1, false));
+            sprites.Add(new Platform(280, 184, platforms, platforms.Animations["platform1"], 0.5f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(262, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(262, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(200, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Platform(200, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
+            sprites.Add(new Tile(200, 80, tiles, 4, 5));
+            sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"]));
+            sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], true));
+            sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], false, true));
+            Random r = new Random();
+            for (int i = 0; i < 8; i++)
+            {
+                Enemy en = new Enemy(r.Next(0, RESOLUTION_WIDTH - 14), r.Next(RESOLUTION_HEIGHT - 14), sprites32, sprites32.Animations["Enemy1"], 2, 2, Color.Red);
+                en.Bounds = new Rectangle(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+                en.Solid = Sprite.SolidState.NonSolid;
+                sprites.Add(en);
+            }
+            
+            sprites.Add(new Tile(304, 8, tiles, 9, 0));
+            for (int i = 168; i < 241; i += 8)
+                sprites.Add(new Tile(160, i, tiles, 5, 5));
+            for (int i = 0; i < 160; i += 8)
+                for (int j = 168; j < 241; j += 8)
+                    sprites.Add(new Tile(i, j, tiles, 3, 2));
+            for (int i = 168; i < 312; i += 8)
+                for (int j = 184; j < 232; j += 8)
+                    sprites.Add(new Tile(i, j, tiles, 1, 20));
+            for (int i = 168; i < 312; i += 8)
+                sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
-            //VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
-            //hudSprites.Add(vText);
-            //Script testScript = ParseScript("playercontrol,false\n" +
-            //    "text,gray,8,8,1\n" +
-            //    "Hello\n" +
-            //    "speak\n" +
-            //    "text,gray,48,144,1\n" +
-            //    "Hello\n" +
-            //    "speak\n" +
-            //    "text,gray,0,0,1\n" +
-            //    "Hello\n" +
-            //    "position,player,above\n" +
-            //    "speak\n" +
-            //    "text,red,0,0,1\n" +
-            //    "Haha lol\n" +
-            //    "position,center\n" +
-            //    "speak_active\n" +
-            //    "endtext\n" +
-            //    "playercontrol,true");
-            //Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
-            //sprites.Add(terminal);
+            VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
+            hudSprites.Add(vText);
+            Script testScript = Command.ParseScript(this, "playercontrol,false\n" +
+                "text,gray,8,8,1\n" +
+                "Hello\n" +
+                "speak\n" +
+                "text,gray,48,144,1\n" +
+                "Hello\n" +
+                "speak\n" +
+                "text,gray,0,0,1\n" +
+                "Hello\n" +
+                "position,player,above\n" +
+                "speak\n" +
+                "text,red,0,0,1\n" +
+                "Haha lol\n" +
+                "position,center\n" +
+                "speak_active\n" +
+                "endtext\n" +
+                "playercontrol,true", "script");
+            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
+            sprites.Add(terminal);
 
-            JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
-            LoadLevel(jObject);
-            sprites.Add(ActivePlayer);
+            //JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
+            //LoadLevel(jObject);
+            //sprites.Add(ActivePlayer);
             ActivePlayer.Layer = 1;
-            ActivePlayer.Visible = false;
-            CurrentState = GameStates.Editing;
+            //ActivePlayer.Visible = false;
+            //CurrentState = GameStates.Editing;
             tool = Tools.Tiles;
 
 #endif
@@ -702,7 +707,10 @@ namespace OpGL
             FocusedRoom = x + y * WidthRooms;
             if (!RoomDatas.ContainsKey(FocusedRoom))
             {
-                RoomDatas.Add(FocusedRoom, new Room(new SpriteCollection(), null, null).Save());
+                Room r = new Room(new SpriteCollection(), Script.Empty, Script.Empty);
+                r.X = x;
+                r.Y = y;
+                RoomDatas.Add(FocusedRoom, r.Save());
             }
             CurrentRoom = LoadRoom(RoomDatas[FocusedRoom]);
             cameraX = CurrentRoom.X * Room.ROOM_WIDTH;

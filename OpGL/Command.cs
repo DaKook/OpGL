@@ -52,7 +52,9 @@ namespace OpGL
                 // multi-line commands
                 int txLines = 0;
                 if (args[0] == "say")
+                {
                     if (!int.TryParse(args.ElementAtOrDefault(1), out txLines)) continue;
+                }
                 else if (args[0] == "text")
                     if (!int.TryParse(args.LastOrDefault(), out txLines)) continue;
                 if (txLines > 0)

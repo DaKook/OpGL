@@ -23,6 +23,7 @@ namespace OpGL
                 Solid = (SolidState)ss;
             }
             Static = true;
+            Layer = -2;
         }
 
         public override JObject Save()

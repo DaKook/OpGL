@@ -20,6 +20,7 @@ namespace OpGL
             Immovable = true;
             flipX = xFlip;
             flipY = yFlip;
+            Layer = -1;
         }
 
         public override void HandleCrewmanCollision(Crewman crewman)
