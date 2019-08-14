@@ -8,14 +8,14 @@ namespace OpGL
 {
     public class Texture
     {
-        public Sprite.SolidState[,] TileSolidStates { get; internal set; }
+        public Sprite.SolidState[,] TileSolidStates { get; set; }
         public SortedList<string,Animation> Animations { get; set; }
-        public string Name { get; internal set; }
-        public uint ID { get; internal set; }
-        public float Width { get; internal set; }
-        public float Height { get; internal set; }
+        public string Name { get; private set; }
+        public uint ID { get; private set; }
+        public float Width { get; private set; }
+        public float Height { get; private set; }
         public int TileSize { get; set; }
-        public uint Program { get; internal set; }
+        public uint Program { get; private set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
 

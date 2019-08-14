@@ -286,6 +286,8 @@ namespace OpGL
                 lastPressed[(int)Inputs.Click] = FrameCount;
                 mouseDown = true;
             }
+            else
+                ActivePlayer.X += 100;
         }
 
         private void GlControl_MouseMove(object sender, MouseEventArgs e)

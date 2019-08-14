@@ -101,13 +101,13 @@ namespace OpGL
         /// </summary>
         //public bool AlwaysProcess { get; set; } = false;
         public bool KillCrewmen { get; set; } = false;
-        public Texture Texture { get; internal set; }
-        internal virtual uint VAO { get => Texture.baseVAO; set { } }
+        public Texture Texture { get; protected set; }
+        public virtual uint VAO { get => Texture.baseVAO; set { } }
 
-        internal Matrix4x4f LocMatrix;
-        internal Matrix4x4f TexMatrix;
+        public Matrix4x4f LocMatrix;
+        public Matrix4x4f TexMatrix;
 
-        internal Sprite()
+        protected Sprite()
         {
 
         }
@@ -175,7 +175,7 @@ namespace OpGL
             UnsafeDraw();
         }
         // update model matrix
-        internal virtual void RenderPrep()
+        public virtual void RenderPrep()
         {
             LocMatrix = Matrix4x4f.Translated((int)X - Animation.Hitbox.X, (int)Y - Animation.Hitbox.Y, 0);
             if (flipX)
@@ -190,7 +190,7 @@ namespace OpGL
             }
         }
         // Just the render call; everything should be set up before calling this.
-        internal virtual void UnsafeDraw()
+        public virtual void UnsafeDraw()
         {
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
         }

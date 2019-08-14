@@ -26,7 +26,7 @@ namespace OpGL
             TexMatrix = Matrix4x4f.Identity;
         }
 
-        internal override void RenderPrep()
+        public override void RenderPrep()
         {
             LocMatrix = Matrix4x4f.Translated((int)X, (int)Y, 0);
             LocMatrix.Scale(Texture.Width * Size / Texture.TileSize, Texture.Height * Size / Texture.TileSize, 1);
