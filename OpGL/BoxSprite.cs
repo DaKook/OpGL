@@ -68,7 +68,7 @@ namespace OpGL
         protected bool updateBuffer = true;
         protected bool firstRender = true;
 
-        internal override uint VAO { get; set; }
+        public override uint VAO { get; set; }
 
         public BoxSprite(float x, float y, Texture texture, int widthTiles, int heightTiles, Color? color = null) : base(x, y, texture, 0, 0)
         {
@@ -101,7 +101,7 @@ namespace OpGL
             UnsafeDraw();
         }
         // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
-        internal override void UnsafeDraw()
+        public override void UnsafeDraw()
         {
             if (updateBuffer)
                 UpdateBuffer();
