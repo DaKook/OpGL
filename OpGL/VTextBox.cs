@@ -59,7 +59,7 @@ namespace OpGL
             Color = Color.FromArgb(0, Color);
         }
 
-        internal override void RenderPrep()
+        public override void RenderPrep()
         {
             // Offset render location because the textbox top-left is -TileSize of location
             X += Texture.TileSize;

@@ -324,6 +324,8 @@ namespace OpGL
                     sprites.Add(new Tile((int)(selection.X + cameraX), (int)(selection.Y + cameraY), currentTexture, currentTile.X, currentTile.Y));
                 }
             }
+            else
+                ActivePlayer.X += 100;
         }
 
         private void GlControl_MouseMove(object sender, MouseEventArgs e)
