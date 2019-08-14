@@ -107,11 +107,6 @@ namespace OpGL
         public Matrix4x4f LocMatrix;
         public Matrix4x4f TexMatrix;
 
-        protected Sprite()
-        {
-
-        }
-
         public Sprite(float x, float y, Texture texture, int texX, int texY, Color? color = null)
         {
             X = x;
@@ -136,8 +131,6 @@ namespace OpGL
             PreviousY = y;
 
             Texture = texture;
-            float dw = 1f / texture.Width;
-            float dh = 1f / texture.Height;
             TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
 
             Animation = animation;

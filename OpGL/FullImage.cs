@@ -15,12 +15,9 @@ namespace OpGL
         public override float Width => base.Width * Size;
         public override float Height => base.Height * Size;
 
-        public FullImage(float x, float y, Texture texture)
+        public FullImage(float x, float y, Texture texture) :
+            base(x, y, texture, new Animation(new Point[] { new Point(0, 0) }, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height), texture))
         {
-            X = x;
-            Y = y;
-            Texture = texture;
-            Animation = new Animation(new Point[] { new Point(0, 0) }, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height), texture);
             Solid = SolidState.NonSolid;
             Static = true;
             TexMatrix = Matrix4x4f.Identity;
