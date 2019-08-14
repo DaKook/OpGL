@@ -67,7 +67,6 @@ namespace OpGL
         public bool PlayerControl = true;
         public bool Freeze = false;
         public Script CurrentScript;
-        private string[] presetcolors = new string[] { "cyan", "red", "yellow", "green", "purple", "blue", "gray", "terminal" };
         public List<VTextBox> TextBoxes = new List<VTextBox>();
 
         // OpenGL
@@ -131,15 +130,15 @@ namespace OpGL
                 _camY = value;
             }
         }
-        const int RESOLUTION_WIDTH = 320;
-        const int RESOLUTION_HEIGHT = 240;
+        public const int RESOLUTION_WIDTH = 320;
+        public const int RESOLUTION_HEIGHT = 240;
 
         // Sprites
         private SpriteCollection sprites
         {
             get => CurrentRooms[FocusedRoom].Objects;
         }
-        private SpriteCollection hudSprites;
+        public SpriteCollection hudSprites;
         public SortedList<string, Sprite> UserAccessSprites = new SortedList<string, Sprite>();
         public Sprite SpriteFromName(string name)
         {
@@ -147,7 +146,7 @@ namespace OpGL
             return sprite;
         }
 
-        Crewman ActivePlayer;
+        public Crewman ActivePlayer;
         public bool IsPlaying { get; private set; } = false;
         private int FrameCount = 1; // start at 1 so inputs aren't "new" at start
         public enum GameStates { Playing, Editing, Menu }
@@ -892,7 +891,7 @@ namespace OpGL
                 {
                     string name = Scripts.Keys[i];
                     string contents = scriptContents[name];
-                    Scripts.Values[i].Commands = ParseScript(contents).Commands;
+                    Scripts.Values[i].Commands = Command.ParseScript(this, contents).Commands;
                     Scripts.Values[i].Contents = contents;
                 }
             }
@@ -1021,337 +1020,6 @@ namespace OpGL
             else s = null;
 
             return s;
-        }
-
-        public Script ParseScript(string script, string name = "")
-        {
-            string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            List<Command> commands = new List<Command>();
-            int i = 0;
-            while (i < lines.Length)
-            {
-                string[] args = lines[i++].Split(new char[] { ',', '(', ')' });
-                switch (args[0].ToLower())
-                {
-                    case "say":
-                        {
-                            if (!int.TryParse(args.ElementAtOrDefault(1), out int sayLines)) continue;
-                            Color sayTextBoxColor = Color.Gray;
-                            Crewman sayCrewman = SpriteFromName(args.ElementAtOrDefault(2)) as Crewman;
-                            if (sayCrewman != null)
-                            {
-                                sayTextBoxColor = sayCrewman.TextBoxColor;
-                            }
-                            else if (args.Length == 5)
-                            {
-                                int.TryParse(args[2], out int r);
-                                int.TryParse(args[3], out int g);
-                                int.TryParse(args[4], out int b);
-                                sayTextBoxColor = Color.FromArgb(r, g, b);
-                            }
-                            else if (presetcolors.Contains(args.ElementAtOrDefault(2)))
-                            {
-                                switch (args[2])
-                                {
-                                    case "cyan":
-                                        sayTextBoxColor = Color.FromArgb(164, 164, 255);
-                                        break;
-                                    case "red":
-                                        sayTextBoxColor = Color.FromArgb(255, 60, 60);
-                                        break;
-                                    case "yellow":
-                                        sayTextBoxColor = Color.FromArgb(255, 255, 134);
-                                        break;
-                                    case "green":
-                                        sayTextBoxColor = Color.FromArgb(144, 255, 144);
-                                        break;
-                                    case "purple":
-                                        sayTextBoxColor = Color.FromArgb(255, 134, 255);
-                                        break;
-                                    case "blue":
-                                        sayTextBoxColor = Color.FromArgb(95, 95, 255);
-                                        break;
-                                    case "gray":
-                                    case "terminal":
-                                        sayTextBoxColor = Color.FromArgb(174, 174, 174);
-                                        break;
-                                }
-                            }
-                            string sayText = "";
-                            if (sayLines > 0)
-                            {
-                                sayText = lines[i++];
-                                for (int sayI = 1; sayI < sayLines; sayI++)
-                                {
-                                    sayText += "\n" + lines[i++];
-                                }
-                            }
-                            commands.Add(new Command(() =>
-                            {
-                                if (sayCrewman == null && args.ElementAtOrDefault(2).ToLower() == "player")
-                                {
-                                    sayCrewman = ActivePlayer;
-                                    sayTextBoxColor = ActivePlayer.TextBoxColor;
-                                }
-                                VTextBox sayTextBox = new VTextBox(0, 0, FontTexture, sayText, sayTextBoxColor);
-                                if (sayCrewman != null)
-                                {
-                                    sayTextBox.Bottom = sayCrewman.Y - 2;
-                                    sayTextBox.X = sayCrewman.X - 16;
-                                    if (sayTextBox.Right > RESOLUTION_WIDTH - 8) sayTextBox.Right = RESOLUTION_WIDTH - 8;
-                                    if (sayTextBox.Bottom > RESOLUTION_HEIGHT - 8) sayTextBox.Bottom = RESOLUTION_HEIGHT - 8;
-                                    if (sayTextBox.X < 8) sayTextBox.X = 8;
-                                    if (sayTextBox.Y < 8) sayTextBox.Y = 8;
-                                }
-                                else
-                                {
-                                    sayTextBox.CenterX = RESOLUTION_WIDTH / 2;
-                                    sayTextBox.CenterY = RESOLUTION_HEIGHT / 2;
-                                }
-                                hudSprites.Add(sayTextBox);
-                                sayTextBox.Appear();
-                                WaitingForAction = () =>
-                                {
-                                    sayTextBox.Disappear();
-                                    sayTextBox.Disappeared += (textBox) => hudSprites.Remove(textBox);
-                                    CurrentScript.Continue();
-                                };
-                            }, true));
-                        }
-                        break;
-                    case "text":
-                        {
-                            if (!int.TryParse(args.LastOrDefault(), out int txLines)) continue;
-                            Color txTextBoxColor = Color.Gray;
-                            Crewman sayCrewman = SpriteFromName(args.ElementAtOrDefault(1)) as Crewman;
-                            int txArgOffset = 0;
-                            if (sayCrewman != null)
-                            {
-                                txTextBoxColor = sayCrewman.TextBoxColor;
-                            }
-                            else if (args.Length == 7)
-                            {
-                                txArgOffset = 2;
-                                int.TryParse(args[2], out int r);
-                                int.TryParse(args[3], out int g);
-                                int.TryParse(args[4], out int b);
-                                txTextBoxColor = Color.FromArgb(r, g, b);
-                            }
-                            else if (presetcolors.Contains(args.ElementAtOrDefault(1)))
-                            {
-                                switch (args[1])
-                                {
-                                    case "cyan":
-                                        txTextBoxColor = Color.FromArgb(164, 164, 255);
-                                        break;
-                                    case "red":
-                                        txTextBoxColor = Color.FromArgb(255, 60, 60);
-                                        break;
-                                    case "yellow":
-                                        txTextBoxColor = Color.FromArgb(255, 255, 134);
-                                        break;
-                                    case "green":
-                                        txTextBoxColor = Color.FromArgb(144, 255, 144);
-                                        break;
-                                    case "purple":
-                                        txTextBoxColor = Color.FromArgb(255, 134, 255);
-                                        break;
-                                    case "blue":
-                                        txTextBoxColor = Color.FromArgb(95, 95, 255);
-                                        break;
-                                    case "gray":
-                                    case "terminal":
-                                        txTextBoxColor = Color.FromArgb(174, 174, 174);
-                                        break;
-                                }
-                            }
-                            string txText = "";
-                            if (txLines > 0)
-                            {
-                                txText = lines[i++];
-                                for (int sayI = 1; sayI < txLines; sayI++)
-                                {
-                                    txText += "\n" + lines[i++];
-                                }
-                            }
-                            int.TryParse(args.ElementAtOrDefault(2 + txArgOffset), out int txX);
-                            int.TryParse(args.ElementAtOrDefault(3 + txArgOffset), out int txY);
-                            commands.Add(new Command(() =>
-                            {
-                                VTextBox tb = new VTextBox(txX, txY, FontTexture, txText, txTextBoxColor);
-                                TextBoxes.Add(tb);
-                                hudSprites.Add(tb);
-                            }));
-                        }
-                        break;
-                    case "changefont":
-                        commands.Add(ChangeFontCommand(args));
-                        break;
-                    case "delay":
-                        commands.Add(WaitCommand(args));
-                        break;
-                    case "playercontrol":
-                        commands.Add(PlayerControlCommand(args));
-                        break;
-                    case "mood":
-                        commands.Add(MoodCommand(args));
-                        break;
-                    case "checkpoint":
-                        commands.Add(CheckpointCommand());
-                        break;
-                    case "position":
-                        commands.Add(PositionCommand(args));
-                        break;
-                    case "speak":
-                        commands.Add(SpeakCommand());
-                        break;
-                    case "speak_active":
-                        commands.Add(SpeakActiveCommand());
-                        break;
-                    case "endtext":
-                        commands.Add(EndTextCommand());
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return new Script(commands.ToArray(), name, script);
-        }
-
-        public Command ChangeFontCommand(string[] args)
-        {
-            string fontTexture = args.ElementAtOrDefault(1);
-            Texture newFont = TextureFromName(fontTexture);
-            Action success = () => { };
-            if (newFont != null && newFont.Width / newFont.TileSize == 16 && newFont.Height / newFont.TileSize == 16)
-            {
-                success = () => {
-                    FontTexture = newFont;
-                };
-            }
-            return new Command(success, false);
-        }
-        public Command WaitCommand(string[] args)
-        {
-            int.TryParse(args.ElementAtOrDefault(1), out int frames);
-            return new Command(() =>
-            {
-                DelayFrames = frames;
-            }, true);
-        }
-        public Command PlayerControlCommand(string[] args)
-        {
-            bool.TryParse(args.ElementAtOrDefault(1), out bool pc);
-            return new Command(() =>
-            {
-                PlayerControl = pc;
-            });
-        }
-        public Command MoodCommand(string[] args)
-        {
-            Crewman crewman = SpriteFromName(args[1]) as Crewman;
-            if (crewman == null) crewman = ActivePlayer;
-            bool sad = (args[2].ToLower() == "sad" || args[2] == "1");
-            return new Command(() =>
-            {
-                if (crewman == null && args.ElementAtOrDefault(1).ToLower() == "player") crewman = ActivePlayer;
-                if (crewman != null)
-                    crewman.Sad = sad;
-            });
-        }
-        public Command CheckpointCommand()
-        {
-            return new Command(() =>
-            {
-                ActivePlayer.CheckpointFlipX = ActivePlayer.FlipX;
-                ActivePlayer.CheckpointFlipY = ActivePlayer.FlipY;
-                ActivePlayer.CheckpointX = ActivePlayer.CenterX;
-                ActivePlayer.CheckpointY = ActivePlayer.FlipY ? ActivePlayer.Y : ActivePlayer.Bottom;
-                if (ActivePlayer.CurrentCheckpoint != null)
-                {
-                    ActivePlayer.CurrentCheckpoint.Deactivate();
-                    ActivePlayer.CurrentCheckpoint = null;
-                }
-            });
-        }
-        public Command PositionCommand(string[] args)
-        {
-            string p = args.ElementAtOrDefault(2);
-            string c = args.ElementAtOrDefault(1);
-
-            return new Command(() =>
-            {
-                if (TextBoxes.Count > 0)
-                {
-                    VTextBox tb = TextBoxes.Last();
-                    if (c.ToLower() == "centerx" || c.ToLower() == "center")
-                        tb.CenterX = RESOLUTION_WIDTH / 2;
-                    if (c.ToLower() == "centery" || c.ToLower() == "center")
-                        tb.CenterY = RESOLUTION_HEIGHT / 2;
-                    Crewman crewman = SpriteFromName(c) as Crewman;
-                    if (c.ToLower() == "player") crewman = ActivePlayer;
-                    if (crewman != null)
-                    {
-                        if (p == "above")
-                        {
-                            tb.Bottom = crewman.Y - 2;
-                            tb.X = crewman.X - 16;
-                        }
-                        else
-                        {
-                            tb.Y = crewman.Bottom + 2;
-                            tb.X = crewman.X - 16;
-                        }
-                    }
-                }
-            });
-        }
-        public Command SpeakCommand()
-        {
-            return new Command(() =>
-            {
-                if (TextBoxes.Count > 0)
-                {
-                    VTextBox tb = TextBoxes.Last();
-                    tb.Appear();
-                    WaitingForAction = () =>
-                    {
-                        CurrentScript.Continue();
-                    };
-                }
-            }, true);
-        }
-        public Command SpeakActiveCommand()
-        {
-            return new Command(() =>
-            {
-                if (TextBoxes.Count > 0)
-                {
-                    VTextBox tb = TextBoxes.Last();
-                    for (int i = TextBoxes.Count - 2; i >= 0 ; i--)
-                    {
-                        TextBoxes[i].Disappear();
-                        TextBoxes[i].Disappeared += (textBox) => hudSprites.Remove(textBox);
-                    }
-                    tb.Appear();
-                    WaitingForAction = () =>
-                    {
-                        CurrentScript.Continue();
-                    };
-                }
-
-            }, true);
-        }
-        public Command EndTextCommand()
-        {
-            return new Command(() =>
-            {
-                for (int i = TextBoxes.Count - 1; i >= 0; i--)
-                {
-                    TextBoxes[i].Disappear();
-                    TextBoxes[i].Disappeared += (textBox) => hudSprites.Remove(textBox);
-                }
-            });
         }
     }
 }
