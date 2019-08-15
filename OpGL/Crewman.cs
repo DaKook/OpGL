@@ -283,7 +283,7 @@ namespace OpGL
             if (testFor == this || DyingFrames > 0) return null;
 
             // Crewmen can collide with entities; normal Drawables cannot
-            if ((testFor.Solid == SolidState.Entity || testFor.KillCrewmen) && IsOverlapping(testFor))
+            if ((testFor.Solid == SolidState.Entity || testFor.KillCrewmen || testFor is GravityLine) && IsOverlapping(testFor))
             {
                 if (testFor.KillCrewmen)
                     return new CollisionData(true, 0, testFor);
@@ -298,7 +298,7 @@ namespace OpGL
         {
             if (cd.CollidedWith.KillCrewmen)
                 Die();
-            else if (cd.CollidedWith.Solid == SolidState.Entity)
+            else if (cd.CollidedWith.Solid != SolidState.Ground)
             {
                 cd.CollidedWith.HandleCrewmanCollision(this);
             }

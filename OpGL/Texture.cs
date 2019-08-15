@@ -37,12 +37,4 @@ namespace OpGL
             baseVBO = vbo;
         }
     }
-
-    static class Textures
-    {
-        public const int FONT = 0;
-        public const int SPRITES = 1;
-        public const int TILES = 2;
-        public const int TILES2 = 3;
-    }
 }

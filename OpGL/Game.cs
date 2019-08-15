@@ -177,6 +177,7 @@ namespace OpGL
             Texture tiles = TextureFromName("tiles");
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
+            Texture gravityline = TextureFromName("gravityline");
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
             ActivePlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
@@ -226,14 +227,8 @@ namespace OpGL
             sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"]));
             sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], true));
             sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], false, true));
-            Random r = new Random();
-            for (int i = 0; i < 8; i++)
-            {
-                Enemy en = new Enemy(r.Next(0, RESOLUTION_WIDTH - 14), r.Next(RESOLUTION_HEIGHT - 14), sprites32, sprites32.Animations["Enemy1"], 2, 2, Color.Red);
-                en.Bounds = new Rectangle(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-                en.Solid = Sprite.SolidState.NonSolid;
-                sprites.Add(en);
-            }
+            GravityLine gl = new GravityLine(227, 8, gravityline, gravityline.Animations["VGravLine"], false, 28);
+            sprites.Add(gl);
             
             sprites.Add(new Tile(304, 8, tiles, 9, 0));
             for (int i = 168; i < 241; i += 8)
@@ -247,8 +242,6 @@ namespace OpGL
             for (int i = 168; i < 312; i += 8)
                 sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
-            VTextBox vText = new VTextBox(40, 40, FontTexture, "Yey! I can talk now!", Color.FromArgb(0xa4, 0xa4, 0xff));
-            hudSprites.Add(vText);
             Script testScript = Command.ParseScript(this, "playercontrol,false\n" +
                 "text,gray,8,8,1\n" +
                 "Hello\n" +
@@ -651,6 +644,10 @@ namespace OpGL
             {
                 selection.Visible = false;
             }
+            if (leftMouse || middleMouse || rightMouse)
+            {
+
+            }
         }
 
         private void HandleUserInputs()
@@ -845,7 +842,7 @@ namespace OpGL
                 // otherwise, a simple collision should suffice
                 else
                 {
-                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity)
+                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity || c.CollidedWith is GravityLine)
                     {
                         entityCollisions.Add(c);
                         if (drawable is Platform)
