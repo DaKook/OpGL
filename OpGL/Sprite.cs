@@ -46,8 +46,8 @@ namespace OpGL
         public float Bottom { get => Y + Height; set => Y = value - Height; }
         public float CenterX { get => X + Width / 2; set => X = value - Width / 2; }
         public float CenterY { get => Y + Height / 2; set => Y = value - Height / 2; }
-        public float PreviousX { get; protected set; }
-        public float PreviousY { get; protected set; }
+        public float PreviousX { get; set; }
+        public float PreviousY { get; set; }
         public virtual float Width { get => Animation.Hitbox.Width; }
         public virtual float Height { get => Animation.Hitbox.Height; }
 

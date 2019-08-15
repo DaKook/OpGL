@@ -88,6 +88,7 @@ namespace OpGL
         public override JObject Save()
         {
             JObject ret = new JObject();
+            ret.Add("Type", "Enemy");
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);

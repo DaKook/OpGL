@@ -126,7 +126,7 @@ namespace OpGL
             get => _camX;
             set
             {
-                camera.Translate(value - _camX, 0, 0);
+                camera.Translate(-(value - _camX), 0, 0);
                 _camX = value;
             }
         }
@@ -135,7 +135,7 @@ namespace OpGL
             get => _camY;
             set
             {
-                camera.Translate(0, value - _camY, 0);
+                camera.Translate(0, -(value - _camY), 0);
                 _camY = value;
             }
         }
@@ -185,9 +185,12 @@ namespace OpGL
             //ActivePlayer.Jump = 8;
             UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
             ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
-            LoadRoom(0, 0);
+            //LoadRoom(0, 0);
+            //WidthRooms = 1;
+            //HeightRooms = 1;
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
+            selection.Visible = false;
             currentTexture = tiles;
 
             //This will probably be moved somewhere else and might be customizeable per-level
@@ -195,72 +198,10 @@ namespace OpGL
             Terminal.TextBox.CenterX = RESOLUTION_WIDTH / 2;
             Terminal.TextBox.Y = 4;
             hudSprites.Add(Terminal.TextBox);
-
-            for (int i = 8; i < 160; i += 8)
-                sprites.Add(new Tile(i, 160, tiles, 4, 4));
-            for (int i = 8; i < 312; i += 8)
-                sprites.Add(new Tile(i, 0, tiles, 4, 6));
-            for (int i = 160; i < 312; i += 8)
-                sprites.Add(new Tile(i, 232, tiles, 4, 4));
-            for (int i = 8; i < 232; i += 8)
-                sprites.Add(new Tile(312, i, tiles, 3, 5));
-            for (int i = 8; i < 160; i += 8)
-                sprites.Add(new Tile(0, i, tiles, 5, 5));
-            sprites.Add(new Tile(0, 160, tiles, 4, 3));
-            sprites.Add(new Tile(160, 152, tiles, 4, 5));
-            sprites.Add(new Tile(0, 152, tiles, 5, 4));
-            sprites.Add(new Tile(160, 160, tiles, 5, 4));
-            sprites.Add(new Tile(0, 0, tiles, 4, 2));
-            sprites.Add(new Tile(312, 0, tiles, 5, 2));
-            sprites.Add(new Tile(312, 232, tiles, 5, 3));
-            sprites.Add(new Platform(96, 64, platforms, platforms.Animations["platform1"], 0, 1, 0, false));
-            sprites.Add(new Platform(144, 80, platforms, platforms.Animations["platform1"], -1, 0, 0, false));
-            //sprites.Add(new Platform(8, 152, platforms, platforms.Animations[1], 0, 0, 1, false));
-            //sprites.Add(new Platform(40, 152, platforms, platforms.Animations[2], 0, 0, -1, false));
-            sprites.Add(new Platform(168, 80, platforms, platforms.Animations["conveyor1r"], 0f, 0f, 1, false));
-            sprites.Add(new Platform(280, 184, platforms, platforms.Animations["platform1"], 0.5f, 0, 0, true, platforms.Animations["disappear"]));
-            sprites.Add(new Platform(262, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            sprites.Add(new Platform(262, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            sprites.Add(new Platform(200, 216, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            sprites.Add(new Platform(200, 224, platforms, platforms.Animations["platform1"], -1f, 0, 0, true, platforms.Animations["disappear"]));
-            sprites.Add(new Tile(200, 80, tiles, 4, 5));
-            sprites.Add(new Checkpoint(88, 144, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"]));
-            sprites.Add(new Checkpoint(184, 216, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], true));
-            sprites.Add(new Checkpoint(184, 8, sprites32, sprites32.Animations["CheckOff"], sprites32.Animations["CheckOn"], false, true));
-            GravityLine gl = new GravityLine(227, 8, gravityline, gravityline.Animations["VGravLine"], false, 28);
-            sprites.Add(gl);
-            
-            sprites.Add(new Tile(304, 8, tiles, 9, 0));
-            for (int i = 168; i < 241; i += 8)
-                sprites.Add(new Tile(160, i, tiles, 5, 5));
-            for (int i = 0; i < 160; i += 8)
-                for (int j = 168; j < 241; j += 8)
-                    sprites.Add(new Tile(i, j, tiles, 3, 2));
-            for (int i = 168; i < 312; i += 8)
-                for (int j = 184; j < 232; j += 8)
-                    sprites.Add(new Tile(i, j, tiles, 1, 20));
-            for (int i = 168; i < 312; i += 8)
-                sprites.Add(new Tile(i, 176, tiles, 1, 19));
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
-            Script testScript = Command.ParseScript(this, "playercontrol,false\n" +
-                "text,gray,8,8,1\n" +
-                "Hello\n" +
-                "speak\n" +
-                "text,gray,48,144,1\n" +
-                "Hello\n" +
-                "speak\n" +
-                "text,gray,0,0,1\n" +
-                "Hello\n" +
-                "position,player,above\n" +
-                "speak\n" +
-                "text,red,0,0,1\n" +
-                "Haha lol\n" +
-                "position,center\n" +
-                "speak_active\n" +
-                "endtext\n" +
-                "playercontrol,true", "script");
-            Terminal terminal = new Terminal(136, 144, sprites32, sprites32.Animations["TerminalOff"], sprites32.Animations["TerminalOn"], testScript, true);
-            sprites.Add(terminal);
+
+            JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
+            LoadLevel(jObject);
 
             //JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             //LoadLevel(jObject);
@@ -269,6 +210,10 @@ namespace OpGL
             //ActivePlayer.Visible = false;
             //CurrentState = GameStates.Editing;
             tool = Tools.Tiles;
+            //sprites.Remove(ActivePlayer);
+            //RoomDatas[0] = CurrentRoom.Save();
+            //Clipboard.SetText(RoomDatas[0].ToString());
+            //sprites.Add(ActivePlayer);
 
 #endif
             glControl.Render += glControl_Render;
@@ -511,6 +456,10 @@ namespace OpGL
 
         private void GlControl_KeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                Clipboard.SetText(CurrentRoom.Save().ToString());
+            }
             if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
             {
                 inputs[(int)inputMap[e.KeyCode]]++;
@@ -713,6 +662,10 @@ namespace OpGL
             cameraX = CurrentRoom.X * Room.ROOM_WIDTH;
             cameraY = CurrentRoom.Y * Room.ROOM_HEIGHT;
             CurrentRoom.Objects.Add(ActivePlayer);
+            ActivePlayer.CenterX = ActivePlayer.CenterX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
+            ActivePlayer.CenterY = ActivePlayer.CenterY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
+            //ActivePlayer.PreviousX = ActivePlayer.PreviousX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
+            //ActivePlayer.PreviousY = ActivePlayer.PreviousY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
         }
 
         private void ProcessWorld()
@@ -753,6 +706,14 @@ namespace OpGL
                 ActivePlayer.CurrentTerminal = null;
                 Terminal.TextBox.Disappear();
             }
+            if (ActivePlayer.CenterX > (CurrentRoom.X + 1) * Room.ROOM_WIDTH)
+                LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
+            else if (ActivePlayer.CenterX < CurrentRoom.X * Room.ROOM_WIDTH)
+                LoadRoom((CurrentRoom.X + WidthRooms - 1) % WidthRooms, CurrentRoom.Y);
+            if (ActivePlayer.CenterY > (CurrentRoom.Y + 1) * Room.ROOM_HEIGHT)
+                LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
+            else if (ActivePlayer.CenterY < CurrentRoom.Y * Room.ROOM_HEIGHT)
+                LoadRoom(CurrentRoom.X, (CurrentRoom.Y + HeightRooms - 1) % HeightRooms);
         }
 
         //private List<Sprite> GetCollidersForRooms(Sprite sp)
@@ -989,9 +950,7 @@ namespace OpGL
                 ActivePlayer = player;
                 ActivePlayer.X = startX;
                 ActivePlayer.Y = startY;
-                int id = startRoomX + startRoomY * WidthRooms;
-                CurrentRoom = LoadRoom(RoomDatas[id]);
-                FocusedRoom = id;
+                LoadRoom(startRoomX, startRoomY);
             }
         }
 
@@ -999,17 +958,16 @@ namespace OpGL
         {
             JArray sArr = loadFrom["Objects"] as JArray;
             Room ret = new Room(new SpriteCollection(), null, null);
+            ret.X = (int)loadFrom["X"];
+            ret.Y = (int)loadFrom["Y"];
             foreach (JToken sprite in sArr)
             {
                 Sprite s = LoadSprite(sprite);
                 if (s != null)
                     ret.Objects.Add(s);
             }
-            ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]);
-            ret.ExitScript = ScriptFromName((string)loadFrom["ExitScript"]);
-            ret.X = (int)loadFrom["X"];
-            ret.Y = (int)loadFrom["Y"];
-
+            ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]) ?? Script.Empty;
+            ret.ExitScript = ScriptFromName((string)loadFrom["ExitScript"]) ?? Script.Empty;
             return ret;
         }
 
@@ -1053,14 +1011,10 @@ namespace OpGL
                 string name = (string)loadFrom["Name"];
                 int textBoxColor = (int)loadFrom["TextBox"];
                 bool sad = (bool)loadFrom["Sad"];
-                int aiState = (int)loadFrom["AI"];
                 float gravity = (float)loadFrom["Gravity"];
                 bool flipX = (bool)loadFrom["FlipX"];
-                string targetName = (string)loadFrom["Target"];
                 s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
                 (s as Crewman).Sad = sad;
-                (s as Crewman).AIState = (Crewman.AIStates)aiState;
-                (s as Crewman).Tag = targetName;
                 s.Gravity = gravity;
                 s.FlipX = flipX;
             }
@@ -1102,6 +1056,13 @@ namespace OpGL
                 s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), ScriptFromName(script), repeat);
                 s.FlipX = flipX;
                 s.FlipY = flipY;
+            }
+            else if (type == "GravityLine")
+            {
+                int length = (int)loadFrom["Length"];
+                bool horizontal = (bool)loadFrom["Horizontal"];
+                string animationName = (string)loadFrom["Animation"];
+                s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
             }
 
             else s = null;

@@ -29,7 +29,7 @@ namespace OpGL
         }
         public static Animation EmptyAnimation
         {
-            get => new Animation(new Point[] { }, new Rectangle(0, 0, 0, 0), null);
+            get => new Animation(new Point[] { }, new Rectangle(0, 0, 0, 0), null) { Name = "" };
         }
 
         public Point GetFrame(int frameId) => frames[frameId];

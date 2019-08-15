@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
@@ -143,6 +144,19 @@ namespace OpGL
                         Color = Color.White;
                 }
             }
+        }
+
+        public override JObject Save()
+        {
+            JObject ret = new JObject();
+            ret.Add("Type", "GravityLine");
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Texture", Texture.Name);
+            ret.Add("Horizontal", Horizontal);
+            ret.Add("Length", LengthTiles);
+            ret.Add("Animation", Animation.Name);
+            return ret;
         }
     }
 }

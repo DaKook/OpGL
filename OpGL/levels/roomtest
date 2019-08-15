@@ -1,5 +1,5 @@
 {
-	"Width": 1,
+	"Width": 2,
 	"Height": 1,
 	"StartRoomX": 0,
 	"StartRoomY": 0,
@@ -27,8 +27,8 @@
 	"Scripts":
 	[
 		{
-			"Name": "script1",
-			"Contents": "say,1,player\nIt works!"
+			"Name": "script",
+			"Contents": "playercontrol,false\nsay,1,player\nIt works!\nplayercontrol,true"
 		}
 	],
 	"Objects":
@@ -38,21 +38,4351 @@
 	"Rooms":
 	[
 		{
-			"Objects":
-			[
-				{
-					"Type": "Tile",
-					"X": 24,
-					"Y": 160,
-					"Texture": "tiles",
-					"TileX": 3,
-					"TileY": 4
-				}
-			],
+			"EnterScript": "",
+			"ExitScript": "",
 			"X": 0,
 			"Y": 0,
+			"Objects": [
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 176.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 192.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 208.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 224.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 240.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 256.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 272.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 288.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 168.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 184.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 216.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 232.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 248.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 264.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 280.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 296.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 16.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 32.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 48.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 64.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 80.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 96.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 112.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 128.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 144.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 16.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 32.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 48.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 64.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 80.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 96.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 112.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 128.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 144.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 3
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 80.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 176.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 192.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 208.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 224.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 240.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 256.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 272.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 288.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 176.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 192.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 208.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 224.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 240.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 256.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 272.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 288.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 176.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 192.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 208.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 224.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 240.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 256.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 272.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 288.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 296.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 280.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 264.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 248.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 232.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 216.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 184.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 168.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 21
+			},
+			{
+			  "Type": "Tile",
+			  "X": 296.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 280.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 264.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 248.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 232.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 216.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 184.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 168.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 19
+			},
+			{
+			  "Type": "Tile",
+			  "X": 296.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 280.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 264.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 248.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 232.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 216.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 184.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 168.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 1,
+			  "TileY": 20
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 16.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 240.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 8.0,
+			  "Texture": "tiles",
+			  "TileX": 9,
+			  "TileY": 0
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 136.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 120.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 104.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 88.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 72.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 56.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 40.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 24.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 0.0,
+			  "Y": 8.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 136.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 120.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 104.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 88.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 72.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 56.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 40.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 24.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 312.0,
+			  "Y": 8.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 304.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 288.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 272.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 256.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 240.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 224.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 208.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 192.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 176.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 160.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 296.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 280.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 264.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 248.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 232.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 216.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 200.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 184.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 168.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 152.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 136.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 120.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 104.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 88.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 72.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 56.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 40.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 24.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 144.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 128.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 112.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 96.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 80.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 64.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 48.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 32.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 8.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Checkpoint",
+			  "X": 184.0,
+			  "Y": 216.0,
+			  "Texture": "sprites32",
+			  "Deactivated": "CheckOff",
+			  "Activated": "CheckOn",
+			  "FlipX": true,
+			  "FlipY": false
+			},
+			{
+			  "Type": "Checkpoint",
+			  "X": 184.0,
+			  "Y": 8.0,
+			  "Texture": "sprites32",
+			  "Deactivated": "CheckOff",
+			  "Activated": "CheckOn",
+			  "FlipX": false,
+			  "FlipY": true
+			},
+			{
+			  "Type": "Checkpoint",
+			  "X": 88.0,
+			  "Y": 144.0,
+			  "Texture": "sprites32",
+			  "Deactivated": "CheckOff",
+			  "Activated": "CheckOn",
+			  "FlipX": false,
+			  "FlipY": false
+			},
+			{
+			  "Type": "GravityLine",
+			  "X": 227.0,
+			  "Y": 8.0,
+			  "Texture": "gravityline",
+			  "Horizontal": false,
+			  "Length": 28,
+			  "Animation": "VGravLine"
+			},
+			{
+			  "Type": "Platform",
+			  "X": 280.0,
+			  "Y": 184.0,
+			  "Texture": "platforms",
+			  "Animation": "platform1",
+			  "DisappearAnimation": "disappear",
+			  "XSpeed": 0.5,
+			  "YSpeed": 0.0,
+			  "Conveyor": 0.0,
+			  "Name": "",
+			  "Disappear": true,
+			  "Color": -1,
+			  "BoundsX": 0,
+			  "BoundsY": 0,
+			  "BoundsWidth": 0,
+			  "BoundsHeight": 0
+			},
+			{
+			  "Type": "Platform",
+			  "X": 144.0,
+			  "Y": 80.0,
+			  "Texture": "platforms",
+			  "Animation": "platform1",
+			  "DisappearAnimation": "",
+			  "XSpeed": -1.0,
+			  "YSpeed": 0.0,
+			  "Conveyor": 0.0,
+			  "Name": "",
+			  "Disappear": false,
+			  "Color": -1,
+			  "BoundsX": 0,
+			  "BoundsY": 0,
+			  "BoundsWidth": 0,
+			  "BoundsHeight": 0
+			},
+			{
+			  "Type": "Platform",
+			  "X": 168.0,
+			  "Y": 80.0,
+			  "Texture": "platforms",
+			  "Animation": "conveyor1r",
+			  "DisappearAnimation": "",
+			  "XSpeed": 0.0,
+			  "YSpeed": 0.0,
+			  "Conveyor": 1.0,
+			  "Name": "",
+			  "Disappear": false,
+			  "Color": -1,
+			  "BoundsX": 0,
+			  "BoundsY": 0,
+			  "BoundsWidth": 0,
+			  "BoundsHeight": 0
+			},
+			{
+			  "Type": "Platform",
+			  "X": 96.0,
+			  "Y": 64.0,
+			  "Texture": "platforms",
+			  "Animation": "platform1",
+			  "DisappearAnimation": "",
+			  "XSpeed": 0.0,
+			  "YSpeed": 1.0,
+			  "Conveyor": 0.0,
+			  "Name": "",
+			  "Disappear": false,
+			  "Color": -1,
+			  "BoundsX": 0,
+			  "BoundsY": 0,
+			  "BoundsWidth": 0,
+			  "BoundsHeight": 0
+			},
+			{
+			  "Type": "Terminal",
+			  "X": 136.0,
+			  "Y": 144.0,
+			  "Texture": "sprites32",
+			  "Deactivated": "TerminalOff",
+			  "Activated": "TerminalOn",
+			  "Script": "script",
+			  "Repeat": true,
+			  "FlipX": false,
+			  "FlipY": false
+			}
+		  ]
+		},
+		{
 			"EnterScript": "",
-			"ExitScript": ""
+			"ExitScript": "",
+			"X": 1,
+			"Y": 0,
+			"Objects": [
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 24.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 56.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 88.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 120.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 328.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 344.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 360.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 376.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 392.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 408.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 424.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 440.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 456.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 472.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 488.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 504.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 520.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 536.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 552.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 568.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 584.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 600.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 616.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 16.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 48.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 80.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 112.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 144.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 208.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 216.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 184.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 152.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 120.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 88.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 56.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 24.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 616.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 600.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 584.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 568.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 552.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 536.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 520.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 504.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 488.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 472.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 456.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 440.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 424.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 408.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 392.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 376.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 360.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 344.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 328.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 128.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 96.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 64.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 32.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 8.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 48.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 80.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 112.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 144.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 176.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 2
+			},
+			{
+			  "Type": "Tile",
+			  "X": 336.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 352.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 368.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 384.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 400.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 416.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 432.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 448.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 464.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 480.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 496.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 512.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 528.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 544.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 560.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 576.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 592.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 608.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 624.0,
+			  "Y": 0.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 8.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 40.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 72.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 104.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 136.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 224.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 192.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 160.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 128.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 96.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 64.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 32.0,
+			  "Texture": "tiles",
+			  "TileX": 3,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 632.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 3
+			},
+			{
+			  "Type": "Tile",
+			  "X": 624.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 608.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 592.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 576.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 560.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 544.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 528.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 512.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 496.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 480.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 464.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 448.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 432.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 416.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 400.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 384.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 368.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 352.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 336.0,
+			  "Y": 232.0,
+			  "Texture": "tiles",
+			  "TileX": 4,
+			  "TileY": 4
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 200.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 6
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 168.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 136.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 104.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 72.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 40.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			},
+			{
+			  "Type": "Tile",
+			  "X": 320.0,
+			  "Y": 16.0,
+			  "Texture": "tiles",
+			  "TileX": 5,
+			  "TileY": 5
+			}
+		  ]
 		}
 	]
 }

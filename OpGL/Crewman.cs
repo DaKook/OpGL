@@ -317,6 +317,7 @@ namespace OpGL
         public override JObject Save()
         {
             JObject ret = new JObject();
+            ret.Add("Type", "Crewman");
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);
@@ -328,10 +329,8 @@ namespace OpGL
             ret.Add("Name", Name);
             ret.Add("TextBox", TextBoxColor.ToArgb());
             ret.Add("FlipX", flipX);
+            ret.Add("Sad", Sad);
             ret.Add("Gravity", Gravity);
-            //Probably don't want to save these because when loading, the target may not have been loaded yet.
-            ret.Add("AI", (int)AIState);
-            ret.Add("Target", Target.Name);
             return ret;
         }
     }

@@ -23,8 +23,8 @@ namespace OpGL
         public Room(SpriteCollection objects, Script enter, Script leave)
         {
             Objects = objects;
-            EnterScript = enter;
-            ExitScript = leave;
+            EnterScript = enter ?? Script.Empty;
+            ExitScript = leave ?? Script.Empty;
         }
 
         public JObject Save()

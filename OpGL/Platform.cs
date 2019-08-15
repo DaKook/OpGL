@@ -32,7 +32,7 @@ namespace OpGL
             YVel = YSpeed;
             Conveyor = conveyor;
             CanDisappear = disappear;
-            DisappearAnimation = disappearAnimation;
+            DisappearAnimation = disappearAnimation ?? Animation.EmptyAnimation;
             Solid = SolidState.Ground;
         }
 
@@ -155,6 +155,7 @@ namespace OpGL
         public override JObject Save()
         {
             JObject ret = new JObject();
+            ret.Add("Type", "Platform");
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);
