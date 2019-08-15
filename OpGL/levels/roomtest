@@ -3224,7 +3224,13 @@
 			  "Texture": "gravityline",
 			  "Horizontal": false,
 			  "Length": 28,
-			  "Animation": "VGravLine"
+			  "Animation": "VGravLine",
+			  "XSpeed": 0.5,
+			  "YSpeed": 0.0,
+			  "BoundsX": 227.0,
+			  "BoundsY": 8.0,
+			  "BoundsWidth": 33.0,
+			  "BoundsHeight": 224.0
 			},
 			{
 			  "Type": "Platform",

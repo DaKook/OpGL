@@ -156,6 +156,27 @@ namespace OpGL
         }
 
         public Crewman ActivePlayer;
+        public void SetPlayer(Crewman player)
+        {
+            if (ActivePlayer != null)
+            {
+                ActivePlayer.Respawned -= RespawnPlatforms;
+            }
+            ActivePlayer = player;
+            ActivePlayer.Respawned += RespawnPlatforms;
+        }
+        public void RespawnPlatforms()
+        {
+            foreach (Sprite sprite in sprites)
+            {
+                if (!(sprite is Platform)) continue;
+                Platform platform = sprite as Platform;
+                if (!platform.Visible && platform.Animation == platform.DisappearAnimation)
+                {
+                    platform.Reappear();
+                }
+            }
+        }
         public bool IsPlaying { get; private set; } = false;
         private int FrameCount = 1; // start at 1 so inputs aren't "new" at start
         public enum GameStates { Playing, Editing, Menu }
@@ -180,11 +201,12 @@ namespace OpGL
             Texture gravityline = TextureFromName("gravityline");
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
-            ActivePlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
-            //ActivePlayer.CanFlip = false;
-            //ActivePlayer.Jump = 8;
-            UserAccessSprites.Add(ActivePlayer.Name, ActivePlayer);
-            ActivePlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
+            //Crewman newPlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
+            ////ActivePlayer.CanFlip = false;
+            ////ActivePlayer.Jump = 8;
+            //UserAccessSprites.Add(newPlayer.Name, newPlayer);
+            //newPlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
+            //SetPlayer(newPlayer);
             //LoadRoom(0, 0);
             //WidthRooms = 1;
             //HeightRooms = 1;
@@ -947,7 +969,7 @@ namespace OpGL
             //Load Player
             {
                 Crewman player = LoadSprite(loadFrom["Player"]) as Crewman;
-                ActivePlayer = player;
+                SetPlayer(player);
                 ActivePlayer.X = startX;
                 ActivePlayer.Y = startY;
                 LoadRoom(startRoomX, startRoomY);
@@ -965,6 +987,10 @@ namespace OpGL
                 Sprite s = LoadSprite(sprite);
                 if (s != null)
                     ret.Objects.Add(s);
+                if (s is Checkpoint && ActivePlayer.CurrentCheckpoint != null && s.X == ActivePlayer.CurrentCheckpoint.X && s.Y == ActivePlayer.CurrentCheckpoint.Y)
+                {
+                    (s as Checkpoint).Activate();
+                }
             }
             ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]) ?? Script.Empty;
             ret.ExitScript = ScriptFromName((string)loadFrom["ExitScript"]) ?? Script.Empty;
@@ -1062,7 +1088,16 @@ namespace OpGL
                 int length = (int)loadFrom["Length"];
                 bool horizontal = (bool)loadFrom["Horizontal"];
                 string animationName = (string)loadFrom["Animation"];
+                float xSpeed = (float)loadFrom["XSpeed"];
+                float ySpeed = (float)loadFrom["YSpeed"];
+                int boundX = (int)loadFrom["BoundsX"];
+                int boundY = (int)loadFrom["BoundsY"];
+                int boundW = (int)loadFrom["BoundsWidth"];
+                int boundH = (int)loadFrom["BoundsHeight"];
                 s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
+                (s as GravityLine).XSpeed = xSpeed;
+                (s as GravityLine).YSpeed = ySpeed;
+                (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
             }
 
             else s = null;

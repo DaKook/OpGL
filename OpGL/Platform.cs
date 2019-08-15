@@ -16,6 +16,7 @@ namespace OpGL
         public float YVel;
         public float Conveyor;
         public bool CanDisappear;
+        public Animation NormalAnimation;
         public Animation DisappearAnimation;
         private int DisappearFrames = -1;
         /// <summary>
@@ -26,6 +27,7 @@ namespace OpGL
         public Rectangle Bounds;
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null) : base(x, y, texture, animation)
         {
+            NormalAnimation = animation;
             XSpeed = xSpeed;
             YSpeed = ySpeed;
             XVel = XSpeed;
@@ -33,6 +35,15 @@ namespace OpGL
             Conveyor = conveyor;
             CanDisappear = disappear;
             DisappearAnimation = disappearAnimation ?? Animation.EmptyAnimation;
+            Solid = SolidState.Ground;
+        }
+
+        public void Reappear()
+        {
+            ResetAnimation();
+            Animation = NormalAnimation;
+            DisappearFrames = -1;
+            Visible = true;
             Solid = SolidState.Ground;
         }
 

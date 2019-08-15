@@ -15,6 +15,10 @@ namespace OpGL
 
         protected int length = 0;
 
+        public float XSpeed;
+        public float YSpeed;
+        public Rectangle Bounds;
+
         public override float Width => Horizontal ? length * Texture.TileSize : base.Width;
         public override float Height => Horizontal ? base.Height : length * Texture.TileSize;
 
@@ -144,6 +148,36 @@ namespace OpGL
                         Color = Color.White;
                 }
             }
+            X += XSpeed;
+            Y += YSpeed;
+            CheckBounds();
+        }
+
+        public void CheckBounds()
+        {
+            if (Bounds.Width > 0 && Bounds.Height > 0)
+            {
+                if (Right > Bounds.X + Bounds.Width)
+                {
+                    Right = Bounds.X + Bounds.Width;
+                    XSpeed *= -1;
+                }
+                else if (X < Bounds.X)
+                {
+                    X = Bounds.X;
+                    XSpeed *= -1;
+                }
+                else if (Bottom > Bounds.Y + Bounds.Height)
+                {
+                    Bottom = Bounds.Y + Bounds.Height;
+                    YSpeed *= -1;
+                }
+                else if (Y < Bounds.Y)
+                {
+                    Y = Bounds.Y;
+                    YSpeed *= -1;
+                }
+            }
         }
 
         public override JObject Save()
@@ -156,6 +190,12 @@ namespace OpGL
             ret.Add("Horizontal", Horizontal);
             ret.Add("Length", LengthTiles);
             ret.Add("Animation", Animation.Name);
+            ret.Add("XSpeed", XSpeed);
+            ret.Add("YSpeed", YSpeed);
+            ret.Add("BoundsX", Bounds.X);
+            ret.Add("BoundsY", Bounds.Y);
+            ret.Add("BoundsWidth", Bounds.Width);
+            ret.Add("BoundsHeight", Bounds.Height);
             return ret;
         }
     }

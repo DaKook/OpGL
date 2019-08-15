@@ -33,6 +33,10 @@ namespace OpGL
         public int LedgeMercy = 0;
         private bool _sad = false;
         public AIStates AIState = AIStates.Stand;
+
+        public delegate void RespawnedDelegate();
+        public event RespawnedDelegate Respawned;
+
         public enum AIStates { Follow, Face, Stand };
         public Crewman Target;
         public string Tag;
@@ -170,6 +174,7 @@ namespace OpGL
                     YVelocity = 0;
                     PreviousX = X;
                     PreviousY = Y;
+                    Respawned?.Invoke();
                 }
             }
         }
