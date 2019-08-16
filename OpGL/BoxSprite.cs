@@ -91,11 +91,11 @@ namespace OpGL
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
             Gl.BindVertexArray(VAO);
 
-            int modelLoc = Gl.GetUniformLocation(Texture.Program, "model");
+            int modelLoc = Texture.Program.ModelLocation;
             Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
-            int texLoc = Gl.GetUniformLocation(Texture.Program, "texMatrix");
+            int texLoc = Texture.Program.TexLocation;
             Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
-            int colorLoc = Gl.GetUniformLocation(Texture.Program, "color");
+            int colorLoc = Texture.Program.ColorLocation;
             Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
 
             UnsafeDraw();

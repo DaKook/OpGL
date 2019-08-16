@@ -81,6 +81,7 @@
     <Compile Include="Crewman.cs" />
     <Compile Include="FullImage.cs" />
     <Compile Include="GravityLine.cs" />
+    <Compile Include="ProgramData.cs" />
     <Compile Include="Sprite.cs" />
     <Compile Include="SpriteCollection.cs" />
     <Compile Include="Enemy.cs" />

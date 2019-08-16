@@ -72,7 +72,7 @@ namespace OpGL
 
         // OpenGL
         private GlControl glControl;
-        private uint program;
+        private ProgramData program;
 
         // Textures
         public Texture FontTexture;
@@ -224,18 +224,10 @@ namespace OpGL
 
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
-
-            //JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
-            //LoadLevel(jObject);
-            //sprites.Add(ActivePlayer);
             ActivePlayer.Layer = 1;
-            //ActivePlayer.Visible = false;
-            //CurrentState = GameStates.Editing;
             tool = Tools.Tiles;
-            //sprites.Remove(ActivePlayer);
-            //RoomDatas[0] = CurrentRoom.Save();
-            //Clipboard.SetText(RoomDatas[0].ToString());
-            //sprites.Add(ActivePlayer);
+            ActivePlayer.MultiplePositions = true;
+            ActivePlayer.Offsets.Add(new PointF(80, 0));
 
 #endif
             glControl.Render += glControl_Render;
@@ -302,17 +294,17 @@ namespace OpGL
         #region "Init"
         private void InitGlProgram()
         {
-            program = GLProgram.Load("shaders/v2dTexTransform.txt", "shaders/f2dTex.txt");
+            program = new ProgramData(GLProgram.Load("shaders/v2dTexTransform.txt", "shaders/f2dTex.txt"));
 
-            Gl.UseProgram(program);
-            int modelMatrixLoc = Gl.GetUniformLocation(program, "model");
+            Gl.UseProgram(program.ID);
+            int modelMatrixLoc = Gl.GetUniformLocation(program.ID, "model");
             Gl.UniformMatrix4f(modelMatrixLoc, 1, false, Matrix4x4f.Identity);
 
             // origin at top-left
             camera = Matrix4x4f.Translated(-1f, 1f, 0f);
             camera.Scale(2f / RESOLUTION_WIDTH, -2f / RESOLUTION_HEIGHT, 1);
             hudView = camera;
-            int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
+            int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
         }
 
@@ -860,7 +852,7 @@ namespace OpGL
             // clear the color buffer
             Gl.Clear(ClearBufferMask.ColorBufferBit);
 
-            int viewMatrixLoc = Gl.GetUniformLocation(program, "view");
+            int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
             Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
             sprites.Render();
 
@@ -976,7 +968,7 @@ namespace OpGL
             }
         }
 
-        public Room LoadRoom(JToken loadFrom)
+        public Room LoadRoom(JToken loadFrom, int xOffset = 0, int yOffset = 0)
         {
             JArray sArr = loadFrom["Objects"] as JArray;
             Room ret = new Room(new SpriteCollection(), null, null);
@@ -985,6 +977,10 @@ namespace OpGL
             foreach (JToken sprite in sArr)
             {
                 Sprite s = LoadSprite(sprite);
+                s.X += ret.X * Room.ROOM_WIDTH + xOffset;
+                s.Y += ret.Y * Room.ROOM_HEIGHT + yOffset;
+                s.PreviousX = s.X;
+                s.PreviousY = s.Y;
                 if (s != null)
                     ret.Objects.Add(s);
                 if (s is Checkpoint && ActivePlayer.CurrentCheckpoint != null && s.X == ActivePlayer.CurrentCheckpoint.X && s.Y == ActivePlayer.CurrentCheckpoint.Y)

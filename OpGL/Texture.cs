@@ -15,7 +15,7 @@ namespace OpGL
         public float Width { get; private set; }
         public float Height { get; private set; }
         public int TileSize { get; set; }
-        public uint Program { get; private set; }
+        public ProgramData Program { get; private set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
 
@@ -25,7 +25,7 @@ namespace OpGL
             return anim;
         }
 
-        public Texture(uint id, float width, float height, int tileSize, string name, uint program, uint vao, uint vbo)
+        public Texture(uint id, float width, float height, int tileSize, string name, ProgramData program, uint vao, uint vbo)
         {
             ID = id;
             Width = width;

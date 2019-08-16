@@ -33,7 +33,7 @@ namespace OpGL
             int texLoc = -1;
             int colorLoc = -1;
             Texture lastTex = null;
-            uint lastProgram = uint.MaxValue;
+            ProgramData lastProgram = null;
             long lastColor = long.MinValue;
             for (int i = 0; i < Count; i++)
             {
@@ -50,11 +50,11 @@ namespace OpGL
                     if (lastProgram != lastTex.Program)
                     {
                         lastProgram = lastTex.Program;
-                        modelLoc = Gl.GetUniformLocation(lastProgram, "model");
-                        texLoc = Gl.GetUniformLocation(lastProgram, "texMatrix");
-                        colorLoc = Gl.GetUniformLocation(lastProgram, "color");
-                        int masterColorLoc = Gl.GetUniformLocation(lastProgram, "masterColor");
-                        Gl.UseProgram(lastProgram);
+                        modelLoc = lastProgram.ModelLocation;
+                        texLoc = lastProgram.TexLocation;
+                        colorLoc = lastProgram.ColorLocation;
+                        int masterColorLoc = lastProgram.MasterColorLocation;
+                        Gl.UseProgram(lastProgram.ID);
                         Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
                     }
                 }
@@ -74,7 +74,7 @@ namespace OpGL
         {
             int minX, maxX, minY, maxY;
             int cX, cY;
-            public TileEnumerator(Sprite d)
+            public TileEnumerator(RectangleF d)
             {
                 minX = (int)d.X / GROUP_SIZE;
                 minY = (int)d.Y / GROUP_SIZE;
@@ -118,7 +118,7 @@ namespace OpGL
             perTile = new SortedList<Point, List<Sprite>>(pointComparer);
             foreach (Sprite d in this)
             {
-                TileEnumerator te = new TileEnumerator(d);
+                TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
                 do
                 {
                     if (!perTile.ContainsKey(te.Current))
@@ -131,12 +131,24 @@ namespace OpGL
         {
             List<Sprite> colliders = new List<Sprite>();
 
-            TileEnumerator te = new TileEnumerator(d);
+            TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
             do
             {
                 if (perTile.ContainsKey(te.Current))
                     colliders.AddRange(perTile[te.Current].Where((item) => item != d && !colliders.Contains(item)));
             } while (te.MoveNext());
+            if (d.MultiplePositions)
+            {
+                for (int i = 0; i < d.Offsets.Count; i++)
+                {
+                    TileEnumerator te2 = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width + d.Offsets[i].X, d.Height + d.Offsets[i].Y));
+                    do
+                    {
+                        if (perTile.ContainsKey(te2.Current))
+                            colliders.AddRange(perTile[te2.Current].Where((item) => item != d && !colliders.Contains(item)));
+                    } while (te2.MoveNext());
+                }
+            }
 
             return colliders;
         }

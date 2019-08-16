@@ -42,6 +42,8 @@ namespace OpGL
         }
         public float X { get; set; }
         public float Y { get; set; }
+        public List<PointF> Offsets = new List<PointF>();
+        public bool MultiplePositions;
         public float Right { get => X + Width; set => X = value - Width; }
         public float Bottom { get => Y + Height; set => Y = value - Height; }
         public float CenterX { get => X + Width / 2; set => X = value - Width / 2; }
@@ -146,7 +148,16 @@ namespace OpGL
         }
         public bool IsOverlapping(Sprite other)
         {
-            return Within(other.X, other.Y, other.Width, other.Height);
+            bool ret = Within(other.X, other.Y, other.Width, other.Height);
+            if (!ret && MultiplePositions)
+            {
+                foreach (PointF offset in Offsets)
+                {
+                    if (ret = Right + offset.X > other.X && X + offset.X < other.Right
+                    && Bottom + offset.Y > other.Y && Y + offset.Y < other.Bottom) break;
+                }
+            }
+            return ret;
         }
 
         /// <summary>
@@ -158,11 +169,11 @@ namespace OpGL
             Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
             Gl.BindVertexArray(VAO);
 
-            int modelLoc = Gl.GetUniformLocation(Texture.Program, "model");
+            int modelLoc = Texture.Program.ModelLocation;
             Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
-            int texLoc = Gl.GetUniformLocation(Texture.Program, "texMatrix");
+            int texLoc = Texture.Program.TexLocation;
             Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
-            int colorLoc = Gl.GetUniformLocation(Texture.Program, "color");
+            int colorLoc = Texture.Program.ColorLocation;
             Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
 
             UnsafeDraw();
@@ -186,6 +197,15 @@ namespace OpGL
         public virtual void UnsafeDraw()
         {
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
+            if (MultiplePositions)
+            {
+                foreach (PointF offset in Offsets)
+                {
+                    LocMatrix.Translate(offset.X * (flipX ? -1 : 1), offset.Y * (flipY ? -1 : 1), 0);
+                    Gl.UniformMatrix4f(Texture.Program.ModelLocation, 1, false, LocMatrix);
+                    Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
+                }
+            }
         }
 
         public void ResetAnimation()
@@ -231,21 +251,28 @@ namespace OpGL
         }
         protected CollisionData GetCollisionData(Sprite testFor)
         {
-            // check for vertical collision first
-            // top
-            if (PreviousY + Height <= testFor.PreviousY)
-                return new CollisionData(true, Y + Height - testFor.Y, testFor);
-            // bottom
-            else if (PreviousY >= testFor.PreviousY + testFor.Height)
-                return new CollisionData(true, Y - (testFor.Y + testFor.Height), testFor);
-            // right
-            else if (PreviousX + Width <= testFor.PreviousX)
-                return new CollisionData(false, X + Width - testFor.X, testFor);
-            // left
-            else if (PreviousX >= testFor.PreviousX + testFor.Width)
-                return new CollisionData(false, X - (testFor.X + testFor.Width), testFor);
-            else
-                return null;
+            for (int i = -1; i < Offsets.Count; i++)
+            {
+                float ofX = i > -1 ? Offsets[i].X : 0;
+                float ofY = i > -1 ? Offsets[i].Y : 0;
+                if (!testFor.Within(X + ofX, Y + ofY, Width, Height)) continue;
+                // check for vertical collision first
+                // top
+                if (PreviousY + Height + ofY <= testFor.PreviousY)
+                    return new CollisionData(true, Bottom + ofY - testFor.Y, testFor);
+                // bottom
+                else if (PreviousY + ofY >= testFor.PreviousY + testFor.Height)
+                    return new CollisionData(true, Y + ofY - (testFor.Bottom), testFor);
+                // right
+                else if (PreviousX + Width + ofX <= testFor.PreviousX)
+                    return new CollisionData(false, Right + ofX - testFor.X, testFor);
+                // left
+                else if (PreviousX + ofX >= testFor.PreviousX + testFor.Width)
+                    return new CollisionData(false, X + ofX - (testFor.Right), testFor);
+                if (!MultiplePositions) break;
+            }
+
+            return null;
         }
 
         /// <summary>
