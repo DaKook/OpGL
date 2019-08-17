@@ -141,10 +141,10 @@ namespace OpGL
             TexMatrix.Translate(p.X, p.Y, 0f);
         }
 
-        public bool Within(float x, float y, float width, float height)
+        public bool Within(float x, float y, float width, float height, float offsetX = 0, float offsetY = 0)
         {
-            return Right > x && X < x + width
-                && Bottom > y && Y < y + height;
+            return Right + offsetX > x && X + offsetX < x + width
+                && Bottom + offsetY > y && Y + offsetY < y + height;
         }
         public bool IsOverlapping(Sprite other)
         {
@@ -155,6 +155,22 @@ namespace OpGL
                 {
                     if (ret = Right + offset.X > other.X && X + offset.X < other.Right
                     && Bottom + offset.Y > other.Y && Y + offset.Y < other.Bottom) break;
+                }
+            }
+            if (!ret && other.MultiplePositions)
+            {
+                foreach (PointF offsetO in other.Offsets)
+                {
+                    ret = Within(other.X + offsetO.X, other.Y + offsetO.Y, other.Width, other.Height);
+                    if (!ret && MultiplePositions)
+                    {
+                        foreach (PointF offset in Offsets)
+                        {
+                            if (ret = Right + offset.X > other.X + offsetO.X && X + offset.X < other.Right + offsetO.X
+                            && Bottom + offset.Y > other.Y + offsetO.Y && Y + offset.Y < other.Bottom + offsetO.Y) break;
+                        }
+                        if (ret) break;
+                    }
                 }
             }
             return ret;
@@ -255,20 +271,26 @@ namespace OpGL
             {
                 float ofX = i > -1 ? Offsets[i].X : 0;
                 float ofY = i > -1 ? Offsets[i].Y : 0;
-                if (!testFor.Within(X + ofX, Y + ofY, Width, Height)) continue;
-                // check for vertical collision first
-                // top
-                if (PreviousY + Height + ofY <= testFor.PreviousY)
-                    return new CollisionData(true, Bottom + ofY - testFor.Y, testFor);
-                // bottom
-                else if (PreviousY + ofY >= testFor.PreviousY + testFor.Height)
-                    return new CollisionData(true, Y + ofY - (testFor.Bottom), testFor);
-                // right
-                else if (PreviousX + Width + ofX <= testFor.PreviousX)
-                    return new CollisionData(false, Right + ofX - testFor.X, testFor);
-                // left
-                else if (PreviousX + ofX >= testFor.PreviousX + testFor.Width)
-                    return new CollisionData(false, X + ofX - (testFor.Right), testFor);
+                for (int j = -1; j < testFor.Offsets.Count; j++)
+                {
+                    float ofXO = j > -1 ? testFor.Offsets[j].X : 0;
+                    float ofYO = j > -1 ? testFor.Offsets[j].Y : 0;
+                    if (!testFor.Within(X + ofX, Y + ofY, Width, Height, ofXO, ofYO)) continue;
+                    // check for vertical collision first
+                    // top
+                    if (PreviousY + Height + ofY <= testFor.PreviousY + ofYO)
+                        return new CollisionData(true, Bottom + ofY - (testFor.Y + ofYO), testFor);
+                    // bottom
+                    else if (PreviousY + ofY >= testFor.PreviousY + testFor.Height + ofYO)
+                        return new CollisionData(true, Y + ofY - (testFor.Bottom + ofYO), testFor);
+                    // right
+                    else if (PreviousX + Width + ofX <= testFor.PreviousX + ofXO)
+                        return new CollisionData(false, Right + ofX - (testFor.X + ofXO), testFor);
+                    // left
+                    else if (PreviousX + ofX >= testFor.PreviousX + testFor.Width + ofXO)
+                        return new CollisionData(false, X + ofX - (testFor.Right + ofXO), testFor);
+                    if (!testFor.MultiplePositions) break;
+                }
                 if (!MultiplePositions) break;
             }
 

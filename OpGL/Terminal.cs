@@ -22,6 +22,7 @@ namespace OpGL
             Script = script;
             Repeat = repeat;
             AlreadyUsed = false;
+            Immovable = true;
         }
 
         public override void HandleCrewmanCollision(Crewman crewman)

@@ -226,8 +226,13 @@ namespace OpGL
             LoadLevel(jObject);
             ActivePlayer.Layer = 1;
             tool = Tools.Tiles;
-            ActivePlayer.MultiplePositions = true;
-            ActivePlayer.Offsets.Add(new PointF(80, 0));
+            //ActivePlayer.MultiplePositions = true;
+            //ActivePlayer.Offsets.Add(new PointF(-40, 0));
+            //ActivePlayer.X = 80;
+            //Platform p = new Platform(16, 16, platforms, platforms.AnimationFromName("platform1"), 1, 0, 0, false, null);
+            //p.MultiplePositions = true;
+            //p.Offsets.Add(new PointF(64, 0));
+            //sprites.Add(p);
 
 #endif
             glControl.Render += glControl_Render;
@@ -684,10 +689,13 @@ namespace OpGL
 
         private void ProcessWorld()
         {
+            List<Sprite> mpSprites = new List<Sprite>();
             for (int i = 0; i < sprites.Count; i++)
             {
                 if (!sprites[i].Static)
                     sprites[i].Process();
+                if (sprites[i].MultiplePositions)
+                    mpSprites.Add(sprites[i]);
             }
 
             sprites.SortForCollisions();
@@ -696,7 +704,7 @@ namespace OpGL
             for (int i = 0; i < checkCollisions.Length; i++)
             {
                 Sprite drawable = checkCollisions[i];
-                PerformCollisionChecks(drawable);
+                PerformCollisionChecks(drawable, mpSprites);
                 endLocation[i] = new PointF(drawable.X, drawable.Y);
             }
             // check again any that have moved since completing their collisions
@@ -710,7 +718,7 @@ namespace OpGL
                     if (endLocation[i] != new PointF(drawable.X, drawable.Y))
                     {
                         collisionPerformed = true;
-                        PerformCollisionChecks(drawable);
+                        PerformCollisionChecks(drawable, mpSprites);
                         endLocation[i] = new PointF(drawable.X, drawable.Y);
                     }
                 }
@@ -748,7 +756,7 @@ namespace OpGL
         //    return ret;
         //}
 
-        private void PerformCollisionChecks(Sprite drawable)
+        private void PerformCollisionChecks(Sprite drawable, List<Sprite> mpSprites)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
             List<CollisionData> entityCollisions = new List<CollisionData>();
@@ -759,6 +767,7 @@ namespace OpGL
             {
                 // get a collision
                 List<Sprite> testFor = sprites.GetPotentialColliders(drawable);
+                testFor.AddRange(mpSprites);
                 List<CollisionData> collisionDatas = new List<CollisionData>();
                 foreach (Sprite d in testFor)
                 {
@@ -821,7 +830,7 @@ namespace OpGL
                     {
                         entityCollisions.Add(c);
                         if (drawable is Platform)
-                            PerformCollisionChecks(c.CollidedWith);
+                            PerformCollisionChecks(c.CollidedWith, mpSprites);
                         else
                             drawable.Collide(c);
                     }
@@ -986,6 +995,7 @@ namespace OpGL
                 if (s is Checkpoint && ActivePlayer.CurrentCheckpoint != null && s.X == ActivePlayer.CurrentCheckpoint.X && s.Y == ActivePlayer.CurrentCheckpoint.Y)
                 {
                     (s as Checkpoint).Activate();
+                    ActivePlayer.CurrentCheckpoint = s as Checkpoint;
                 }
             }
             ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]) ?? Script.Empty;
