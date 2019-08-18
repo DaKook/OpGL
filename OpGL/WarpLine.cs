@@ -65,6 +65,8 @@ namespace OpGL
                     {
                         sprite.X += Offset.X;
                         sprite.Y += Offset.Y;
+                        sprite.PreviousX += Offset.X;
+                        sprite.PreviousY += Offset.Y;
                     }
                     sprite.Offsets.Remove(Offset);
                     if (sprite.Offsets.Count == 0) sprite.MultiplePositions = false;
@@ -78,11 +80,14 @@ namespace OpGL
         public override void Collide(CollisionData cd)
         {
             Sprite s = cd.CollidedWith;
-            s.Offsets.Add(Offset);
-            s.MultiplePositions = true;
-            Warping.Add(s);
-            s.IsWarping += 1;
-            warpingDatas.Add(Math.Sign(cd.Distance));
+            if (!Warping.Contains(s))
+            {
+                s.Offsets.Add(Offset);
+                s.MultiplePositions = true;
+                Warping.Add(s);
+                s.IsWarping += 1;
+                warpingDatas.Add(Math.Sign(cd.Distance));
+            }
         }
 
         public override CollisionData TestCollision(Sprite testFor)

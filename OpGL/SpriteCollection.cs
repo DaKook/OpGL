@@ -154,7 +154,7 @@ namespace OpGL
             {
                 for (int i = 0; i < d.Offsets.Count; i++)
                 {
-                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width + d.Offsets[i].X, d.Height + d.Offsets[i].Y));
+                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                     do
                     {
                         if (perTile.ContainsKey(te.Current))
