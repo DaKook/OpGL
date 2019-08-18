@@ -222,11 +222,13 @@ namespace OpGL
             Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
             if (MultiplePositions)
             {
+                PointF lastOffset = new PointF(0, 0);
                 foreach (PointF offset in Offsets)
                 {
-                    LocMatrix.Translate(offset.X * (flipX ? -1 : 1), offset.Y * (flipY ? -1 : 1), 0);
+                    LocMatrix.Translate((offset.X - lastOffset.X) * (flipX ? -1 : 1), (offset.Y - lastOffset.Y) * (flipY ? -1 : 1), 0);
                     Gl.UniformMatrix4f(Texture.Program.ModelLocation, 1, false, LocMatrix);
                     Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
+                    lastOffset = offset;
                 }
             }
         }

@@ -232,6 +232,8 @@ namespace OpGL
             Platform p = new Platform(168, 224, platforms, platforms.AnimationFromName("platform1"), 1, 0, 0, false, null);
             //p.MultiplePositions = true;
             //p.Offsets.Add(new PointF(64, 0));
+            //ActivePlayer.MultiplePositions = true;
+            //ActivePlayer.Offsets.Add(new PointF(24, 0));
             sprites.Add(p);
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
