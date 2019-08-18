@@ -229,10 +229,10 @@ namespace OpGL
             //ActivePlayer.MultiplePositions = true;
             //ActivePlayer.Offsets.Add(new PointF(-40, 0));
             //ActivePlayer.X = 80;
-            //Platform p = new Platform(16, 16, platforms, platforms.AnimationFromName("platform1"), 1, 0, 0, false, null);
+            Platform p = new Platform(168, 224, platforms, platforms.AnimationFromName("platform1"), 1, 0, 0, false, null);
             //p.MultiplePositions = true;
             //p.Offsets.Add(new PointF(64, 0));
-            //sprites.Add(p);
+            sprites.Add(p);
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
 
@@ -696,8 +696,6 @@ namespace OpGL
             {
                 if (!sprites[i].Static)
                     sprites[i].Process();
-                if (sprites[i].MultiplePositions)
-                    mpSprites.Add(sprites[i]);
             }
 
             sprites.SortForCollisions();
@@ -706,7 +704,7 @@ namespace OpGL
             for (int i = 0; i < checkCollisions.Length; i++)
             {
                 Sprite drawable = checkCollisions[i];
-                PerformCollisionChecks(drawable, mpSprites);
+                PerformCollisionChecks(drawable);
                 endLocation[i] = new PointF(drawable.X, drawable.Y);
             }
             // check again any that have moved since completing their collisions
@@ -720,7 +718,7 @@ namespace OpGL
                     if (endLocation[i] != new PointF(drawable.X, drawable.Y))
                     {
                         collisionPerformed = true;
-                        PerformCollisionChecks(drawable, mpSprites);
+                        PerformCollisionChecks(drawable);
                         endLocation[i] = new PointF(drawable.X, drawable.Y);
                     }
                 }
@@ -761,7 +759,7 @@ namespace OpGL
         //    return ret;
         //}
 
-        private void PerformCollisionChecks(Sprite drawable, List<Sprite> mpSprites)
+        private void PerformCollisionChecks(Sprite drawable)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
             List<CollisionData> entityCollisions = new List<CollisionData>();
@@ -772,7 +770,6 @@ namespace OpGL
             {
                 // get a collision
                 List<Sprite> testFor = sprites.GetPotentialColliders(drawable);
-                testFor.AddRange(mpSprites);
                 List<CollisionData> collisionDatas = new List<CollisionData>();
                 foreach (Sprite d in testFor)
                 {
@@ -841,7 +838,7 @@ namespace OpGL
                         else
                         {
                             if (drawable is Platform)
-                                PerformCollisionChecks(c.CollidedWith, mpSprites);
+                                PerformCollisionChecks(c.CollidedWith);
                             else
                                 drawable.Collide(c);
                         }

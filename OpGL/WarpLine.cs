@@ -50,16 +50,16 @@ namespace OpGL
                     if (!Horizontal)
                     {
                         if (warpingDatas[i] == -1)
-                            warp = sprite.X > Right;
+                            warp = sprite.X >= Right;
                         else
-                            warp = sprite.Right < X;
+                            warp = sprite.Right <= X;
                     }
                     else
                     {
                         if (warpingDatas[i] == -1)
-                            warp = sprite.Y > Bottom;
+                            warp = sprite.Y >= Bottom;
                         else
-                            warp = sprite.Bottom < Y;
+                            warp = sprite.Bottom <= Y;
                     }
                     if (warp)
                     {
