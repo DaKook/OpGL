@@ -69,6 +69,7 @@ namespace OpGL
                 return Animation.GetFrame(animFrame).Y;
             }
         }
+        public virtual uint TextureID { get => Texture.ID; }
 
         public bool Visible { get; set; } = true;
         public enum SolidState {
@@ -106,6 +107,8 @@ namespace OpGL
         public Texture Texture { get; protected set; }
         public virtual uint VAO { get => Texture.baseVAO; set { } }
 
+        public int IsWarping = 0;
+
         public Matrix4x4f LocMatrix;
         public Matrix4x4f TexMatrix;
 
@@ -133,12 +136,16 @@ namespace OpGL
             PreviousY = y;
 
             Texture = texture;
-            TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
+            if (texture != null)
+                TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
 
             Animation = animation;
-            _old = Animation.GetFrame(0);
-            Point p = Animation.GetFrame(animFrame);
-            TexMatrix.Translate(p.X, p.Y, 0f);
+            if (animation != null)
+            {
+                _old = Animation.GetFrame(0);
+                Point p = Animation.GetFrame(animFrame);
+                TexMatrix.Translate(p.X, p.Y, 0f);
+            }
         }
 
         public bool Within(float x, float y, float width, float height, float offsetX = 0, float offsetY = 0)
@@ -255,10 +262,10 @@ namespace OpGL
 
         public virtual CollisionData TestCollision(Sprite testFor)
         {
-            if (testFor == this || Immovable) return null;
+            if (testFor == this || Immovable || Static) return null;
 
             CollisionData ret = null;
-            if ((Solid == SolidState.Entity || Solid == SolidState.Ground) && testFor.Solid == SolidState.Ground)
+            if ((Solid == SolidState.Entity || Solid == SolidState.Ground) && testFor.Solid == SolidState.Ground || testFor is WarpLine)
             {
                 if (IsOverlapping(testFor))
                     ret = GetCollisionData(testFor);
@@ -339,12 +346,6 @@ namespace OpGL
         public virtual void HandleCrewmanCollision(Crewman crewman)
         {
             //Do nothing
-        }
-
-        protected void write(string name, object s, JTokenWriter writer)
-        {
-            writer.WritePropertyName(name);
-            writer.WriteValue(s);
         }
 
         public virtual JObject Save()

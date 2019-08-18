@@ -141,12 +141,12 @@ namespace OpGL
             {
                 for (int i = 0; i < d.Offsets.Count; i++)
                 {
-                    TileEnumerator te2 = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width + d.Offsets[i].X, d.Height + d.Offsets[i].Y));
+                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width + d.Offsets[i].X, d.Height + d.Offsets[i].Y));
                     do
                     {
-                        if (perTile.ContainsKey(te2.Current))
-                            colliders.AddRange(perTile[te2.Current].Where((item) => item != d && !colliders.Contains(item)));
-                    } while (te2.MoveNext());
+                        if (perTile.ContainsKey(te.Current))
+                            colliders.AddRange(perTile[te.Current].Where((item) => item != d && !colliders.Contains(item)));
+                    } while (te.MoveNext());
                 }
             }
 
@@ -158,7 +158,7 @@ namespace OpGL
             int c = d1.Layer.CompareTo(d2.Layer);
             if (c == 0)
             {
-                int t = d1.Texture.ID.CompareTo(d2.Texture.ID);
+                int t = d1.TextureID.CompareTo(d2.TextureID);
                 if (t == 0)
                     return d1.Color.ToArgb().CompareTo(d2.Color.ToArgb());
                 else

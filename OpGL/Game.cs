@@ -233,6 +233,8 @@ namespace OpGL
             //p.MultiplePositions = true;
             //p.Offsets.Add(new PointF(64, 0));
             //sprites.Add(p);
+            WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
+            sprites.Add(wl);
 
 #endif
             glControl.Render += glControl_Render;
@@ -728,14 +730,17 @@ namespace OpGL
                 ActivePlayer.CurrentTerminal = null;
                 Terminal.TextBox.Disappear();
             }
-            if (ActivePlayer.CenterX > (CurrentRoom.X + 1) * Room.ROOM_WIDTH)
-                LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
-            else if (ActivePlayer.CenterX < CurrentRoom.X * Room.ROOM_WIDTH)
-                LoadRoom((CurrentRoom.X + WidthRooms - 1) % WidthRooms, CurrentRoom.Y);
-            if (ActivePlayer.CenterY > (CurrentRoom.Y + 1) * Room.ROOM_HEIGHT)
-                LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
-            else if (ActivePlayer.CenterY < CurrentRoom.Y * Room.ROOM_HEIGHT)
-                LoadRoom(CurrentRoom.X, (CurrentRoom.Y + HeightRooms - 1) % HeightRooms);
+            if (ActivePlayer.IsWarping == 0)
+            {
+                if (ActivePlayer.CenterX > (CurrentRoom.X + 1) * Room.ROOM_WIDTH)
+                    LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
+                else if (ActivePlayer.CenterX < CurrentRoom.X * Room.ROOM_WIDTH)
+                    LoadRoom((CurrentRoom.X + WidthRooms - 1) % WidthRooms, CurrentRoom.Y);
+                if (ActivePlayer.CenterY > (CurrentRoom.Y + 1) * Room.ROOM_HEIGHT)
+                    LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
+                else if (ActivePlayer.CenterY < CurrentRoom.Y * Room.ROOM_HEIGHT)
+                    LoadRoom(CurrentRoom.X, (CurrentRoom.Y + HeightRooms - 1) % HeightRooms);
+            }
         }
 
         //private List<Sprite> GetCollidersForRooms(Sprite sp)
@@ -826,13 +831,20 @@ namespace OpGL
                 // otherwise, a simple collision should suffice
                 else
                 {
-                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity || c.CollidedWith is GravityLine)
+                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity || c.CollidedWith is GravityLine || c.CollidedWith is WarpLine)
                     {
                         entityCollisions.Add(c);
-                        if (drawable is Platform)
-                            PerformCollisionChecks(c.CollidedWith, mpSprites);
+                        if (c.CollidedWith is WarpLine)
+                        {
+                            (c.CollidedWith as WarpLine).Collide(c.CollidedWith.TestCollision(drawable));
+                        }
                         else
-                            drawable.Collide(c);
+                        {
+                            if (drawable is Platform)
+                                PerformCollisionChecks(c.CollidedWith, mpSprites);
+                            else
+                                drawable.Collide(c);
+                        }
                     }
                     else // only Crewman can collide with entities, but that check is elsewhere
                         drawable.Collide(c);
