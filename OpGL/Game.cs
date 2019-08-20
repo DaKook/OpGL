@@ -73,6 +73,7 @@ namespace OpGL
         // OpenGL
         private GlControl glControl;
         private ProgramData program;
+        private uint fbo;
 
         // Textures
         public Texture FontTexture;
@@ -469,8 +470,66 @@ namespace OpGL
             glControl_Resize(null, null);
 
             Gl.ClearColor(0f, 0f, 0f, 1f);
+
+            // screenshot
+            fbo = Gl.CreateFramebuffer();
+            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+            uint fTex = Gl.CreateTexture(TextureTarget.Texture2d);
+            Gl.BindTexture(TextureTarget.Texture2d, fTex);
+            Gl.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, 0, PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
+            Gl.GenerateMipmap(TextureTarget.Texture2d);
+
+            Gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d, fTex, 0);
+            if (Gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferStatus.FramebufferComplete)
+                throw new Exception("hey");
+            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
         #endregion
+
+        private void Screenshot()
+        {
+            Debugger.NotifyOfCrossThreadDependency();
+            if (glControl.InvokeRequired)
+                glControl.Invoke((Action)(() => RenderScreengrab()));
+            else
+                RenderScreengrab();
+        }
+        private unsafe void RenderScreengrab()
+        {
+            RenderOffScreen();
+            glControl_Render(null, null);
+
+            // bitmap header
+            const int headerSize = 26;
+            int rowSize = RESOLUTION_WIDTH * 4;
+            int fileSize = headerSize + rowSize * RESOLUTION_HEIGHT;
+            byte[] data = new byte[RESOLUTION_WIDTH * RESOLUTION_HEIGHT * 4 + headerSize];
+            data[0] = 0x42; // BM
+            data[1] = 0x4D;
+            Array.Copy(BitConverter.GetBytes(fileSize), 0, data, 0x2, 4); // size of file
+            data[0x0A] = headerSize; // pointer to pixel array
+            data[0x0E] = 12; // size of BITMAPCOREHEADER
+            Array.Copy(BitConverter.GetBytes((ushort)RESOLUTION_WIDTH), 0, data, 0x12, 2);
+            Array.Copy(BitConverter.GetBytes((ushort)RESOLUTION_HEIGHT), 0, data, 0x14, 2);
+            data[0x16] = 1; // "must be 1"
+            data[0x18] = 32; // bpp
+
+            fixed (byte* fixedData = data)
+                Gl.ReadPixels(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)(fixedData + headerSize));
+            RenderOnScreen();
+
+            System.IO.File.WriteAllBytes("screenshot.bmp", data);
+        }
+        private void RenderOffScreen()
+        {
+            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+            Gl.Viewport(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+        }
+        private void RenderOnScreen()
+        {
+            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            glControl_Resize(null, null);
+        }
 
         private void glControl_Resize(object sender, EventArgs e)
         {
