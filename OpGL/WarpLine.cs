@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
@@ -99,5 +100,18 @@ namespace OpGL
         }
 
         public override uint TextureID => 0;
+
+        public override JObject Save()
+        {
+            JObject ret = new JObject();
+            ret.Add("Type", "WarpLine");
+            ret.Add("X", X);
+            ret.Add("Y", Y);
+            ret.Add("Length", Length);
+            ret.Add("Horizontal", Horizontal);
+            ret.Add("OffsetX", Offset.X);
+            ret.Add("OffsetY", Offset.Y);
+            return ret;
+        }
     }
 }

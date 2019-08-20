@@ -37,7 +37,11 @@ namespace OpGL
             JObject[] objs = new JObject[Objects.Count];
             for (int i = 0; i < Objects.Count; i++)
             {
+                Objects[i].X -= X * ROOM_WIDTH;
+                Objects[i].Y -= Y * ROOM_HEIGHT;
                 objs[i] = Objects[i].Save();
+                Objects[i].X += X * ROOM_WIDTH;
+                Objects[i].Y += Y * ROOM_HEIGHT;
             }
             ret.Add("Objects", new JArray(objs));
             return ret;

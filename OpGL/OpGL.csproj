@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Animation.cs" />
+    <Compile Include="AutoTileSettings.cs" />
     <Compile Include="BoxSprite.cs" />
     <Compile Include="Checkpoint.cs" />
     <Compile Include="CollisionData.cs" />

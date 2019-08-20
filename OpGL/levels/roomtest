@@ -534,14 +534,6 @@
 			{
 			  "Type": "Tile",
 			  "X": 0.0,
-			  "Y": 152.0,
-			  "Texture": "tiles",
-			  "TileX": 5,
-			  "TileY": 4
-			},
-			{
-			  "Type": "Tile",
-			  "X": 0.0,
 			  "Y": 0.0,
 			  "Texture": "tiles",
 			  "TileX": 4,
@@ -2670,14 +2662,6 @@
 			{
 			  "Type": "Tile",
 			  "X": 160.0,
-			  "Y": 240.0,
-			  "Texture": "tiles",
-			  "TileX": 5,
-			  "TileY": 5
-			},
-			{
-			  "Type": "Tile",
-			  "X": 160.0,
 			  "Y": 224.0,
 			  "Texture": "tiles",
 			  "TileX": 5,
@@ -2950,14 +2934,6 @@
 			{
 			  "Type": "Tile",
 			  "X": 176.0,
-			  "Y": 232.0,
-			  "Texture": "tiles",
-			  "TileX": 4,
-			  "TileY": 4
-			},
-			{
-			  "Type": "Tile",
-			  "X": 160.0,
 			  "Y": 232.0,
 			  "Texture": "tiles",
 			  "TileX": 4,

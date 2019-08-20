@@ -93,6 +93,8 @@ namespace OpGL
         private BoxSprite selection;
         private Point currentTile = new Point(0, 0);
         private Texture currentTexture;
+        private SortedList<int, Tile> tiles = new SortedList<int, Tile>();
+        private AutoTileSettings autoTiles;
 
         // Rooms
         public Room CurrentRoom;
@@ -225,7 +227,6 @@ namespace OpGL
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
             ActivePlayer.Layer = 1;
-            tool = Tools.Tiles;
             //ActivePlayer.MultiplePositions = true;
             //ActivePlayer.Offsets.Add(new PointF(-40, 0));
             //ActivePlayer.X = 80;
@@ -235,8 +236,12 @@ namespace OpGL
             //ActivePlayer.MultiplePositions = true;
             //ActivePlayer.Offsets.Add(new PointF(24, 0));
             sprites.Add(p);
+            tool = Tools.Ground;
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
+            CurrentState = GameStates.Editing;
+            autoTiles = AutoTileSettings.Default47(0, 7);autoTiles.Name = "ground1";
+
 
 #endif
             glControl.Render += glControl_Render;
@@ -286,7 +291,7 @@ namespace OpGL
             {
                 if (tool == Tools.Tiles)
                 {
-                    sprites.Add(new Tile((int)(selection.X + cameraX), (int)(selection.Y + cameraY), currentTexture, currentTile.X, currentTile.Y));
+                    //sprites.Add(new Tile((int)(selection.X + cameraX), (int)(selection.Y + cameraY), currentTexture, currentTile.X, currentTile.Y));
                 }
             }
             else
@@ -481,7 +486,9 @@ namespace OpGL
         {
             if (e.Control && e.KeyCode == Keys.C)
             {
+                sprites.Remove(ActivePlayer);
                 Clipboard.SetText(CurrentRoom.Save().ToString());
+                sprites.Add(ActivePlayer);
             }
             if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
             {
@@ -493,20 +500,28 @@ namespace OpGL
             {
                 if (e.KeyCode == Keys.Right)
                 {
+                    sprites.Remove(ActivePlayer);
+                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
                     LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
                 }
                 else if (e.KeyCode == Keys.Left)
                 {
+                    sprites.Remove(ActivePlayer);
+                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
                     int x = CurrentRoom.X - 1;
                     if (x < 0) x = WidthRooms - 1;
                     LoadRoom(x, CurrentRoom.Y);
                 }
                 else if (e.KeyCode == Keys.Down)
                 {
+                    sprites.Remove(ActivePlayer);
+                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
                     LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
                 }
                 else if (e.KeyCode == Keys.Up)
                 {
+                    sprites.Remove(ActivePlayer);
+                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
                     int y = CurrentRoom.Y - 1;
                     if (y < 0) y = HeightRooms - 1;
                     LoadRoom(CurrentRoom.X, y);
@@ -604,6 +619,14 @@ namespace OpGL
             }
         }
 
+        private Tile GetTile(int x, int y)
+        {
+            if (tiles.ContainsKey(x + (y * RESOLUTION_WIDTH)))
+                return tiles[x + (y * RESOLUTION_WIDTH)];
+            else
+                return null;
+        }
+
         private void HandleEditingInputs()
         {
             if (mouseX > -1 && mouseY > -1)
@@ -616,10 +639,103 @@ namespace OpGL
             {
                 selection.Visible = false;
             }
-            if (leftMouse || middleMouse || rightMouse)
+            if (tool == Tools.Tiles)
             {
-
+                if (leftMouse || rightMouse)
+                {
+                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
+                    if (tiles.ContainsKey(l))
+                    {
+                        sprites.Remove(tiles[l]);
+                        tiles.Remove(l);
+                    }
+                    if (leftMouse)
+                    {
+                        Tile t = new Tile((int)selection.X, (int)selection.Y, currentTexture, currentTile.X, currentTile.Y);
+                        sprites.Add(t);
+                        tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                    }
+                }
+                else if (middleMouse)
+                {
+                    Tile t = null;
+                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
+                    if (tiles.ContainsKey(l))
+                        t = tiles[l];
+                    if (t != null)
+                    {
+                        currentTexture = t.Texture;
+                        currentTile = new Point(t.TextureX, t.TextureY);
+                    }
+                }
             }
+            else if (tool == Tools.Ground && autoTiles != null)
+            {
+                if (leftMouse || rightMouse)
+                {
+                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
+                    if (tiles.ContainsKey(l))
+                    {
+                        sprites.Remove(tiles[l]);
+                        tiles.Remove(l);
+                    }
+                    float x = selection.X;
+                    float y = selection.Y;
+                    if (leftMouse)
+                    {
+                        int data = getAutoTileData(x, y);
+                        Point p = autoTiles.GetTile(data);
+                        Tile t = new Tile((int)x, (int)y, currentTexture, p.X, p.Y);
+                        t.Tag = autoTiles.Name;
+                        tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                        sprites.Add(t);
+                    }
+                    for (int i = -1; i < 2; i++)
+                    {
+                        for (int j = -1; j < 2; j++)
+                        {
+                            if (i != 0 || j != 0)
+                            {
+                                int xx = (int)x + (i * 8);
+                                int yy = (int)y + (j * 8);
+                                if (GetTile(xx, yy)?.Tag == autoTiles.Name)
+                                {
+                                    l = xx + yy * RESOLUTION_WIDTH;
+                                    sprites.Remove(tiles[l]);
+                                    tiles.Remove(l);
+                                    Point p = autoTiles.GetTile(getAutoTileData(xx, yy));
+                                    Tile t = new Tile(xx, yy, currentTexture, p.X, p.Y);
+                                    t.Tag = autoTiles.Name;
+                                    tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                                    sprites.Add(t);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private int getAutoTileData(float x, float y)
+        {
+            int data = 0;
+            if (GetTile((int)x, (int)y - 8)?.Tag == autoTiles.Name)
+                data += 1;
+            if (GetTile((int)x + 8, (int)y)?.Tag == autoTiles.Name)
+                data += 2;
+            if (GetTile((int)x, (int)y + 8)?.Tag == autoTiles.Name)
+                data += 4;
+            if (GetTile((int)x - 8, (int)y)?.Tag == autoTiles.Name)
+                data += 8;
+            if (GetTile((int)x + 8, (int)y - 8)?.Tag == autoTiles.Name)
+                data += 16;
+            if (GetTile((int)x + 8, (int)y + 8)?.Tag == autoTiles.Name)
+                data += 32;
+            if (GetTile((int)x - 8, (int)y + 8)?.Tag == autoTiles.Name)
+                data += 64;
+            if (GetTile((int)x - 8, (int)y - 8)?.Tag == autoTiles.Name)
+                data += 128;
+            return data;
         }
 
         private void HandleUserInputs()
@@ -687,6 +803,15 @@ namespace OpGL
             CurrentRoom.Objects.Add(ActivePlayer);
             ActivePlayer.CenterX = ActivePlayer.CenterX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
             ActivePlayer.CenterY = ActivePlayer.CenterY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
+            for (int i = 0; i < sprites.Count; i++)
+            {
+                if (sprites[i] is Tile)
+                {
+                    int l = (int)(sprites[i].X + sprites[i].Y * RESOLUTION_WIDTH);
+                    if (tiles.ContainsKey(l)) tiles.Remove(l);
+                    tiles.Add(l, sprites[i] as Tile);
+                }
+            }
             //ActivePlayer.PreviousX = ActivePlayer.PreviousX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
             //ActivePlayer.PreviousY = ActivePlayer.PreviousY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
         }
@@ -1022,7 +1147,7 @@ namespace OpGL
             float x = (float)loadFrom["X"];
             float y = (float)loadFrom["Y"];
             string textureName = (string)loadFrom["Texture"];
-            Texture texture = TextureFromName(textureName);
+            Texture texture = TextureFromName(textureName ?? "");
             if (type == "Tile")
             {
                 int tileX = (int)loadFrom["TileX"];
@@ -1115,6 +1240,14 @@ namespace OpGL
                 (s as GravityLine).XSpeed = xSpeed;
                 (s as GravityLine).YSpeed = ySpeed;
                 (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+            }
+            else if (type == "WarpLine")
+            {
+                int length = (int)loadFrom["Length"];
+                bool horizontal = (bool)loadFrom["Horizontal"];
+                float offX = (float)loadFrom["OffsetX"];
+                float offY = (float)loadFrom["OffsetY"];
+                s = new WarpLine(x, y, length, horizontal, offX, offY);
             }
 
             else s = null;

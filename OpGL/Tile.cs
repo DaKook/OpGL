@@ -10,6 +10,7 @@ namespace OpGL
 {
     public class Tile : Sprite
     {
+        public string Tag;
         public Tile(int x, int y, Texture texture, int tileX, int tileY) : base(x, y, texture, tileX, tileY)
         {
             if (Texture.TileSolidStates.Length > 0)
