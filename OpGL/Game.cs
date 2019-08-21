@@ -237,11 +237,12 @@ namespace OpGL
             //ActivePlayer.MultiplePositions = true;
             //ActivePlayer.Offsets.Add(new PointF(24, 0));
             sprites.Add(p);
-            tool = Tools.Ground;
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
             CurrentState = GameStates.Editing;
-            autoTiles = AutoTileSettings.Default47(0, 7);autoTiles.Name = "ground1";
+            tool = Tools.Background;
+            autoTiles = AutoTileSettings.Default13(0, 17);
+            autoTiles.Name = "bg1";
 
 
 #endif
@@ -554,7 +555,8 @@ namespace OpGL
                 inputs[(int)inputMap[e.KeyCode]]++;
                 lastPressed[(int)inputMap[e.KeyCode]] = FrameCount;
             }
-            heldKeys.Add(e.KeyCode);
+            if (!heldKeys.Contains(e.KeyCode))
+                heldKeys.Add(e.KeyCode);
             if (CurrentState == GameStates.Editing)
             {
                 if (e.KeyCode == Keys.Right)
@@ -691,8 +693,10 @@ namespace OpGL
             if (mouseX > -1 && mouseY > -1)
             {
                 selection.Visible = true;
-                selection.X = mouseX - mouseX % 8;
-                selection.Y = mouseY - mouseY % 8;
+                if (!heldKeys.Contains(Keys.OemCloseBrackets))
+                    selection.X = mouseX - mouseX % 8;
+                if (!heldKeys.Contains(Keys.OemOpenBrackets))
+                    selection.Y = mouseY - mouseY % 8;
             }
             else
             {
@@ -702,18 +706,7 @@ namespace OpGL
             {
                 if (leftMouse || rightMouse)
                 {
-                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
-                    if (tiles.ContainsKey(l))
-                    {
-                        sprites.Remove(tiles[l]);
-                        tiles.Remove(l);
-                    }
-                    if (leftMouse)
-                    {
-                        Tile t = new Tile((int)selection.X, (int)selection.Y, currentTexture, currentTile.X, currentTile.Y);
-                        sprites.Add(t);
-                        tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
-                    }
+                    TileTool(selection.X, selection.Y, leftMouse);
                 }
                 else if (middleMouse)
                 {
@@ -728,71 +721,92 @@ namespace OpGL
                     }
                 }
             }
-            else if (tool == Tools.Ground && autoTiles != null)
+            else if (tool == Tools.Ground || tool == Tools.Background && autoTiles != null)
             {
                 if (leftMouse || rightMouse)
                 {
-                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
-                    if (tiles.ContainsKey(l))
+                    AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
+                }
+            }
+
+        }
+
+        private void TileTool(float x, float y, bool leftClick)
+        {
+            int l = (int)(x + y * RESOLUTION_WIDTH);
+            if (tiles.ContainsKey(l))
+            {
+                sprites.Remove(tiles[l]);
+                tiles.Remove(l);
+            }
+            if (leftClick)
+            {
+                Tile t = new Tile((int)x, (int)y, currentTexture, currentTile.X, currentTile.Y);
+                sprites.Add(t);
+                tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+            }
+        }
+
+        private void AutoTilesTool(float x, float y, bool leftClick, bool isBackground)
+        {
+            int l = (int)(x + y * RESOLUTION_WIDTH);
+            if (tiles.ContainsKey(l))
+            {
+                sprites.Remove(tiles[l]);
+                tiles.Remove(l);
+            }
+            if (leftClick)
+            {
+                int data = getAutoTileData(x, y, isBackground);
+                Point p = autoTiles.GetTile(data);
+                Tile t = new Tile((int)x, (int)y, currentTexture, p.X, p.Y);
+                t.Tag = autoTiles.Name;
+                tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                sprites.Add(t);
+            }
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    if (i != 0 || j != 0)
                     {
-                        sprites.Remove(tiles[l]);
-                        tiles.Remove(l);
-                    }
-                    float x = selection.X;
-                    float y = selection.Y;
-                    if (leftMouse)
-                    {
-                        int data = getAutoTileData(x, y);
-                        Point p = autoTiles.GetTile(data);
-                        Tile t = new Tile((int)x, (int)y, currentTexture, p.X, p.Y);
-                        t.Tag = autoTiles.Name;
-                        tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
-                        sprites.Add(t);
-                    }
-                    for (int i = -1; i < 2; i++)
-                    {
-                        for (int j = -1; j < 2; j++)
+                        int xx = (int)x + (i * 8);
+                        int yy = (int)y + (j * 8);
+                        if (GetTile(xx, yy)?.Tag == autoTiles.Name)
                         {
-                            if (i != 0 || j != 0)
-                            {
-                                int xx = (int)x + (i * 8);
-                                int yy = (int)y + (j * 8);
-                                if (GetTile(xx, yy)?.Tag == autoTiles.Name)
-                                {
-                                    l = xx + yy * RESOLUTION_WIDTH;
-                                    sprites.Remove(tiles[l]);
-                                    tiles.Remove(l);
-                                    Point p = autoTiles.GetTile(getAutoTileData(xx, yy));
-                                    Tile t = new Tile(xx, yy, currentTexture, p.X, p.Y);
-                                    t.Tag = autoTiles.Name;
-                                    tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
-                                    sprites.Add(t);
-                                }
-                            }
+                            l = xx + yy * RESOLUTION_WIDTH;
+                            sprites.Remove(tiles[l]);
+                            tiles.Remove(l);
+                            Point p = autoTiles.GetTile(getAutoTileData(xx, yy, isBackground));
+                            Tile t = new Tile(xx, yy, currentTexture, p.X, p.Y);
+                            t.Tag = autoTiles.Name;
+                            tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                            sprites.Add(t);
                         }
                     }
                 }
             }
         }
 
-        private int getAutoTileData(float x, float y)
+        private int getAutoTileData(float x, float y, bool isBackground)
         {
+            Tile gt = null;
             int data = 0;
-            if (GetTile((int)x, (int)y - 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 1;
-            if (GetTile((int)x + 8, (int)y)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x + 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 2;
-            if (GetTile((int)x, (int)y + 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 4;
-            if (GetTile((int)x - 8, (int)y)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x - 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 8;
-            if (GetTile((int)x + 8, (int)y - 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 16;
-            if (GetTile((int)x + 8, (int)y + 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 32;
-            if (GetTile((int)x - 8, (int)y + 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 64;
-            if (GetTile((int)x - 8, (int)y - 8)?.Tag == autoTiles.Name)
+            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
                 data += 128;
             return data;
         }
