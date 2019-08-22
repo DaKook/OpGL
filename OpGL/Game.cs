@@ -89,13 +89,18 @@ namespace OpGL
         }
 
         // Editing
-        private enum Tools { Ground, Background, Tiles, Checkpoint, Enemy, Platform, Terminal }
+        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal }
         private Tools tool = Tools.Ground;
+        private enum FocusOptions { Level, Tileset, Dialog }
+        private FocusOptions CurrentEditingFocus = FocusOptions.Level;
         private BoxSprite selection;
         private Point currentTile = new Point(0, 0);
         private Texture currentTexture;
         private SortedList<int, Tile> tiles = new SortedList<int, Tile>();
         private AutoTileSettings autoTiles;
+        private int autoTileStyle = 13;
+        private FullImage tileset;
+        private BoxSprite tileSelection;
 
         // Rooms
         public Room CurrentRoom;
@@ -215,8 +220,10 @@ namespace OpGL
             //HeightRooms = 1;
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
+            tileSelection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Red);
             selection.Visible = false;
             currentTexture = tiles;
+            tileset = new FullImage(0, 0, tiles);
 
             //This will probably be moved somewhere else and might be customizeable per-level
             Terminal.TextBox = new VTextBox(0, 0, FontTexture, " Press ENTER to activate terminal ", Color.FromArgb(255, 130, 20));
@@ -559,51 +566,113 @@ namespace OpGL
                 heldKeys.Add(e.KeyCode);
             if (CurrentState == GameStates.Editing)
             {
-                if (e.KeyCode == Keys.Right)
+                if (CurrentEditingFocus == FocusOptions.Level)
                 {
-                    sprites.Remove(ActivePlayer);
-                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
-                    LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
+                    if (e.KeyCode == Keys.Right)
+                    {
+                        sprites.Remove(ActivePlayer);
+                        RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
+                    }
+                    else if (e.KeyCode == Keys.Left)
+                    {
+                        sprites.Remove(ActivePlayer);
+                        RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        int x = CurrentRoom.X - 1;
+                        if (x < 0) x = WidthRooms - 1;
+                        LoadRoom(x, CurrentRoom.Y);
+                    }
+                    else if (e.KeyCode == Keys.Down)
+                    {
+                        sprites.Remove(ActivePlayer);
+                        RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
+                    }
+                    else if (e.KeyCode == Keys.Up)
+                    {
+                        sprites.Remove(ActivePlayer);
+                        RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        int y = CurrentRoom.Y - 1;
+                        if (y < 0) y = HeightRooms - 1;
+                        LoadRoom(CurrentRoom.X, y);
+                    }
+                    else if (e.KeyCode == Keys.S)
+                    {
+                        currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSize);
+                    }
+                    else if (e.KeyCode == Keys.W)
+                    {
+                        currentTile.Y -= 1;
+                        if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSize;
+                    }
+                    else if (e.KeyCode == Keys.D)
+                    {
+                        currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSize);
+                    }
+                    else if (e.KeyCode == Keys.A)
+                    {
+                        currentTile.X -= 1;
+                        if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSize;
+                    }
+                    else if (e.KeyCode == Keys.D1)
+                    {
+                        tool = Tools.Ground;
+                        tileSelection.X = autoTiles.GetTile(0).X * 8;
+                        tileSelection.Y = autoTiles.GetTile(0).Y * 8;
+                        tileSelection.SetSize(autoTileStyle == 47 ? 8 : 3, autoTileStyle == 3 ? 1 : (autoTileStyle == 13 ? 5 : 6));
+                    }
+                    else if (e.KeyCode == Keys.D2)
+                    {
+                        tool = Tools.Background;
+                    }
+                    else if (e.KeyCode == Keys.OemMinus)
+                    {
+                        tool = Tools.Tiles;
+                        tileSelection.X = currentTile.X * 8;
+                        tileSelection.Y = currentTile.Y * 8;
+                        tileSelection.SetSize(1, 1);
+                    }
+                    else if (e.KeyCode == Keys.Tab)
+                    {
+                        CurrentEditingFocus = FocusOptions.Tileset;
+                        tileset.Layer = -1;
+                        if (tool == Tools.Background || tool == Tools.Ground)
+                        {
+                            if (autoTileStyle == 3)
+                                selection.SetSize(3, 1);
+                            if (autoTileStyle == 13)
+                                selection.SetSize(3, 5);
+                            if (autoTileStyle == 47)
+                                selection.SetSize(8, 6);
+                        }
+                        hudSprites.Add(tileSelection);
+                        hudSprites.Add(tileset);
+                    }
                 }
-                else if (e.KeyCode == Keys.Left)
+                else if (CurrentEditingFocus == FocusOptions.Tileset)
                 {
-                    sprites.Remove(ActivePlayer);
-                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
-                    int x = CurrentRoom.X - 1;
-                    if (x < 0) x = WidthRooms - 1;
-                    LoadRoom(x, CurrentRoom.Y);
-                }
-                else if (e.KeyCode == Keys.Down)
-                {
-                    sprites.Remove(ActivePlayer);
-                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
-                    LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
-                }
-                else if (e.KeyCode == Keys.Up)
-                {
-                    sprites.Remove(ActivePlayer);
-                    RoomDatas[FocusedRoom] = CurrentRoom.Save();
-                    int y = CurrentRoom.Y - 1;
-                    if (y < 0) y = HeightRooms - 1;
-                    LoadRoom(CurrentRoom.X, y);
-                }
-                else if (e.KeyCode == Keys.S)
-                {
-                    currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSize);
-                }
-                else if (e.KeyCode == Keys.W)
-                {
-                    currentTile.Y -= 1;
-                    if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSize;
-                }
-                else if (e.KeyCode == Keys.D)
-                {
-                    currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSize);
-                }
-                else if (e.KeyCode == Keys.A)
-                {
-                    currentTile.X -= 1;
-                    if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSize;
+                    if (e.KeyCode == Keys.Tab)
+                    {
+                        CurrentEditingFocus = FocusOptions.Level;
+                        hudSprites.Remove(tileset);
+                        hudSprites.Remove(tileSelection);
+                        selection.SetSize(1, 1);
+                    }
+                    else if (e.KeyCode == Keys.D1)
+                    {
+                        autoTileStyle = 13;
+                        selection.SetSize(3, 5);
+                    }
+                    else if (e.KeyCode == Keys.D2)
+                    {
+                        autoTileStyle = 3;
+                        selection.SetSize(3, 1);
+                    }
+                    else if (e.KeyCode == Keys.D3)
+                    {
+                        autoTileStyle = 47;
+                        selection.SetSize(8, 6);
+                    }
                 }
             }
         }
@@ -690,7 +759,7 @@ namespace OpGL
 
         private void HandleEditingInputs()
         {
-            if (mouseX > -1 && mouseY > -1)
+            if (mouseX > -1 && mouseY > -1 || CurrentEditingFocus == FocusOptions.Dialog)
             {
                 selection.Visible = true;
                 if (!heldKeys.Contains(Keys.OemCloseBrackets))
@@ -702,33 +771,78 @@ namespace OpGL
             {
                 selection.Visible = false;
             }
-            if (tool == Tools.Tiles)
+            if (CurrentEditingFocus == FocusOptions.Level)
             {
-                if (leftMouse || rightMouse)
+                if (tool == Tools.Tiles)
                 {
-                    TileTool(selection.X, selection.Y, leftMouse);
-                }
-                else if (middleMouse)
-                {
-                    Tile t = null;
-                    int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
-                    if (tiles.ContainsKey(l))
-                        t = tiles[l];
-                    if (t != null)
+                    if (leftMouse || rightMouse)
                     {
-                        currentTexture = t.Texture;
-                        currentTile = new Point(t.TextureX, t.TextureY);
+                        TileTool(selection.X, selection.Y, leftMouse);
+                    }
+                    else if (middleMouse)
+                    {
+                        Tile t = null;
+                        int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
+                        if (tiles.ContainsKey(l))
+                            t = tiles[l];
+                        if (t != null)
+                        {
+                            currentTexture = t.Texture;
+                            currentTile = new Point(t.TextureX, t.TextureY);
+                        }
+                    }
+                }
+                else if (tool == Tools.Ground || tool == Tools.Background && autoTiles != null)
+                {
+                    if (leftMouse || rightMouse)
+                    {
+                        AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
                     }
                 }
             }
-            else if (tool == Tools.Ground || tool == Tools.Background && autoTiles != null)
+            else if (CurrentEditingFocus == FocusOptions.Tileset)
             {
-                if (leftMouse || rightMouse)
+                if (tool == Tools.Tiles)
                 {
-                    AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
+                    if (leftMouse)
+                    {
+                        currentTile = new Point((int)selection.X / 8, (int)selection.Y / 8);
+                        tileSelection.X = selection.X;
+                        tileSelection.Y = selection.Y;
+                        tileSelection.SetSize(1, 1);
+                    }
+                }
+                else if (tool == Tools.Ground || tool == Tools.Background)
+                {
+                    if (leftMouse)
+                    {
+                        if (autoTileStyle == 3)
+                        {
+                            autoTiles = AutoTileSettings.Default3((int)selection.X / 8, (int)selection.Y / 8);
+                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto3";
+                            tileSelection.X = selection.X;
+                            tileSelection.Y = selection.Y;
+                            tileSelection.SetSize(3, 1);
+                        }
+                        else if (autoTileStyle == 13)
+                        {
+                            autoTiles = AutoTileSettings.Default13((int)selection.X / 8, (int)selection.Y / 8);
+                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto13";
+                            tileSelection.X = selection.X;
+                            tileSelection.Y = selection.Y;
+                            tileSelection.SetSize(3, 5);
+                        }
+                        else if (autoTileStyle == 47)
+                        {
+                            autoTiles = AutoTileSettings.Default47((int)selection.X / 8, (int)selection.Y / 8);
+                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto47";
+                            tileSelection.X = selection.X;
+                            tileSelection.Y = selection.Y;
+                            tileSelection.SetSize(8, 6);
+                        }
+                    }
                 }
             }
-
         }
 
         private void TileTool(float x, float y, bool leftClick)
