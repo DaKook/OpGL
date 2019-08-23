@@ -31,13 +31,6 @@ namespace OpGL
                     game.StartGame();
                 }
             }
-            else
-            {
-                if (e.KeyCode == Keys.Escape)
-                {
-                    game.StopGame();
-                }
-            }
         }
 
         //private void updatePreview()
@@ -125,6 +118,11 @@ namespace OpGL
         private void GlControl_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             e.IsInputKey = true;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

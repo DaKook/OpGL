@@ -26,6 +26,7 @@ namespace OpGL
             Jump,
             Pause,
             Kill,
+            Escape,
             Count
         }
         private int[] inputs = new int[(int)Inputs.Count];
@@ -37,6 +38,7 @@ namespace OpGL
             //{ Keys.Down, Inputs.Down }, { Keys.S, Inputs.Down },
             { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump },
             { Keys.Enter, Inputs.Pause },
+            { Keys.Escape, Inputs.Escape },
             { Keys.R, Inputs.Kill }
         };
         private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
@@ -101,6 +103,7 @@ namespace OpGL
         private int autoTileStyle = 13;
         private FullImage tileset;
         private BoxSprite tileSelection;
+        private bool isEditor;
 
         // Rooms
         public Room CurrentRoom;
@@ -247,6 +250,7 @@ namespace OpGL
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
             CurrentState = GameStates.Editing;
+            isEditor = true;
             tool = Tools.Background;
             autoTiles = AutoTileSettings.Default13(0, 17);
             autoTiles.Name = "bg1";
@@ -648,6 +652,12 @@ namespace OpGL
                         hudSprites.Add(tileSelection);
                         hudSprites.Add(tileset);
                     }
+                    else if (e.KeyCode == Keys.Enter)
+                    {
+                        LoadRoom(CurrentRoom.X, CurrentRoom.Y);
+                        CurrentState = GameStates.Playing;
+                        ActivePlayer.Visible = true;
+                    }
                 }
                 else if (CurrentEditingFocus == FocusOptions.Tileset)
                 {
@@ -906,27 +916,38 @@ namespace OpGL
         {
             Tile gt = null;
             int data = 0;
-            if ((gt = GetTile((int)x, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0)
                 data += 1;
-            if ((gt = GetTile((int)x + 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x + 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || x == RESOLUTION_WIDTH - 8)
                 data += 2;
-            if ((gt = GetTile((int)x, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8)
                 data += 4;
-            if ((gt = GetTile((int)x - 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x - 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || x == 0)
                 data += 8;
-            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == RESOLUTION_WIDTH - 8)
                 data += 16;
-            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == RESOLUTION_WIDTH - 8)
                 data += 32;
-            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == 0)
                 data += 64;
-            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)))
+            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == 0)
                 data += 128;
             return data;
         }
 
         private void HandleUserInputs()
         {
+            if (isEditor && IsInputActive(Inputs.Escape))
+            {
+                CurrentScript = null;
+                foreach (VTextBox box in TextBoxes)
+                {
+                    box.Disappear();
+                }
+                LoadRoom(CurrentRoom.X, CurrentRoom.Y);
+                ActivePlayer.Visible = false;
+                CurrentState = GameStates.Editing;
+            }
             if (PlayerControl)
             {
                 if (IsInputActive(Inputs.Right))
@@ -976,6 +997,11 @@ namespace OpGL
 
         public void LoadRoom(int x, int y)
         {
+            if (isEditor && CurrentState == GameStates.Editing)
+            {
+                sprites.Remove(ActivePlayer);
+                RoomDatas[FocusedRoom] = CurrentRoom.Save();
+            }
             FocusedRoom = x + y * WidthRooms;
             if (!RoomDatas.ContainsKey(FocusedRoom))
             {
