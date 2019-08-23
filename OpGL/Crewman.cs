@@ -67,6 +67,11 @@ namespace OpGL
         public int DyingFrames;
         public float XVelocity;
 
+        public static SoundEffect Flip1;
+        public static SoundEffect Flip2;
+        public static SoundEffect Cry;
+        public SoundEffect Squeak;
+
         public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null, Color? textBoxColor = null) : base(x, y, texture, stand)
         {
             Name = name;
@@ -213,6 +218,7 @@ namespace OpGL
                 onPlatform.OnTop.Remove(this);
                 onPlatform = null;
             }
+            Cry?.Play();
             Animation = DyingAnimation;
             ResetAnimation();
             DyingFrames = 60;
@@ -273,6 +279,15 @@ namespace OpGL
                 if (CanFlip)
                 {
                     Gravity *= -1;
+                    if (Math.Sign(Gravity) == -1)
+                        Flip1?.Play();
+                    else if (Math.Sign(Gravity) == 1)
+                        Flip2?.Play();
+                }
+                else
+                {
+                    if (Jump > 0)
+                        Flip1?.Play();
                 }
                 YVelocity = -Jump * Math.Sign(Gravity);
                 changeAnimationInAir();
@@ -326,16 +341,17 @@ namespace OpGL
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);
-            ret.Add("Standing", StandingAnimation.Name);
-            ret.Add("Walking", WalkingAnimation.Name);
-            ret.Add("Falling", FallingAnimation.Name);
-            ret.Add("Jumping", JumpingAnimation.Name);
-            ret.Add("Dying", DyingAnimation.Name);
+            ret.Add("Standing", StandingAnimation?.Name ?? "");
+            ret.Add("Walking", WalkingAnimation?.Name ?? "");
+            ret.Add("Falling", FallingAnimation?.Name ?? "");
+            ret.Add("Jumping", JumpingAnimation?.Name ?? "");
+            ret.Add("Dying", DyingAnimation?.Name ?? "");
             ret.Add("Name", Name);
             ret.Add("TextBox", TextBoxColor.ToArgb());
             ret.Add("FlipX", flipX);
             ret.Add("Sad", Sad);
             ret.Add("Gravity", Gravity);
+            ret.Add("Squeak", Squeak?.Name ?? "");
             return ret;
         }
     }

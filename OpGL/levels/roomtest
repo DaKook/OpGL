@@ -21,14 +21,13 @@
 		"Sad": false,
 		"Gravity": 0.6875,
 		"FlipX": false,
-		"AI": 2,
-		"Target": ""
+		"Squeak": "crew1"
 	},
 	"Scripts":
 	[
 		{
 			"Name": "script",
-			"Contents": "playercontrol,false\nsay,1,player\nVVVVVV\nsay,1,gray\nCreate Profile\ntext,gray,0,0,1\nUsername?\nposition,center\nspeak_active\ntext,cyan,0,0,1\nCaptainViridian\nposition,player,below\nspeak\nendtext\ntext,gray,0,0,1\nPassword?\nposition,center\nspeak_active\ntext,cyan,0,0,1\n*************\nposition,player,below\nspeak\nendtext\ntext,gray,0,0,3\nGender?\n> Male\n  Female\nposition,center\nspeak_active\nendtext\nplayercontrol,true"
+			"Contents": "playercontrol,false\nsay,1,player\nVVVVVV\nsay,1,gray\nCreate Profile\nsqueak,gray\ntext,gray,0,0,1\nUsername?\nposition,center\nspeak_active\nsqueak,player\ntext,cyan,0,0,1\nCaptainViridian\nposition,player,below\nspeak\nendtext\nsqueak,gray\ntext,gray,0,0,1\nPassword?\nposition,center\nspeak_active\nsqueak,player\ntext,cyan,0,0,1\n*************\nposition,player,below\nspeak\nendtext\nsqueak,gray\ntext,gray,0,0,3\nGender?\n> Male\n  Female\nposition,center\nspeak_active\nendtext\nplayercontrol,true"
 		}
 	],
 	"Objects":

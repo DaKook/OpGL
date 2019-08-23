@@ -15,6 +15,7 @@ namespace OpGL
         public Script Script;
         public bool Repeat;
         public bool AlreadyUsed;
+        public static SoundEffect ActivateSound;
         public Terminal(float x, float y, Texture texture, Animation deactivated, Animation activated, Script script, bool repeat) : base(x, y, texture, deactivated)
         {
             DeactivatedAnimation = deactivated;
@@ -30,7 +31,7 @@ namespace OpGL
             if (Animation == DeactivatedAnimation)
             {
                 Animation = ActivatedAnimation;
-                //Play terminal sound
+                ActivateSound?.Play();
             }
             if (crewman.CurrentTerminal == null || (crewman.CurrentTerminal != this && (Math.Abs(crewman.CurrentTerminal.CenterX - crewman.CenterX) > Math.Abs(CenterX - crewman.CenterX))))
             {

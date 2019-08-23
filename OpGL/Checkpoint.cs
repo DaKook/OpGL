@@ -12,6 +12,7 @@ namespace OpGL
         public Animation ActivatedAnimation = null;
         public Animation DeactevatedAnimation = null;
         public bool Activated;
+        public static SoundEffect ActivateSound;
         public Checkpoint(float x, float y, Texture texture, Animation deactivated, Animation activated = null, bool xFlip = false, bool yFlip = false) : base(x, y, texture, deactivated)
         {
             DeactevatedAnimation = deactivated;
@@ -47,11 +48,16 @@ namespace OpGL
             Animation = DeactevatedAnimation;
         }
 
-        public void Activate()
+        public void Activate(bool playSound = true)
         {
-            Activated = true;
-            ResetAnimation();
-            Animation = ActivatedAnimation;
+            if (!Activated)
+            {
+                if (playSound)
+                    ActivateSound?.Play();
+                Activated = true;
+                ResetAnimation();
+                Animation = ActivatedAnimation;
+            }
         }
 
         public override JObject Save()

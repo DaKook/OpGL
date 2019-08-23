@@ -90,6 +90,16 @@ namespace OpGL
             return null;
         }
 
+        // Sounds
+        public SortedList<string, SoundEffect> Sounds = new SortedList<string, SoundEffect>();
+        public SoundEffect GetSound(string name)
+        {
+            if (Sounds.TryGetValue(name, out SoundEffect se))
+                return se;
+            else
+                return null;
+        }
+
         // Editing
         private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal }
         private Tools tool = Tools.Ground;
@@ -199,6 +209,7 @@ namespace OpGL
 
             InitGlProgram();
             InitOpenGLSettings();
+            InitSounds();
 
             textures = new List<Texture>();
             LoadTextures();
@@ -212,6 +223,12 @@ namespace OpGL
             Texture gravityline = TextureFromName("gravityline");
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
+            Crewman.Flip1 = GetSound("jump");
+            Crewman.Flip2 = GetSound("jump2");
+            Crewman.Cry = GetSound("hurt");
+            Platform.DisappearSound = GetSound("vanish");
+            Checkpoint.ActivateSound = GetSound("save");
+            Terminal.ActivateSound = GetSound("terminal");
             //Crewman newPlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
             ////ActivePlayer.CanFlip = false;
             ////ActivePlayer.Jump = 8;
@@ -496,8 +513,19 @@ namespace OpGL
                 throw new Exception("hey");
             Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
-        #endregion
 
+        private void InitSounds()
+        {
+            List<string> files = System.IO.Directory.EnumerateFiles("sounds/").ToList();
+            files.Sort();
+            foreach (string file in files)
+            {
+                if (!file.EndsWith(".wav")) continue;
+                SoundEffect se = new SoundEffect(file);
+                Sounds.Add(se.Name, se);
+            }
+        }
+        #endregion
         private void Screenshot()
         {
             Debugger.NotifyOfCrossThreadDependency();
@@ -657,6 +685,7 @@ namespace OpGL
                         LoadRoom(CurrentRoom.X, CurrentRoom.Y);
                         CurrentState = GameStates.Playing;
                         ActivePlayer.Visible = true;
+                        selection.Visible = false;
                     }
                 }
                 else if (CurrentEditingFocus == FocusOptions.Tileset)
@@ -946,6 +975,7 @@ namespace OpGL
                 }
                 LoadRoom(CurrentRoom.X, CurrentRoom.Y);
                 ActivePlayer.Visible = false;
+                selection.Visible = true;
                 CurrentState = GameStates.Editing;
             }
             if (PlayerControl)
@@ -1343,7 +1373,7 @@ namespace OpGL
                     ret.Objects.Add(s);
                 if (s is Checkpoint && ActivePlayer.CurrentCheckpoint != null && s.X == ActivePlayer.CurrentCheckpoint.X && s.Y == ActivePlayer.CurrentCheckpoint.Y)
                 {
-                    (s as Checkpoint).Activate();
+                    (s as Checkpoint).Activate(false);
                     ActivePlayer.CurrentCheckpoint = s as Checkpoint;
                 }
             }
@@ -1394,8 +1424,10 @@ namespace OpGL
                 bool sad = (bool)loadFrom["Sad"];
                 float gravity = (float)loadFrom["Gravity"];
                 bool flipX = (bool)loadFrom["FlipX"];
+                string squeakName = (string)loadFrom["Squeak"];
                 s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
                 (s as Crewman).Sad = sad;
+                (s as Crewman).Squeak = GetSound(squeakName);
                 s.Gravity = gravity;
                 s.FlipX = flipX;
             }

@@ -36,7 +36,8 @@ namespace OpGL
             { "position", PositionCommand },
             { "speak", SpeakCommand },
             { "speak_active", SpeakActiveCommand },
-            { "endtext", EndTextCommand }
+            { "endtext", EndTextCommand },
+            { "squeak", SqueakCommand }
        };
 
         public static Script ParseScript(Game game, string script, string name = "")
@@ -74,9 +75,11 @@ namespace OpGL
         {
             Color sayTextBoxColor = Color.Gray;
             Crewman sayCrewman = game.SpriteFromName(args.ElementAtOrDefault(2)) as Crewman;
+            SoundEffect squeak = null;
             if (sayCrewman != null)
             {
                 sayTextBoxColor = sayCrewman.TextBoxColor;
+                squeak = sayCrewman.Squeak;
             }
             else if (args.Length == 6)
             {
@@ -91,25 +94,32 @@ namespace OpGL
                 {
                     case "cyan":
                         sayTextBoxColor = Color.FromArgb(164, 164, 255);
+                        squeak = game.GetSound("crew1");
                         break;
                     case "red":
                         sayTextBoxColor = Color.FromArgb(255, 60, 60);
+                        squeak = game.GetSound("crew6");
                         break;
                     case "yellow":
                         sayTextBoxColor = Color.FromArgb(255, 255, 134);
+                        squeak = game.GetSound("crew4");
                         break;
                     case "green":
                         sayTextBoxColor = Color.FromArgb(144, 255, 144);
+                        squeak = game.GetSound("crew2");
                         break;
                     case "purple":
                         sayTextBoxColor = Color.FromArgb(255, 134, 255);
+                        squeak = game.GetSound("crew5");
                         break;
                     case "blue":
                         sayTextBoxColor = Color.FromArgb(95, 95, 255);
+                        squeak = game.GetSound("crew3");
                         break;
                     case "gray":
                     case "terminal":
                         sayTextBoxColor = Color.FromArgb(174, 174, 174);
+                        squeak = game.GetSound("blip2");
                         break;
                 }
             }
@@ -120,6 +130,7 @@ namespace OpGL
                 {
                     sayCrewman = game.ActivePlayer;
                     sayTextBoxColor = game.ActivePlayer.TextBoxColor;
+                    squeak = game.ActivePlayer.Squeak;
                 }
                 VTextBox sayTextBox = new VTextBox(0, 0, game.FontTexture, args.Last(), sayTextBoxColor);
                 if (sayCrewman != null)
@@ -137,6 +148,7 @@ namespace OpGL
                     sayTextBox.CenterY = Game.RESOLUTION_HEIGHT / 2;
                 }
                 game.hudSprites.Add(sayTextBox);
+                squeak?.Play();
                 sayTextBox.Appear();
                 game.WaitingForAction = () =>
                 {
@@ -145,6 +157,42 @@ namespace OpGL
                     game.CurrentScript.Continue();
                 };
             }, true);
+        }
+        private static Command SqueakCommand(Game game, string[] args)
+        {
+            SoundEffect squeak = null;
+            switch (args.ElementAtOrDefault(1))
+            {
+                case "cyan":
+                    squeak = game.GetSound("crew1");
+                    break;
+                case "red":
+                    squeak = game.GetSound("crew6");
+                    break;
+                case "yellow":
+                    squeak = game.GetSound("crew4");
+                    break;
+                case "green":
+                    squeak = game.GetSound("crew2");
+                    break;
+                case "purple":
+                    squeak = game.GetSound("crew5");
+                    break;
+                case "blue":
+                    squeak = game.GetSound("crew3");
+                    break;
+                case "gray":
+                case "terminal":
+                    squeak = game.GetSound("blip2");
+                    break;
+            }
+            return new Command(game, () => {
+                if (args.ElementAtOrDefault(1).ToLower() == "player")
+                    squeak = game.ActivePlayer.Squeak;
+                else if (args.ElementAtOrDefault(1).ToLower() == "cry")
+                    squeak = Crewman.Cry;
+                squeak?.Play();
+            }, false);
         }
         private static Command TextCommand(Game game, string[] args)
         {

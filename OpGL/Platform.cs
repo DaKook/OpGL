@@ -25,6 +25,7 @@ namespace OpGL
         public bool SingleDirection;
         public List<Sprite> OnTop = new List<Sprite>();
         public Rectangle Bounds;
+        public static SoundEffect DisappearSound;
         public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null) : base(x, y, texture, animation)
         {
             NormalAnimation = animation;
@@ -157,6 +158,7 @@ namespace OpGL
             if (!CanDisappear) return;
             if (DisappearAnimation != null)
             {
+                DisappearSound?.Play();
                 ResetAnimation();
                 Animation = DisappearAnimation;
                 DisappearFrames = DisappearAnimation.FrameCount;
