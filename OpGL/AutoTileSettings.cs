@@ -299,6 +299,23 @@ namespace OpGL
             return ret;
         }
 
+        public static AutoTileSettings Default4(int originX, int originY)
+        {
+            AutoTileSettings ret = new AutoTileSettings(new Point(originX, originY));
+            for (int i = 0; i < 256; i++)
+            {
+                if (isTile(2, i))
+                    ret.setTile(i, new Point(originX, originY));
+                else if (isTile(0, i))
+                    ret.setTile(i, new Point(originX + 1, originY));
+                else if (isTile(3, i))
+                    ret.setTile(i, new Point(originX + 2, originY));
+                else if (isTile(1, i))
+                    ret.setTile(i, new Point(originX + 3, originY));
+            }
+            return ret;
+        }
+
         public Point GetTile(int data)
         {
             return tiles[data];

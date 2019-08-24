@@ -109,7 +109,24 @@ namespace OpGL
         private Point currentTile = new Point(0, 0);
         private Texture currentTexture;
         private SortedList<int, Tile> tiles = new SortedList<int, Tile>();
-        private AutoTileSettings autoTiles;
+        private AutoTileSettings autoTiles
+        {
+            get
+            {
+                if (tool == Tools.Background) return backgroundTiles;
+                else if (tool == Tools.Spikes) return spikesTiles;
+                else return groundTiles;
+            }
+            set
+            {
+                if (tool == Tools.Background) backgroundTiles = value;
+                else if (tool == Tools.Spikes) spikesTiles = value;
+                else groundTiles = value;
+            }
+        }
+        private AutoTileSettings groundTiles;
+        private AutoTileSettings backgroundTiles;
+        private AutoTileSettings spikesTiles;
         private int autoTileStyle = 13;
         private FullImage tileset;
         private BoxSprite tileSelection;
@@ -268,9 +285,7 @@ namespace OpGL
             sprites.Add(wl);
             CurrentState = GameStates.Editing;
             isEditor = true;
-            tool = Tools.Background;
-            autoTiles = AutoTileSettings.Default13(0, 17);
-            autoTiles.Name = "bg1";
+            tool = Tools.Ground;
 
 
 #endif
@@ -657,6 +672,10 @@ namespace OpGL
                     {
                         tool = Tools.Background;
                     }
+                    else if (e.KeyCode == Keys.D3)
+                    {
+                        tool = Tools.Spikes;
+                    }
                     else if (e.KeyCode == Keys.OemMinus)
                     {
                         tool = Tools.Tiles;
@@ -668,7 +687,7 @@ namespace OpGL
                     {
                         CurrentEditingFocus = FocusOptions.Tileset;
                         tileset.Layer = -1;
-                        if (tool == Tools.Background || tool == Tools.Ground)
+                        if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes)
                         {
                             if (autoTileStyle == 3)
                                 selection.SetSize(3, 1);
@@ -676,6 +695,8 @@ namespace OpGL
                                 selection.SetSize(3, 5);
                             if (autoTileStyle == 47)
                                 selection.SetSize(8, 6);
+                            if (autoTileStyle == 4)
+                                selection.SetSize(4, 1);
                         }
                         hudSprites.Add(tileSelection);
                         hudSprites.Add(tileset);
@@ -697,20 +718,25 @@ namespace OpGL
                         hudSprites.Remove(tileSelection);
                         selection.SetSize(1, 1);
                     }
-                    else if (e.KeyCode == Keys.D1)
+                    else if (e.KeyCode == Keys.D1 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         autoTileStyle = 13;
                         selection.SetSize(3, 5);
                     }
-                    else if (e.KeyCode == Keys.D2)
+                    else if (e.KeyCode == Keys.D2 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         autoTileStyle = 3;
                         selection.SetSize(3, 1);
                     }
-                    else if (e.KeyCode == Keys.D3)
+                    else if (e.KeyCode == Keys.D3 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         autoTileStyle = 47;
                         selection.SetSize(8, 6);
+                    }
+                    else if (e.KeyCode == Keys.D4 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
+                    {
+                        autoTileStyle = 4;
+                        selection.SetSize(4, 1);
                     }
                 }
             }
@@ -831,7 +857,7 @@ namespace OpGL
                         }
                     }
                 }
-                else if (tool == Tools.Ground || tool == Tools.Background && autoTiles != null)
+                else if (tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes && autoTiles != null)
                 {
                     if (leftMouse || rightMouse)
                     {
@@ -851,14 +877,14 @@ namespace OpGL
                         tileSelection.SetSize(1, 1);
                     }
                 }
-                else if (tool == Tools.Ground || tool == Tools.Background)
+                else if (tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes)
                 {
                     if (leftMouse)
                     {
                         if (autoTileStyle == 3)
                         {
                             autoTiles = AutoTileSettings.Default3((int)selection.X / 8, (int)selection.Y / 8);
-                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto3";
+                            autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto3";
                             tileSelection.X = selection.X;
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(3, 1);
@@ -866,7 +892,7 @@ namespace OpGL
                         else if (autoTileStyle == 13)
                         {
                             autoTiles = AutoTileSettings.Default13((int)selection.X / 8, (int)selection.Y / 8);
-                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto13";
+                            autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto13";
                             tileSelection.X = selection.X;
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(3, 5);
@@ -874,10 +900,18 @@ namespace OpGL
                         else if (autoTileStyle == 47)
                         {
                             autoTiles = AutoTileSettings.Default47((int)selection.X / 8, (int)selection.Y / 8);
-                            autoTiles.Name = ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto47";
+                            autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto47";
                             tileSelection.X = selection.X;
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(8, 6);
+                        }
+                        else if (autoTileStyle == 4)
+                        {
+                            autoTiles = AutoTileSettings.Default4((int)selection.X / 8, (int)selection.Y / 8);
+                            autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto4";
+                            tileSelection.X = selection.X;
+                            tileSelection.Y = selection.Y;
+                            tileSelection.SetSize(4, 1);
                         }
                     }
                 }
@@ -943,23 +977,25 @@ namespace OpGL
 
         private int getAutoTileData(float x, float y, bool isBackground)
         {
-            Tile gt = null;
+            bool bg = tool != Tools.Ground;
+            bool sp = tool == Tools.Spikes;
             int data = 0;
-            if ((gt = GetTile((int)x, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0)
+            Tile gt;
+            if ((gt = GetTile((int)x, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0)
                 data += 1;
-            if ((gt = GetTile((int)x + 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || x == RESOLUTION_WIDTH - 8)
+            if ((gt = GetTile((int)x + 8, (int)y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || x == RESOLUTION_WIDTH - 8)
                 data += 2;
-            if ((gt = GetTile((int)x, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8)
+            if ((gt = GetTile((int)x, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8)
                 data += 4;
-            if ((gt = GetTile((int)x - 8, (int)y)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || x == 0)
+            if ((gt = GetTile((int)x - 8, (int)y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || x == 0)
                 data += 8;
-            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == RESOLUTION_WIDTH - 8)
+            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == RESOLUTION_WIDTH - 8)
                 data += 16;
-            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == RESOLUTION_WIDTH - 8)
+            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == RESOLUTION_WIDTH - 8)
                 data += 32;
-            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == 0)
+            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == 0)
                 data += 64;
-            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && (gt.Tag == autoTiles.Name || (isBackground && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == 0)
+            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == 0)
                 data += 128;
             return data;
         }
@@ -1395,7 +1431,8 @@ namespace OpGL
             {
                 int tileX = (int)loadFrom["TileX"];
                 int tileY = (int)loadFrom["TileY"];
-                s = new Tile((int)x, (int)y, texture, tileX, tileY);
+                string tag = (string)loadFrom["Tag"];
+                s = new Tile((int)x, (int)y, texture, tileX, tileY) { Tag = tag };
             }
             else if (type == "Enemy")
             {

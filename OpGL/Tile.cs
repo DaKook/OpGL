@@ -36,6 +36,7 @@ namespace OpGL
             ret.Add("Texture", Texture.Name);
             ret.Add("TileX", TextureX);
             ret.Add("TileY", TextureY);
+            ret.Add("Tag", Tag);
             return ret;
         }
     }
