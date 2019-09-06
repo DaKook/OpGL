@@ -28,7 +28,7 @@ namespace OpGL
 
         public void Play()
         {
-            reader.Position = 0;
+            reader.Seek(0, SeekOrigin.Begin);
             wav.Play();
         }
 

@@ -99,6 +99,15 @@ namespace OpGL
             else
                 return null;
         }
+        public SortedList<string, Music> Songs = new SortedList<string, Music>();
+        public Music GetMusic(string name)
+        {
+            if (Songs.TryGetValue(name, out Music m))
+                return m;
+            else
+                return null;
+        }
+        public Music CurrentSong;
 
         // Editing
         private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal }
@@ -227,6 +236,7 @@ namespace OpGL
             InitGlProgram();
             InitOpenGLSettings();
             InitSounds();
+            InitMusic();
 
             textures = new List<Texture>();
             LoadTextures();
@@ -286,7 +296,8 @@ namespace OpGL
             CurrentState = GameStates.Editing;
             isEditor = true;
             tool = Tools.Ground;
-
+            CurrentSong = Songs["Peregrinator Homo"];
+            CurrentSong.Play();
 
 #endif
             glControl.Render += glControl_Render;
@@ -389,7 +400,7 @@ namespace OpGL
                         JArray arr = (JArray)jObject["Animations"];
                         if (arr != null)
                         {
-                            SortedList<string,Animation> anims = new SortedList<string,Animation>();
+                            SortedList<string, Animation> anims = new SortedList<string, Animation>();
                             foreach (JObject anim in arr)
                             {
                                 JArray frms = (JArray)anim["Frames"];
@@ -451,7 +462,7 @@ namespace OpGL
                     else // no _data file, create with default grid size
                     {
                         textures.Add(CreateTexture(fName, 32));
-                        textures.Last().Animations = new SortedList<string,Animation>();
+                        textures.Last().Animations = new SortedList<string, Animation>();
                     }
                 }
             }
@@ -540,6 +551,19 @@ namespace OpGL
                 Sounds.Add(se.Name, se);
             }
         }
+
+        private void InitMusic()
+        {
+            List<string> files = System.IO.Directory.EnumerateFiles("music/").ToList();
+            files.Sort();
+            foreach (string file in files)
+            {
+                if (!(file.EndsWith(".ogg") || file.EndsWith(".wav"))) continue;
+                Music m = new Music(file);
+                Songs.Add(m.Name, m);
+            }
+        }
+        //END INITIALIZE
         #endregion
         private void Screenshot()
         {
@@ -664,9 +688,9 @@ namespace OpGL
                     else if (e.KeyCode == Keys.D1)
                     {
                         tool = Tools.Ground;
-                        tileSelection.X = autoTiles.GetTile(0).X * 8;
-                        tileSelection.Y = autoTiles.GetTile(0).Y * 8;
-                        tileSelection.SetSize(autoTileStyle == 47 ? 8 : 3, autoTileStyle == 3 ? 1 : (autoTileStyle == 13 ? 5 : 6));
+                        tileSelection.X = autoTiles.GetTile((p) => false).X * 8;
+                        tileSelection.Y = autoTiles.GetTile((p) => false).Y * 8;
+                        tileSelection.SetSize(autoTiles.Size == 47 ? 8 : 3, autoTiles.Size == 3 ? 1 : (autoTiles.Size == 13 ? 5 : 6));
                     }
                     else if (e.KeyCode == Keys.D2)
                     {
@@ -944,8 +968,7 @@ namespace OpGL
             }
             if (leftClick)
             {
-                int data = getAutoTileData(x, y, isBackground);
-                Point p = autoTiles.GetTile(data);
+                Point p = autoTiles.GetTile(AutoTilesPredicate((int)selection.X, (int)selection.Y));
                 Tile t = new Tile((int)x, (int)y, currentTexture, p.X, p.Y);
                 t.Tag = autoTiles.Name;
                 tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
@@ -964,7 +987,7 @@ namespace OpGL
                             l = xx + yy * RESOLUTION_WIDTH;
                             sprites.Remove(tiles[l]);
                             tiles.Remove(l);
-                            Point p = autoTiles.GetTile(getAutoTileData(xx, yy, isBackground));
+                            Point p = autoTiles.GetTile(AutoTilesPredicate(xx, yy));
                             Tile t = new Tile(xx, yy, currentTexture, p.X, p.Y);
                             t.Tag = autoTiles.Name;
                             tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
@@ -975,29 +998,16 @@ namespace OpGL
             }
         }
 
-        private int getAutoTileData(float x, float y, bool isBackground)
+        private Predicate<Point> AutoTilesPredicate(int x, int y)
         {
             bool bg = tool != Tools.Ground;
             bool sp = tool == Tools.Spikes;
-            int data = 0;
             Tile gt;
-            if ((gt = GetTile((int)x, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0)
-                data += 1;
-            if ((gt = GetTile((int)x + 8, (int)y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || x == RESOLUTION_WIDTH - 8)
-                data += 2;
-            if ((gt = GetTile((int)x, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8)
-                data += 4;
-            if ((gt = GetTile((int)x - 8, (int)y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || x == 0)
-                data += 8;
-            if ((gt = GetTile((int)x + 8, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == RESOLUTION_WIDTH - 8)
-                data += 16;
-            if ((gt = GetTile((int)x + 8, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == RESOLUTION_WIDTH - 8)
-                data += 32;
-            if ((gt = GetTile((int)x - 8, (int)y + 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == RESOLUTION_HEIGHT - 8 || x == 0)
-                data += 64;
-            if ((gt = GetTile((int)x - 8, (int)y - 8)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) || y == 0 || x == 0)
-                data += 128;
-            return data;
+            return (p) => (gt = GetTile(p.X + x, p.Y + y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) ||
+            (p.X < 0 && x == 0) ||
+            (p.X > 0 && x == RESOLUTION_WIDTH - 8) ||
+            (p.Y < 0 && y == 0) ||
+            (p.Y > 0 && y == RESOLUTION_HEIGHT - 8);
         }
 
         private void HandleUserInputs()
