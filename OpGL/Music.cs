@@ -21,6 +21,8 @@ namespace OpGL
             string fName = path.Split('/').Last();
             fName = fName.Substring(0, fName.Length - 4);
             Name = fName;
+            if (!path.EndsWith(".ogg"))
+                throw new InvalidOperationException("Music can only be .ogg files!");
             vr = new AccurateVorbisWaveReader(path);
             wo = new WaveOut();
             vl = new VorbisLoop(vr);

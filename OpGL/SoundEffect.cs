@@ -11,7 +11,7 @@ namespace OpGL
     public class SoundEffect
     {
         Stream source;
-        WaveFileReader reader;
+        WaveStream reader;
         WaveOut wav;
         public string Name;
 
@@ -22,7 +22,12 @@ namespace OpGL
             Name = fName;
             source = File.Open(path, FileMode.Open);
             wav = new WaveOut();
-            reader = new WaveFileReader(source);
+            if (path.EndsWith(".wav"))
+            {
+                reader = new WaveFileReader(source);
+            }
+            else
+                throw new InvalidOperationException("Sound effects can only be .wav files!");
             wav.Init(reader);
         }
 

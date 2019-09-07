@@ -47,7 +47,7 @@ namespace OpGL
                         bufferData[index++] = curY;
                         bufferData[index++] = x;
                         bufferData[index++] = y;
-                        curX += Texture.TileSize;
+                        curX += Texture.GetCharacterWidth(c);
                     }
                 }
                 visibleCharacters = index / 4;

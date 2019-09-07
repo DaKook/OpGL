@@ -9,6 +9,7 @@ namespace OpGL
     public class Texture
     {
         public Sprite.SolidState[,] TileSolidStates { get; set; }
+        public SortedList<int, int> CharacterWidths { get; set; }
         public SortedList<string,Animation> Animations { get; set; }
         public string Name { get; private set; }
         public uint ID { get; private set; }
@@ -18,6 +19,14 @@ namespace OpGL
         public ProgramData Program { get; private set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
+
+        public int GetCharacterWidth(int character)
+        {
+            if (CharacterWidths != null && CharacterWidths.ContainsKey(character))
+                return CharacterWidths[character];
+            else
+                return TileSize;
+        }
 
         public Animation AnimationFromName(string name)
         {

@@ -298,6 +298,8 @@ namespace OpGL
             tool = Tools.Ground;
             CurrentSong = Songs["Peregrinator Homo"];
             CurrentSong.Play();
+            StringDrawable s2 = new StringDrawable(12, 24, TextureFromName("font2"), "Pokémon! Gotta catch 'em all!", Color.LightBlue);
+            hudSprites.Add(s2);
 
 #endif
             glControl.Render += glControl_Render;
@@ -393,7 +395,6 @@ namespace OpGL
                     {
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fName + "_data.txt"));
                         Texture tex = CreateTexture(fName, (int)jObject["GridSize"]);
-                        string test = (string)jObject["Trololol"];
                         textures.Add(tex);
 
                         // Animations
@@ -457,6 +458,39 @@ namespace OpGL
                                 i += 2;
                             }
                             tex.TileSolidStates = states;
+                        }
+                        // Characters
+                        JArray chrs = (JArray)jObject["Characters"];
+                        if (chrs != null)
+                        {
+                            SortedList<int, int> characters = new SortedList<int, int>();
+                            int i = 0;
+                            int x = 0;
+                            int y = 0;
+                            while (i < chrs.Count)
+                            {
+                                int ch = (int)chrs[i];
+                                if (ch > 0 && ch < 256 && y == 0)
+                                {
+                                    x = ch;
+                                    y = 1;
+                                }
+                                else if (y > 0 && ch >= 0)
+                                {
+                                    if (!characters.ContainsKey(ch))
+                                        characters.Add(x, ch);
+                                    else
+                                        characters[x] = ch;
+                                    y -= 1;
+                                    x += 1;
+                                }
+                                else if (ch < 0)
+                                {
+                                    y = -ch;
+                                }
+                                i++;
+                            }
+                            tex.CharacterWidths = characters;
                         }
                     }
                     else // no _data file, create with default grid size
