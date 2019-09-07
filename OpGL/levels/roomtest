@@ -3237,7 +3237,7 @@
 			  "DisappearAnimation": "",
 			  "XSpeed": 0.0,
 			  "YSpeed": 0.0,
-			  "Conveyor": 1.0,
+			  "Conveyor": 10.0,
 			  "Name": "",
 			  "Disappear": false,
 			  "Color": -1,

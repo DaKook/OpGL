@@ -17,6 +17,7 @@ namespace OpGL
         private Animation jumpingAnimation;
         private Animation dyingAnimation;
         public float YVelocity;
+        public float XVelocity;
         public static float TerminalVelocity = 5f;
         public float MaxSpeed = 3f;
         public float Acceleration = 0.375f;
@@ -65,7 +66,6 @@ namespace OpGL
         public Animation JumpingAnimation { get => jumpingAnimation ?? defaultAnimation; set => jumpingAnimation = value; }
         public Animation DyingAnimation { get => dyingAnimation ?? defaultAnimation; set => dyingAnimation = value; }
         public int DyingFrames;
-        public float XVelocity;
 
         public static SoundEffect Flip1;
         public static SoundEffect Flip2;
@@ -126,6 +126,8 @@ namespace OpGL
                         LedgeMercy -= 1;
                     if (onPlatform != null)
                     {
+                        XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                        YVelocity += onPlatform.YVel;
                         onPlatform.OnTop.Remove(this);
                         onPlatform = null;
                     }
@@ -133,11 +135,36 @@ namespace OpGL
                     changeAnimationInAir();
                 }
                 OnGround = false;
-                XVelocity += Math.Sign(InputDirection) * Acceleration;
-                if (XVelocity > MaxSpeed)
-                    XVelocity = MaxSpeed;
-                else if (XVelocity < -MaxSpeed)
-                    XVelocity = -MaxSpeed;
+                if (Math.Sign(InputDirection) == -1)
+                {
+                    if (XVelocity > -MaxSpeed)
+                    {
+                        XVelocity -= Acceleration;
+                        if (XVelocity < -MaxSpeed)
+                            XVelocity = -MaxSpeed;
+                    }
+                    else if (XVelocity < -MaxSpeed)
+                    {
+                        XVelocity += Acceleration;
+                        if (XVelocity > -MaxSpeed)
+                            XVelocity = -MaxSpeed;
+                    }
+                }
+                else if (Math.Sign(InputDirection) == 1)
+                {
+                    if (XVelocity < MaxSpeed)
+                    {
+                        XVelocity += Acceleration;
+                        if (XVelocity > MaxSpeed)
+                            XVelocity = MaxSpeed;
+                    }
+                    else if (XVelocity > MaxSpeed)
+                    {
+                        XVelocity -= Acceleration;
+                        if (XVelocity < MaxSpeed)
+                            XVelocity = MaxSpeed;
+                    }
+                }
                 if (InputDirection == 0)
                 {
                     int s = Math.Sign(XVelocity);
@@ -145,7 +172,7 @@ namespace OpGL
                     if (Math.Sign(XVelocity) != s)
                         XVelocity = 0;
                 }
-                if ((flipX && XVelocity > 0) || (!flipX && XVelocity < 0))
+                if ((flipX && InputDirection > 0) || (!flipX && InputDirection < 0))
                 {
                     flipX = !flipX;
                 }
@@ -237,13 +264,19 @@ namespace OpGL
                 if (collision as Platform != null && onPlatform != collision)
                 {
                     if (onPlatform != null)
+                    {
+                        XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                        YVelocity += onPlatform.YVel;
                         onPlatform.OnTop.Remove(this);
+                    }
                     onPlatform = collision as Platform;
                     onPlatform.OnTop.Add(this);
                     onPlatform.Disappear();
                 }
                 else if (onPlatform != null && collision as Platform == null)
                 {
+                    XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                    YVelocity += onPlatform.YVel;
                     onPlatform.OnTop.Remove(this);
                     onPlatform = null;
                 }
@@ -273,6 +306,8 @@ namespace OpGL
                 OnGround = false;
                 if (onPlatform != null)
                 {
+                    XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                    YVelocity += onPlatform.YVel;
                     onPlatform.OnTop.Remove(this);
                     onPlatform = null;
                 }
