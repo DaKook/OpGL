@@ -136,7 +136,6 @@ namespace OpGL
         private AutoTileSettings groundTiles;
         private AutoTileSettings backgroundTiles;
         private AutoTileSettings spikesTiles;
-        private int autoTileStyle = 13;
         private FullImage tileset;
         private BoxSprite tileSelection;
         private bool isEditor;
@@ -256,15 +255,6 @@ namespace OpGL
             Platform.DisappearSound = GetSound("vanish");
             Checkpoint.ActivateSound = GetSound("save");
             Terminal.ActivateSound = GetSound("terminal");
-            //Crewman newPlayer = new Crewman(20, 20, viridian, "Viridian", viridian.Animations["Standing"], viridian.Animations["Walking"], viridian.Animations["Falling"], viridian.Animations["Jumping"], viridian.Animations["Dying"]);
-            ////ActivePlayer.CanFlip = false;
-            ////ActivePlayer.Jump = 8;
-            //UserAccessSprites.Add(newPlayer.Name, newPlayer);
-            //newPlayer.TextBoxColor = Color.FromArgb(164, 164, 255);
-            //SetPlayer(newPlayer);
-            //LoadRoom(0, 0);
-            //WidthRooms = 1;
-            //HeightRooms = 1;
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
             tileSelection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Red);
@@ -277,19 +267,12 @@ namespace OpGL
             Terminal.TextBox.CenterX = RESOLUTION_WIDTH / 2;
             Terminal.TextBox.Y = 4;
             hudSprites.Add(Terminal.TextBox);
-            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, FontTexture, "TEST", Color.White));
+            hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, TextureFromName("font2"), "TEST", Color.White));
 
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
             ActivePlayer.Layer = 1;
-            //ActivePlayer.MultiplePositions = true;
-            //ActivePlayer.Offsets.Add(new PointF(-40, 0));
-            //ActivePlayer.X = 80;
-            Platform p = new Platform(168, 224, platforms, platforms.AnimationFromName("platform1"), 1, 0, 0, false, null);
-            //p.MultiplePositions = true;
-            //p.Offsets.Add(new PointF(64, 0));
-            //ActivePlayer.MultiplePositions = true;
-            //ActivePlayer.Offsets.Add(new PointF(24, 0));
+            Platform p = new Platform(168, 224, platforms, platforms.AnimationFromName("platform1"), 4, 0, 0, false, null);
             sprites.Add(p);
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
@@ -300,6 +283,12 @@ namespace OpGL
             CurrentSong.Play();
             StringDrawable s2 = new StringDrawable(12, 24, TextureFromName("font2"), "Pokémon! Gotta catch 'em all!", Color.LightBlue);
             hudSprites.Add(s2);
+            groundTiles = AutoTileSettings.Default13(3, 2);
+            groundTiles.Name = "Ground";
+            backgroundTiles = AutoTileSettings.Default13(0, 17);
+            backgroundTiles.Name = "BG";
+            spikesTiles = AutoTileSettings.Default4(8, 0);
+            spikesTiles.Name = "Spikes";
 
 #endif
             glControl.Render += glControl_Render;
@@ -747,14 +736,34 @@ namespace OpGL
                         tileset.Layer = -1;
                         if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes)
                         {
-                            if (autoTileStyle == 3)
+                            if (autoTiles.Size == 3)
+                            {
                                 selection.SetSize(3, 1);
-                            if (autoTileStyle == 13)
+                                tileSelection.SetSize(3, 1);
+                            }
+                            else if (autoTiles.Size == 13)
+                            {
                                 selection.SetSize(3, 5);
-                            if (autoTileStyle == 47)
+                                tileSelection.SetSize(3, 5);
+                            }
+                            else if (autoTiles.Size == 47)
+                            {
                                 selection.SetSize(8, 6);
-                            if (autoTileStyle == 4)
+                                tileSelection.SetSize(8, 6);
+                            }
+                            else if (autoTiles.Size == 4)
+                            {
                                 selection.SetSize(4, 1);
+                                tileSelection.SetSize(4, 1);
+                            }
+                            tileSelection.X = autoTiles.Origin.X * currentTexture.TileSize;
+                            tileSelection.Y = autoTiles.Origin.Y * currentTexture.TileSize;
+                        }
+                        else if (tool == Tools.Tiles)
+                        {
+                            tileSelection.SetSize(1, 1);
+                            tileSelection.X = currentTile.X * currentTexture.TileSize;
+                            tileSelection.Y = currentTile.Y * currentTexture.TileSize;
                         }
                         hudSprites.Add(tileSelection);
                         hudSprites.Add(tileset);
@@ -778,22 +787,18 @@ namespace OpGL
                     }
                     else if (e.KeyCode == Keys.D1 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
-                        autoTileStyle = 13;
                         selection.SetSize(3, 5);
                     }
                     else if (e.KeyCode == Keys.D2 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
-                        autoTileStyle = 3;
                         selection.SetSize(3, 1);
                     }
                     else if (e.KeyCode == Keys.D3 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
-                        autoTileStyle = 47;
                         selection.SetSize(8, 6);
                     }
                     else if (e.KeyCode == Keys.D4 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
-                        autoTileStyle = 4;
                         selection.SetSize(4, 1);
                     }
                 }
@@ -939,7 +944,7 @@ namespace OpGL
                 {
                     if (leftMouse)
                     {
-                        if (autoTileStyle == 3)
+                        if (selection.WidthTiles == 3 && selection.HeightTiles == 1)
                         {
                             autoTiles = AutoTileSettings.Default3((int)selection.X / 8, (int)selection.Y / 8);
                             autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto3";
@@ -947,7 +952,7 @@ namespace OpGL
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(3, 1);
                         }
-                        else if (autoTileStyle == 13)
+                        else if (selection.HeightTiles == 5)
                         {
                             autoTiles = AutoTileSettings.Default13((int)selection.X / 8, (int)selection.Y / 8);
                             autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto13";
@@ -955,7 +960,7 @@ namespace OpGL
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(3, 5);
                         }
-                        else if (autoTileStyle == 47)
+                        else if (selection.WidthTiles == 8)
                         {
                             autoTiles = AutoTileSettings.Default47((int)selection.X / 8, (int)selection.Y / 8);
                             autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto47";
@@ -963,7 +968,7 @@ namespace OpGL
                             tileSelection.Y = selection.Y;
                             tileSelection.SetSize(8, 6);
                         }
-                        else if (autoTileStyle == 4)
+                        else if (selection.WidthTiles == 4)
                         {
                             autoTiles = AutoTileSettings.Default4((int)selection.X / 8, (int)selection.Y / 8);
                             autoTiles.Name = "(" + currentTexture.Name + ") " + ((int)(selection.X / 8)).ToString() + ", " + ((int)(selection.Y / 8)).ToString() + ": Auto4";

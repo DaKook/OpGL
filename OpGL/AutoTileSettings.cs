@@ -11,6 +11,7 @@ namespace OpGL
     {
         public string Name;
         private SortedList<int, Point> tiles = new SortedList<int, Point>();
+        public Point Origin { get; private set; }
         public int Size { get; private set; }
         private static bool checkBit(int index, int data)
         {
@@ -20,6 +21,7 @@ namespace OpGL
         {
             tiles.Add(0, defaultTile);
             Size = 1;
+            Origin = defaultTile;
         }
         private void setTile(int index, Point tile)
         {
@@ -286,7 +288,7 @@ namespace OpGL
                     }
                 }
             }
-            ret.Size = 45;
+            ret.Size = 47;
             return ret;
         }
 

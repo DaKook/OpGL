@@ -17,6 +17,8 @@ namespace OpGL
 
         public override float Width => w * Texture.TileSize;
         public override float Height => h * Texture.TileSize;
+        public int WidthTiles => w;
+        public int HeightTiles => h;
 
         public void SetWidth(int tiles)
         {
@@ -56,8 +58,6 @@ namespace OpGL
             }
             boxTiles = index / 4;
             Array.Resize(ref bufferData, index);
-
-            h = (int)curY + Texture.TileSize;
             if (curX > w) w = (int)curX;
 
             updateBuffer = true;
