@@ -1129,8 +1129,8 @@ namespace OpGL
             cameraX = CurrentRoom.X * Room.ROOM_WIDTH;
             cameraY = CurrentRoom.Y * Room.ROOM_HEIGHT;
             CurrentRoom.Objects.Add(ActivePlayer);
-            ActivePlayer.CenterX = ActivePlayer.CenterX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
-            ActivePlayer.CenterY = ActivePlayer.CenterY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
+            ActivePlayer.CenterX = (ActivePlayer.CenterX + Room.ROOM_WIDTH) % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
+            ActivePlayer.CenterY = (ActivePlayer.CenterY + Room.ROOM_HEIGHT) % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
             for (int i = 0; i < sprites.Count; i++)
             {
                 if (sprites[i] is Tile)
