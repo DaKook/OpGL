@@ -32,6 +32,7 @@ namespace OpGL
         public Checkpoint CurrentCheckpoint;
         public int JumpBuffer = 0;
         public int LedgeMercy = 0;
+        private int spikeMercy = 4;
         private bool _sad = false;
         public AIStates AIState = AIStates.Stand;
 
@@ -110,6 +111,9 @@ namespace OpGL
                         else if (Target.CenterX < CenterX) flipX = true;
                     }
                 }
+                
+                if (spikeMercy < 4)
+                    spikeMercy += 1;
 
                 YVelocity += Gravity;
                 if (JumpBuffer > 0) JumpBuffer -= 1;
@@ -352,7 +356,19 @@ namespace OpGL
         public override void Collide(CollisionData cd)
         {
             if (cd.CollidedWith.KillCrewmen)
-                Die();
+            {
+                if (!OnGround && cd.CollidedWith is Tile)
+                {
+                    spikeMercy -= 2;
+                    if (spikeMercy <= 0)
+                    {
+                        spikeMercy = 4;
+                        Die();
+                    }
+                }
+                else
+                    Die();
+            }
             else if (cd.CollidedWith.Solid != SolidState.Ground)
             {
                 cd.CollidedWith.HandleCrewmanCollision(this);
