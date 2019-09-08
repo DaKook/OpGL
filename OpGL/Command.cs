@@ -37,7 +37,9 @@ namespace OpGL
             { "speak", SpeakCommand },
             { "speak_active", SpeakActiveCommand },
             { "endtext", EndTextCommand },
-            { "squeak", SqueakCommand }
+            { "squeak", SqueakCommand },
+            { "playef", PlaySoundCommand },
+            { "playsound", PlaySoundCommand }
        };
 
         public static Script ParseScript(Game game, string script, string name = "")
@@ -383,6 +385,11 @@ namespace OpGL
                     game.TextBoxes[i].Disappeared += (textBox) => game.hudSprites.Remove(textBox);
                 }
             });
+        }
+        private static Command PlaySoundCommand(Game game, string[] args)
+        {
+            SoundEffect se = game.GetSound(args.LastOrDefault());
+            return new Command(game, () => { se.Play(); }, false);
         }
 
     }

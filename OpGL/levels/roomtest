@@ -27,7 +27,7 @@
 	[
 		{
 			"Name": "script",
-			"Contents": "playercontrol,false\nsay,1,player\nPROFESSOR DID YOU SEE THAT???\nsay,1,yellow\nSee what...?\nsay,1,player\nNothing I guess...\nchangefont,evilfont\nsay,1,180,0,0\n\"Nothing\" he says... Ha ha ha ha ha!\nchangefont,font\nplayercontrol,true"
+			"Contents": "playercontrol,false\nsay,1,player\nPROFESSOR DID YOU SEE THAT???\nsay,1,yellow\nSee what...?\nsay,1,player\nNothing I guess...\nchangefont,evilfont\nplayef,crew8e\nsay,1,180,0,0\n\"Nothing\" he says... Ha ha ha ha ha!\nchangefont,font\nplayef,crew7\nsay,1,200,200,200\nOh shut up, you.\nplayercontrol,true"
 		}
 	],
 	"Objects":
