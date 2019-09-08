@@ -841,7 +841,7 @@ namespace OpGL
                 {
                     HandleUserInputs();
 
-                    if (!Freeze)
+                    if (!Freeze && CurrentState == GameStates.Playing)
                         ProcessWorld();
 
                     if (DelayFrames > 0)
