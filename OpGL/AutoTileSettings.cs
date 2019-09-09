@@ -327,7 +327,7 @@ namespace OpGL
                     ret.setTile(i, new Point(originX + 1, originY));
                 else if (checkBit(3, i))
                     ret.setTile(i, new Point(originX + 2, originY));
-                else if (checkBit(1, i))
+                else
                     ret.setTile(i, new Point(originX + 3, originY));
             }
             ret.Size = 4;

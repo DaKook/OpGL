@@ -289,6 +289,8 @@ namespace OpGL
             backgroundTiles.Name = "BG";
             spikesTiles = AutoTileSettings.Default4(8, 0);
             spikesTiles.Name = "Spikes";
+            WarpToken wt = new WarpToken(200, 180, sprites32, sprites32.AnimationFromName("WarpToken"), 16, 8, this, WarpToken.FlipSettings.Flip);
+            sprites.Add(wt);
 
 #endif
             glControl.Render += glControl_Render;
@@ -711,9 +713,6 @@ namespace OpGL
                     else if (e.KeyCode == Keys.D1)
                     {
                         tool = Tools.Ground;
-                        tileSelection.X = autoTiles.GetTile((p) => false).X * 8;
-                        tileSelection.Y = autoTiles.GetTile((p) => false).Y * 8;
-                        tileSelection.SetSize(autoTiles.Size == 47 ? 8 : 3, autoTiles.Size == 3 ? 1 : (autoTiles.Size == 13 ? 5 : 6));
                     }
                     else if (e.KeyCode == Keys.D2)
                     {
@@ -1579,6 +1578,14 @@ namespace OpGL
                 float offX = (float)loadFrom["OffsetX"];
                 float offY = (float)loadFrom["OffsetY"];
                 s = new WarpLine(x, y, length, horizontal, offX, offY);
+            }
+            else if (type == "WarpToken")
+            {
+                Animation animation = texture.AnimationFromName((string)loadFrom["Animation"]);
+                float outX = (float)loadFrom["OutX"];
+                float outY = (float)loadFrom["OutY"];
+                int settings = (int)loadFrom["Flip"];
+                s = new WarpToken(x, y, texture, animation, outX, outY, this, (WarpToken.FlipSettings)settings);
             }
 
             else s = null;

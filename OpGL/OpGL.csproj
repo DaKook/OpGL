@@ -120,6 +120,7 @@
     <Compile Include="Tile.cs" />
     <Compile Include="VTextBox.cs" />
     <Compile Include="WarpLine.cs" />
+    <Compile Include="WarpToken.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
