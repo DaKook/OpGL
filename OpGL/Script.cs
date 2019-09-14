@@ -16,6 +16,9 @@ namespace OpGL
         public string Name;
         public string Contents;
 
+        public int WaitingFrames;
+        public bool WaitingForAction = false;
+
         public Command[] Commands;
         public Script(Command[] commands, string name = "", string contents = "")
         {
@@ -43,6 +46,17 @@ namespace OpGL
             }
             if (Finished != null && currentLocation >= Commands.Length) Finished(this);
             return ;
+        }
+
+        public void Process()
+        {
+            if (WaitingFrames > 0)
+            {
+                if (WaitingFrames-- <= 0)
+                {
+                    Continue();
+                }
+            }
         }
     }
 }

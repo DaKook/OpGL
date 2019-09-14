@@ -71,6 +71,7 @@ namespace OpGL
         public bool Freeze = false;
         public Script CurrentScript;
         public List<VTextBox> TextBoxes = new List<VTextBox>();
+        private static Random r = new Random();
 
         // OpenGL
         private GlControl glControl;
@@ -165,26 +166,12 @@ namespace OpGL
 
         // Camera
         private Matrix4x4f camera, hudView;
-        private float _camX;
-        private float _camY;
-        private float cameraX
-        {
-            get => _camX;
-            set
-            {
-                camera.Translate(-(value - _camX), 0, 0);
-                _camX = value;
-            }
-        }
-        private float cameraY
-        {
-            get => _camY;
-            set
-            {
-                camera.Translate(0, -(value - _camY), 0);
-                _camY = value;
-            }
-        }
+        private float cameraX;
+        private float cameraY;
+        private int flashFrames;
+        private bool isFlashing = false;
+        private int shakeFrames;
+        private int shakeIntensity;
         public const int RESOLUTION_WIDTH = 320;
         public const int RESOLUTION_HEIGHT = 240;
 
@@ -255,6 +242,7 @@ namespace OpGL
             Platform.DisappearSound = GetSound("vanish");
             Checkpoint.ActivateSound = GetSound("save");
             Terminal.ActivateSound = GetSound("terminal");
+            WarpToken.WarpSound = GetSound("teleport");
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
             tileSelection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Red);
@@ -385,7 +373,13 @@ namespace OpGL
                     if (System.IO.File.Exists("textures/" + fName + "_data.txt"))
                     {
                         JObject jObject = JObject.Parse(System.IO.File.ReadAllText("textures/" + fName + "_data.txt"));
-                        Texture tex = CreateTexture(fName, (int)jObject["GridSize"]);
+                        int gridSize = (int)jObject["GridSize"];
+                        int gridSize2;
+                        if (jObject.ContainsKey("GridSize2"))
+                            gridSize2 = (int)jObject["GridSize2"];
+                        else
+                            gridSize2 = gridSize;
+                        Texture tex = CreateTexture(fName, gridSize, gridSize2);
                         textures.Add(tex);
 
                         // Animations
@@ -429,7 +423,7 @@ namespace OpGL
                         JArray tls = (JArray)jObject["Tiles"];
                         if (tls != null)
                         {
-                            Sprite.SolidState[,] states = new Sprite.SolidState[(int)(tex.Width / tex.TileSize), (int)(tex.Height / tex.TileSize)];
+                            Sprite.SolidState[,] states = new Sprite.SolidState[(int)(tex.Width / tex.TileSizeX), (int)(tex.Height / tex.TileSizeY)];
                             int i = 0;
                             int x = 0;
                             int y = 0;
@@ -486,13 +480,13 @@ namespace OpGL
                     }
                     else // no _data file, create with default grid size
                     {
-                        textures.Add(CreateTexture(fName, 32));
+                        textures.Add(CreateTexture(fName, 32, 32));
                         textures.Last().Animations = new SortedList<string, Animation>();
                     }
                 }
             }
         }
-        private Texture CreateTexture(string texture, int gridSize)
+        private Texture CreateTexture(string texture, int gridSize, int gridSize2)
         {
             SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode("textures/" + texture + ".png");
 
@@ -502,10 +496,10 @@ namespace OpGL
             Gl.BindBuffer(BufferTarget.ArrayBuffer, texb);
             float[] fls = new float[]
             {
-                0f,       0f,       0f, 0f,
-                0f,       gridSize, 0f, 1f,
-                gridSize, gridSize, 1f, 1f,
-                gridSize, 0f,       1f, 0f
+                0f,       0f,        0f, 0f,
+                0f,       gridSize2, 0f, 1f,
+                gridSize, gridSize2, 1f, 1f,
+                gridSize, 0f,        1f, 0f
             };
             Gl.BufferData(BufferTarget.ArrayBuffer, (uint)fls.Length * sizeof(float), fls, BufferUsage.StaticDraw);
 
@@ -538,7 +532,7 @@ namespace OpGL
             Gl.VertexAttribDivisor(2, 1);
             Gl.VertexAttribDivisor(3, 1);
 
-            return new Texture(tex, bmp.Width, bmp.Height, gridSize, texture, program, texa, texb);
+            return new Texture(tex, bmp.Width, bmp.Height, gridSize, gridSize2, texture, program, texa, texb);
         }
 
         private void InitOpenGLSettings()
@@ -694,21 +688,21 @@ namespace OpGL
                     }
                     else if (e.KeyCode == Keys.S)
                     {
-                        currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSize);
+                        currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSizeY);
                     }
                     else if (e.KeyCode == Keys.W)
                     {
                         currentTile.Y -= 1;
-                        if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSize;
+                        if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSizeY;
                     }
                     else if (e.KeyCode == Keys.D)
                     {
-                        currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSize);
+                        currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSizeX);
                     }
                     else if (e.KeyCode == Keys.A)
                     {
                         currentTile.X -= 1;
-                        if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSize;
+                        if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSizeX;
                     }
                     else if (e.KeyCode == Keys.D1)
                     {
@@ -755,14 +749,14 @@ namespace OpGL
                                 selection.SetSize(4, 1);
                                 tileSelection.SetSize(4, 1);
                             }
-                            tileSelection.X = autoTiles.Origin.X * currentTexture.TileSize;
-                            tileSelection.Y = autoTiles.Origin.Y * currentTexture.TileSize;
+                            tileSelection.X = autoTiles.Origin.X * currentTexture.TileSizeX;
+                            tileSelection.Y = autoTiles.Origin.Y * currentTexture.TileSizeY;
                         }
                         else if (tool == Tools.Tiles)
                         {
                             tileSelection.SetSize(1, 1);
-                            tileSelection.X = currentTile.X * currentTexture.TileSize;
-                            tileSelection.Y = currentTile.Y * currentTexture.TileSize;
+                            tileSelection.X = currentTile.X * currentTexture.TileSizeX;
+                            tileSelection.Y = currentTile.Y * currentTexture.TileSizeY;
                         }
                         hudSprites.Add(tileSelection);
                         hudSprites.Add(tileset);
@@ -1314,6 +1308,16 @@ namespace OpGL
         }
         public void StopGame() { IsPlaying = false; }
 
+        public void Flash(int frames)
+        {
+            flashFrames = frames;
+        }
+        public void Shake(int frames, int intensity = 2)
+        {
+            shakeFrames = frames;
+            shakeIntensity = intensity;
+        }
+
         private void glControl_Render(object sender, GlControlEventArgs e)
         {
 #if TEST
@@ -1322,14 +1326,41 @@ namespace OpGL
 #endif
 
             // clear the color buffer
+            if (flashFrames > 0)
+            {
+                if (!isFlashing)
+                {
+                    isFlashing = true;
+                    Gl.ClearColor(1f, 1f, 1f, 1f);
+                }
+                flashFrames -= 1;
+            }
+            else if (isFlashing && flashFrames == 0)
+            {
+                isFlashing = false;
+                Gl.ClearColor(0f, 0f, 0f, 1f);
+            }
             Gl.Clear(ClearBufferMask.ColorBufferBit);
 
-            int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
-            Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
-            sprites.Render();
+            if (!isFlashing)
+            {
+                Matrix4x4f cam = camera;
+                int offsetX = 0;
+                int offsetY = 0;
+                if (shakeFrames > 0)
+                {
+                    offsetX = r.Next(-shakeIntensity, shakeIntensity + 1);
+                    offsetY = r.Next(-shakeIntensity, shakeIntensity + 1);
+                    shakeFrames -= 1;
+                }
+                cam.Translate(-(cameraX + offsetX), -(cameraY + offsetY), 0);
+                int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
+                Gl.UniformMatrix4f(viewMatrixLoc, 1, false, cam);
+                sprites.Render();
 
-            Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
-            hudSprites.Render();
+                Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
+                hudSprites.Render();
+            }
 
 #if TEST
             float ms = (float)t.ElapsedTicks / Stopwatch.Frequency * 1000f;

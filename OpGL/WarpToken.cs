@@ -14,6 +14,7 @@ namespace OpGL
         public float OutX;
         public float OutY;
         private Game game;
+        public static SoundEffect WarpSound;
         public WarpToken(float x, float y, Texture texture, Animation animation, float outX, float outY, Game owner, FlipSettings flip = FlipSettings.Unflip) : base(x, y, texture, animation)
         {
             Settings = flip;
@@ -44,6 +45,9 @@ namespace OpGL
             else crewman.Bottom = OutY + Height;
             crewman.PreviousY = crewman.Y;
             crewman.YVelocity = 0;
+            game.Flash(10);
+            game.Shake(40);
+            WarpSound?.Play();
         }
 
         public override JObject Save()

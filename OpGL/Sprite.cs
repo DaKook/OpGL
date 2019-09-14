@@ -120,10 +120,10 @@ namespace OpGL
             PreviousY = y;
 
             Texture = texture;
-            TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
+            TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
             TexMatrix.Translate(texX, texY, 0f);
 
-            Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSize, texture.TileSize), texture);
+            Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSizeX, texture.TileSizeY), texture);
             _old = Animation.GetFrame(0);
             Color = color ?? Color.White;
         }
@@ -137,7 +137,7 @@ namespace OpGL
 
             Texture = texture;
             if (texture != null)
-                TexMatrix = Matrix4x4f.Scaled(texture.TileSize / texture.Width, texture.TileSize / texture.Height, 1f);
+                TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
 
             Animation = animation;
             if (animation != null)

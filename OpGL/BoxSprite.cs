@@ -15,8 +15,8 @@ namespace OpGL
         protected int w;
         protected int h;
 
-        public override float Width => w * Texture.TileSize;
-        public override float Height => h * Texture.TileSize;
+        public override float Width => w * Texture.TileSizeX;
+        public override float Height => h * Texture.TileSizeY;
         public int WidthTiles => w;
         public int HeightTiles => h;
 
@@ -51,10 +51,10 @@ namespace OpGL
                     bufferData[index++] = curY;
                     bufferData[index++] = x == 0 ? (w == 1 ? 0 : 1) : (x == w - 1 ? 3 : 2);
                     bufferData[index++] = y == 0 ? (h == 1 ? 0 : 1) : (y == h - 1 ? 3 : 2);
-                    curX += Texture.TileSize;
+                    curX += Texture.TileSizeX;
                 }
                 curX = 0;
-                curY += Texture.TileSize;
+                curY += Texture.TileSizeY;
             }
             boxTiles = index / 4;
             Array.Resize(ref bufferData, index);
@@ -72,7 +72,7 @@ namespace OpGL
 
         public BoxSprite(float x, float y, Texture texture, int widthTiles, int heightTiles, Color? color = null) : base(x, y, texture, 0, 0)
         {
-            if (texture.Width / texture.TileSize != 4 || texture.Height / texture.TileSize != 4)
+            if (texture.Width / texture.TileSizeX != 4 || texture.Height / texture.TileSizeY != 4)
                 throw new InvalidOperationException("A BoxSprite's texture must be 4x4 tiles.");
 
             Color = color ?? Color.White;

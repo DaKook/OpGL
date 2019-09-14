@@ -37,7 +37,7 @@ namespace OpGL
                     {
                         if (curX > w) w = (int)curX;
                         curX = 0;
-                        curY += Texture.TileSize;
+                        curY += Texture.TileSizeY;
                     }
                     else
                     {
@@ -53,7 +53,7 @@ namespace OpGL
                 visibleCharacters = index / 4;
                 Array.Resize(ref bufferData, index);
 
-                h = (int)curY + Texture.TileSize;
+                h = (int)curY + Texture.TileSizeY;
                 if (curX > w) w = (int)curX;
 
                 updateBuffer = true;
@@ -69,7 +69,7 @@ namespace OpGL
 
         public StringDrawable(float x, float y, Texture texture, string text, Color? color = null) : base(x, y, texture, 0, 0)
         {
-            if (texture.Width / texture.TileSize != 16 || texture.Height / texture.TileSize != 16)
+            if (texture.Width / texture.TileSizeX != 16 || texture.Height / texture.TileSizeY != 16)
                 throw new InvalidOperationException("A StringDrawable's texture must be 16x16 tiles.");
 
             Color = color ?? Color.White;

@@ -19,8 +19,8 @@ namespace OpGL
         public float YSpeed;
         public Rectangle Bounds;
 
-        public override float Width => Horizontal ? length * Texture.TileSize : base.Width;
-        public override float Height => Horizontal ? base.Height : length * Texture.TileSize;
+        public override float Width => Horizontal ? length * Texture.TileSizeX : base.Width;
+        public override float Height => Horizontal ? base.Height : length * Texture.TileSizeY;
 
         public bool Horizontal;
 
@@ -49,8 +49,8 @@ namespace OpGL
             int index = 0;
             while (index < bufferData.Length)
             {
-                bufferData[index++] = Horizontal ? curL * Texture.TileSize : 0;
-                bufferData[index++] = Horizontal ? 0 : curL * Texture.TileSize;
+                bufferData[index++] = Horizontal ? curL * Texture.TileSizeX : 0;
+                bufferData[index++] = Horizontal ? 0 : curL * Texture.TileSizeY;
                 bufferData[index++] = curL == 0 ? 0 : (curL == length - 1 ? 2 : 1);
                 bufferData[index++] = 0;
                 curL += 1;

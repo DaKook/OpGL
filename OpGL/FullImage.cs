@@ -26,7 +26,7 @@ namespace OpGL
         public override void RenderPrep()
         {
             LocMatrix = Matrix4x4f.Translated((int)X, (int)Y, 0);
-            LocMatrix.Scale(Texture.Width * Size / Texture.TileSize, Texture.Height * Size / Texture.TileSize, 1);
+            LocMatrix.Scale(Texture.Width * Size / Texture.TileSizeX, Texture.Height * Size / Texture.TileSizeY, 1);
             if (flipX)
             {
                 LocMatrix.Scale(-1, 1, 1);

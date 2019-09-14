@@ -255,7 +255,7 @@ namespace OpGL
             string fontTexture = args.ElementAtOrDefault(1);
             Texture newFont = game.TextureFromName(fontTexture);
             Action success = () => { };
-            if (newFont != null && newFont.Width / newFont.TileSize == 16 && newFont.Height / newFont.TileSize == 16)
+            if (newFont != null && newFont.Width / newFont.TileSizeX == 16 && newFont.Height / newFont.TileSizeY == 16)
             {
                 success = () => {
                     game.FontTexture = newFont;

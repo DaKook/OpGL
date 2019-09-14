@@ -23,10 +23,10 @@ namespace OpGL
                 base.Text = value;
 
                 // box
-                w += 2 * Texture.TileSize;
-                h += 2 * Texture.TileSize;
-                int tilesW = w / Texture.TileSize;
-                int tilesH = h / Texture.TileSize;
+                w += 2 * Texture.TileSizeX;
+                h += 2 * Texture.TileSizeY;
+                int tilesW = w / Texture.TileSizeX;
+                int tilesH = h / Texture.TileSizeY;
                 // textbox must be rendered first
                 int stringLength = bufferData.Length;
                 int boxLength = tilesW * tilesH * 4;
@@ -40,8 +40,8 @@ namespace OpGL
                 {
                     for (int j = -1; j < tilesW - 1; j++)
                     {
-                        bufferData[index++] = j * Texture.TileSize;
-                        bufferData[index++] = i * Texture.TileSize;
+                        bufferData[index++] = j * Texture.TileSizeX;
+                        bufferData[index++] = i * Texture.TileSizeY;
                         //       (j + tilesW - 2) / (tilesW - 2) = 0 on first loop, 2 on last, 1 on others
                         int tx = (j + tilesW - 2) / (tilesW - 2) + (i + tilesH - 2) / (tilesH - 2) * 3;
                         bufferData[index++] = tx;
@@ -62,11 +62,11 @@ namespace OpGL
         public override void RenderPrep()
         {
             // Offset render location because the textbox top-left is -TileSize of location
-            X += Texture.TileSize;
-            Y += Texture.TileSize;
+            X += Texture.TileSizeX;
+            Y += Texture.TileSizeY;
             base.RenderPrep();
-            X -= Texture.TileSize;
-            Y -= Texture.TileSize;
+            X -= Texture.TileSizeX;
+            Y -= Texture.TileSizeY;
         }
 
         public void Appear(int speed = 51)

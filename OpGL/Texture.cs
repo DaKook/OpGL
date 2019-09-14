@@ -15,7 +15,8 @@ namespace OpGL
         public uint ID { get; private set; }
         public float Width { get; private set; }
         public float Height { get; private set; }
-        public int TileSize { get; set; }
+        public int TileSizeX { get; set; }
+        public int TileSizeY { get; set; }
         public ProgramData Program { get; private set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
@@ -25,7 +26,7 @@ namespace OpGL
             if (CharacterWidths != null && CharacterWidths.ContainsKey(character))
                 return CharacterWidths[character];
             else
-                return TileSize;
+                return TileSizeX;
         }
 
         public Animation AnimationFromName(string name)
@@ -34,12 +35,13 @@ namespace OpGL
             return anim;
         }
 
-        public Texture(uint id, float width, float height, int tileSize, string name, ProgramData program, uint vao, uint vbo)
+        public Texture(uint id, float width, float height, int tileSize, int tileSize2, string name, ProgramData program, uint vao, uint vbo)
         {
             ID = id;
             Width = width;
             Height = height;
-            TileSize = tileSize;
+            TileSizeX = tileSize;
+            TileSizeY = tileSize2;
             Name = name;
             Program = program;
             baseVAO = vao;
