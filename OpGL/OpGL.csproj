@@ -95,6 +95,7 @@
     <Compile Include="LoopStream.cs" />
     <Compile Include="Music.cs" />
     <Compile Include="ProgramData.cs" />
+    <Compile Include="ScriptBox.cs" />
     <Compile Include="SoundEffect.cs" />
     <Compile Include="Sprite.cs" />
     <Compile Include="SpriteCollection.cs" />

@@ -39,7 +39,9 @@ namespace OpGL
             { "endtext", EndTextCommand },
             { "squeak", SqueakCommand },
             { "playef", PlaySoundCommand },
-            { "playsound", PlaySoundCommand }
+            { "playsound", PlaySoundCommand },
+            { "addsprite", AddSpriteCommand },
+            { "changeai", ChangeAICommand }
        };
 
         public static Script ParseScript(Game game, string script, string name = "")
@@ -390,6 +392,45 @@ namespace OpGL
         {
             SoundEffect se = game.GetSound(args.LastOrDefault());
             return new Command(game, () => { se.Play(); }, false);
+        }
+        private static Command AddSpriteCommand(Game game, string[] args)
+        {
+            int.TryParse(args.ElementAtOrDefault(2), out int x);
+            int.TryParse(args.ElementAtOrDefault(3), out int y);
+            Sprite s = game.SpriteFromName(args.ElementAtOrDefault(1));
+            return new Command(game, () =>
+            {
+                if (s != null)
+                {
+                    game.AddSprite(s, x, y);
+                }
+            }, false);
+        }
+        private static Command ChangeAICommand(Game game, string[] args)
+        {
+            Crewman crewman1 = game.SpriteFromName(args.ElementAtOrDefault(1)) as Crewman;
+            Crewman crewman2 = game.SpriteFromName(args.ElementAtOrDefault(3)) as Crewman;
+            string aiString = args.ElementAtOrDefault(2);
+            Crewman.AIStates aiState = Crewman.AIStates.Stand;
+            if (aiString != null)
+            {
+                if (aiString.ToLower() == "stand")
+                    aiState = Crewman.AIStates.Stand;
+                else if (aiString.ToLower() == "follow")
+                    aiState = Crewman.AIStates.Follow;
+                else if (aiString.ToLower() == "face")
+                    aiState = Crewman.AIStates.Face;
+            }
+            return new Command(game, () =>
+            {
+                if (crewman1 != null)
+                {
+                    if (crewman2 == null) crewman2 = game.ActivePlayer;
+                    crewman1.AIState = aiState;
+                    if (aiState != Crewman.AIStates.Stand)
+                        crewman1.Target = crewman2;
+                }
+            }, false);
         }
 
     }

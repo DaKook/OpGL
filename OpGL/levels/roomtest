@@ -8,8 +8,8 @@
 	"Player":
 	{
 		"Type": "Crewman",
-		"X": 0,
-		"Y": 0,
+		"X": 20,
+		"Y": 20,
 		"Texture": "viridian",
 		"Standing": "Standing",
 		"Walking": "Walking",
@@ -27,12 +27,32 @@
 	[
 		{
 			"Name": "script",
-			"Contents": "playercontrol,false\nsay,1,player\nPROFESSOR DID YOU SEE THAT???\nsay,1,yellow\nSee what...?\nsay,1,player\nNothing I guess...\nchangefont,evilfont\nplayef,crew8e\nsay,1,180,0,0\n\"Nothing\" he says... Ha ha ha ha ha!\nchangefont,font\nplayef,crew7\nsay,1,200,200,200\nOh shut up, you.\nplayercontrol,true"
+			"Contents": "playercontrol,false\nsay,1,player\nOFFICER DID YOU SEE THAT???\nsay,1,Vermilion\nSee what...?\nsay,1,player\nNothing I guess...\nchangefont,evilfont\nplayef,crew8e\nsay,1,180,0,0\n\"Nothing\" he says... Ha ha ha ha ha!\nchangefont,font\nplayef,crew7\nsay,1,200,200,200\nOh shut up, you.\nplayercontrol,true"
+		},
+		{
+			"Name": "script2",
+			"Contents": "addsprite,Vermilion,20,20\nchangeai,Vermilion,follow,player"
 		}
 	],
 	"Objects":
 	[
-		
+		{
+			"Type": "Crewman",
+			"X": 20,
+			"Y": 20,
+			"Texture": "vermilion",
+			"Standing": "Standing",
+			"Walking": "Walking",
+			"Falling": "Falling",
+			"Jumping": "Jumping",
+			"Dying": "Dying",
+			"Name": "Vermilion",
+			"TextBox": 16727100,
+			"Sad": false,
+			"Gravity": 0.6875,
+			"FlipX": false,
+			"Squeak": "crew6"
+		}
 	],
 	"Rooms":
 	[
@@ -3275,6 +3295,15 @@
 			  "Repeat": true,
 			  "FlipX": false,
 			  "FlipY": false
+			},
+			{
+				"Type": "ScriptBox",
+				"X": 0.0,
+				"Y": 80.0,
+				"Texture": "box",
+				"Width": 40,
+				"Height": 22,
+				"Script": "script2"
 			}
 		  ]
 		},

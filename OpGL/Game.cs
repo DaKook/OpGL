@@ -260,17 +260,13 @@ namespace OpGL
             JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
             LoadLevel(jObject);
             ActivePlayer.Layer = 1;
-            Platform p = new Platform(168, 224, platforms, platforms.AnimationFromName("platform1"), 4, 0, 0, false, null);
-            sprites.Add(p);
             WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
             sprites.Add(wl);
-            CurrentState = GameStates.Editing;
-            isEditor = true;
+            CurrentState = GameStates.Playing;
+            isEditor = false;
             tool = Tools.Ground;
             CurrentSong = Songs["Peregrinator Homo"];
             CurrentSong.Play();
-            StringDrawable s2 = new StringDrawable(12, 24, TextureFromName("font2"), "Pokémon! Gotta catch 'em all!", Color.LightBlue);
-            hudSprites.Add(s2);
             groundTiles = AutoTileSettings.Default13(3, 2);
             groundTiles.Name = "Ground";
             backgroundTiles = AutoTileSettings.Default13(0, 17);
@@ -1317,6 +1313,13 @@ namespace OpGL
             shakeFrames = frames;
             shakeIntensity = intensity;
         }
+        public void AddSprite(Sprite s, float x, float y)
+        {
+            if (!sprites.Contains(s))
+                sprites.Add(s);
+            s.X = x;
+            s.Y = y;
+        }
 
         private void glControl_Render(object sender, GlControlEventArgs e)
         {
@@ -1617,6 +1620,13 @@ namespace OpGL
                 float outY = (float)loadFrom["OutY"];
                 int settings = (int)loadFrom["Flip"];
                 s = new WarpToken(x, y, texture, animation, outX, outY, this, (WarpToken.FlipSettings)settings);
+            }
+            else if (type == "ScriptBox")
+            {
+                int width = (int)loadFrom["Width"];
+                int height = (int)loadFrom["Height"];
+                string script = (string)loadFrom["Script"];
+                s = new ScriptBox(x, y, texture, width, height, ScriptFromName(script));
             }
 
             else s = null;

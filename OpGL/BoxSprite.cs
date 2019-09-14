@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    class BoxSprite : Sprite
+    public class BoxSprite : Sprite
     {
         protected int boxTiles = 0;
 
