@@ -143,7 +143,7 @@ namespace OpGL
 
         // Rooms
         public Room CurrentRoom;
-        public SortedList<int, JToken> RoomDatas = new SortedList<int, JToken>();
+        public SortedList<int, JObject> RoomDatas = new SortedList<int, JObject>();
         public int FocusedRoom;
         public int WidthRooms;
         public int HeightRooms;
@@ -257,13 +257,13 @@ namespace OpGL
             hudSprites.Add(Terminal.TextBox);
             hudSprites.Add(timerSprite = new StringDrawable(8, RESOLUTION_HEIGHT - 12, TextureFromName("font2"), "TEST", Color.White));
 
-            JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/roomtest"));
+            JObject jObject = JObject.Parse(System.IO.File.ReadAllText("levels/TestLevel.lv7"));
             LoadLevel(jObject);
             ActivePlayer.Layer = 1;
-            WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
-            sprites.Add(wl);
-            CurrentState = GameStates.Playing;
-            isEditor = false;
+            //WarpLine wl = new WarpLine(319, 200, 32, false, -152, 0);
+            //sprites.Add(wl);
+            CurrentState = GameStates.Editing;
+            isEditor = true;
             tool = Tools.Ground;
             CurrentSong = Songs["Peregrinator Homo"];
             CurrentSong.Play();
@@ -273,8 +273,8 @@ namespace OpGL
             backgroundTiles.Name = "BG";
             spikesTiles = AutoTileSettings.Default4(8, 0);
             spikesTiles.Name = "Spikes";
-            WarpToken wt = new WarpToken(200, 180, sprites32, sprites32.AnimationFromName("WarpToken"), 16, 8, this, WarpToken.FlipSettings.Flip);
-            sprites.Add(wt);
+            //WarpToken wt = new WarpToken(200, 180, sprites32, sprites32.AnimationFromName("WarpToken"), 16, 8, this, WarpToken.FlipSettings.Flip);
+            //sprites.Add(wt);
 
 #endif
             glControl.Render += glControl_Render;
@@ -647,7 +647,12 @@ namespace OpGL
             {
                 if (CurrentEditingFocus == FocusOptions.Level)
                 {
-                    if (e.KeyCode == Keys.Right)
+                    if (e.Control && e.KeyCode == Keys.S)
+                    {
+                        string s = SaveLevel().ToString();
+                        System.IO.File.WriteAllText("levels/TestLevel.lv7", s);
+                    }
+                    else if (e.KeyCode == Keys.Right)
                     {
                         sprites.Remove(ActivePlayer);
                         RoomDatas[FocusedRoom] = CurrentRoom.Save();
@@ -1412,7 +1417,7 @@ namespace OpGL
             }
             arr = new JArray(jarr);
             ret.Add("Objects", arr);
-            jarr = (JObject[])RoomDatas.Values.ToArray();
+            jarr = RoomDatas.Values.ToArray();
             arr = new JArray(jarr);
             ret.Add("Rooms", arr);
             JObject player = ActivePlayer.Save();
@@ -1459,7 +1464,7 @@ namespace OpGL
                     int x = (int)room["X"];
                     int y = (int)room["Y"];
                     int id = x + y * WidthRooms;
-                    RoomDatas.Add(id, room);
+                    RoomDatas.Add(id, (JObject)room);
                 }
             }
             //Load Scripts
