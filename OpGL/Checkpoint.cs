@@ -26,7 +26,7 @@ namespace OpGL
 
         public override void HandleCrewmanCollision(Crewman crewman)
         {
-            if (!Activated)
+            if (crewman.CurrentCheckpoint != this)
             {
                 if (crewman.CurrentCheckpoint != null)
                 {
@@ -50,10 +50,10 @@ namespace OpGL
 
         public void Activate(bool playSound = true)
         {
+            if (playSound)
+                ActivateSound?.Play();
             if (!Activated)
             {
-                if (playSound)
-                    ActivateSound?.Play();
                 Activated = true;
                 ResetAnimation();
                 Animation = ActivatedAnimation;

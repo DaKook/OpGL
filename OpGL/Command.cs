@@ -24,7 +24,7 @@ namespace OpGL
         }
 
         private static string[] presetcolors = new string[] { "cyan", "red", "yellow", "green", "purple", "blue", "gray", "terminal" };
-        private delegate Command cmd(Game game, string[] args);
+        private delegate Command cmd(Game game, string[] args, Script script);
         private static Dictionary<string, cmd> cmdTypes = new Dictionary<string, cmd> {
             { "say", SayCommand },
             { "text", TextCommand },
@@ -44,7 +44,7 @@ namespace OpGL
             { "changeai", ChangeAICommand }
        };
 
-        public static Script ParseScript(Game game, string script, string name = "")
+        public static Command[] ParseScript(Game game, string script, Script parent)
         {
             string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             List<Command> commands = new List<Command>();
@@ -70,12 +70,12 @@ namespace OpGL
                 }
 
                 if (cmdTypes.ContainsKey(args[0]))
-                    commands.Add(cmdTypes[args[0]](game, args));
+                    commands.Add(cmdTypes[args[0]](game, args, parent));
             }
-            return new Script(commands.ToArray(), name, script);
+            return commands.ToArray();
         }
 
-        private static Command SayCommand(Game game, string[] args)
+        private static Command SayCommand(Game game, string[] args, Script script)
         {
             Color sayTextBoxColor = Color.Gray;
             Crewman sayCrewman = game.SpriteFromName(args.ElementAtOrDefault(2)) as Crewman;
@@ -154,15 +154,15 @@ namespace OpGL
                 game.hudSprites.Add(sayTextBox);
                 squeak?.Play();
                 sayTextBox.Appear();
-                game.WaitingForAction = () =>
+                game.WaitingForAction = true;
+                script.WaitingForAction = () =>
                 {
                     sayTextBox.Disappear();
                     sayTextBox.Disappeared += (textBox) => game.hudSprites.Remove(textBox);
-                    game.CurrentScript.Continue();
                 };
             }, true);
         }
-        private static Command SqueakCommand(Game game, string[] args)
+        private static Command SqueakCommand(Game game, string[] args, Script script)
         {
             SoundEffect squeak = null;
             switch (args.ElementAtOrDefault(1))
@@ -198,7 +198,7 @@ namespace OpGL
                 squeak?.Play();
             }, false);
         }
-        private static Command TextCommand(Game game, string[] args)
+        private static Command TextCommand(Game game, string[] args, Script script)
         {
             Color txTextBoxColor = Color.Gray;
             Crewman sayCrewman = game.SpriteFromName(args.ElementAtOrDefault(1)) as Crewman;
@@ -252,7 +252,7 @@ namespace OpGL
                 game.hudSprites.Add(tb);
             });
         }
-        private static Command ChangeFontCommand(Game game, string[] args)
+        private static Command ChangeFontCommand(Game game, string[] args, Script script)
         {
             string fontTexture = args.ElementAtOrDefault(1);
             Texture newFont = game.TextureFromName(fontTexture);
@@ -265,15 +265,15 @@ namespace OpGL
             }
             return new Command(game, success, false);
         }
-        private static Command WaitCommand(Game game, string[] args)
+        private static Command WaitCommand(Game game, string[] args, Script script)
         {
             int.TryParse(args.ElementAtOrDefault(1), out int frames);
             return new Command(game, () =>
             {
-                game.DelayFrames = frames;
+                script.WaitingFrames = frames;
             }, true);
         }
-        private static Command PlayerControlCommand(Game game, string[] args)
+        private static Command PlayerControlCommand(Game game, string[] args, Script script)
         {
             bool.TryParse(args.ElementAtOrDefault(1), out bool pc);
             return new Command(game, () =>
@@ -281,7 +281,7 @@ namespace OpGL
                 game.PlayerControl = pc;
             });
         }
-        private static Command MoodCommand(Game game, string[] args)
+        private static Command MoodCommand(Game game, string[] args, Script script)
         {
             Crewman crewman = game.SpriteFromName(args[1]) as Crewman;
             if (crewman == null) crewman = game.ActivePlayer;
@@ -293,7 +293,7 @@ namespace OpGL
                     crewman.Sad = sad;
             });
         }
-        private static Command CheckpointCommand(Game game, string[] args)
+        private static Command CheckpointCommand(Game game, string[] args, Script script)
         {
             return new Command(game, () =>
             {
@@ -309,7 +309,7 @@ namespace OpGL
                 }
             });
         }
-        private static Command PositionCommand(Game game, string[] args)
+        private static Command PositionCommand(Game game, string[] args, Script script)
         {
             string p = args.ElementAtOrDefault(2);
             string c = args.ElementAtOrDefault(1);
@@ -341,7 +341,7 @@ namespace OpGL
                 }
             });
         }
-        private static Command SpeakCommand(Game game, string[] args)
+        private static Command SpeakCommand(Game game, string[] args, Script script)
         {
             return new Command(game, () =>
             {
@@ -349,14 +349,15 @@ namespace OpGL
                 {
                     VTextBox tb = game.TextBoxes.Last();
                     tb.Appear();
-                    game.WaitingForAction = () =>
+                    game.WaitingForAction = true;
+                    script.WaitingForAction = () =>
                     {
-                        game.CurrentScript.Continue();
+                        
                     };
                 }
             }, true);
         }
-        private static Command SpeakActiveCommand(Game game, string[] args)
+        private static Command SpeakActiveCommand(Game game, string[] args, Script script)
         {
             return new Command(game, () =>
             {
@@ -369,15 +370,16 @@ namespace OpGL
                         game.TextBoxes[i].Disappeared += (textBox) => game.hudSprites.Remove(textBox);
                     }
                     tb.Appear();
-                    game.WaitingForAction = () =>
+                    game.WaitingForAction = true;
+                    script.WaitingForAction = () =>
                     {
-                        game.CurrentScript.Continue();
+                        
                     };
                 }
 
             }, true);
         }
-        private static Command EndTextCommand(Game game, string[] args)
+        private static Command EndTextCommand(Game game, string[] args, Script script)
         {
             return new Command(game, () =>
             {
@@ -388,12 +390,12 @@ namespace OpGL
                 }
             });
         }
-        private static Command PlaySoundCommand(Game game, string[] args)
+        private static Command PlaySoundCommand(Game game, string[] args, Script script)
         {
             SoundEffect se = game.GetSound(args.LastOrDefault());
             return new Command(game, () => { se.Play(); }, false);
         }
-        private static Command AddSpriteCommand(Game game, string[] args)
+        private static Command AddSpriteCommand(Game game, string[] args, Script script)
         {
             int.TryParse(args.ElementAtOrDefault(2), out int x);
             int.TryParse(args.ElementAtOrDefault(3), out int y);
@@ -406,7 +408,7 @@ namespace OpGL
                 }
             }, false);
         }
-        private static Command ChangeAICommand(Game game, string[] args)
+        private static Command ChangeAICommand(Game game, string[] args, Script script)
         {
             Crewman crewman1 = game.SpriteFromName(args.ElementAtOrDefault(1)) as Crewman;
             Crewman crewman2 = game.SpriteFromName(args.ElementAtOrDefault(3)) as Crewman;

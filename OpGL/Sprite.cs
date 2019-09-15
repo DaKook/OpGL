@@ -298,6 +298,8 @@ namespace OpGL
                     // left
                     else if (PreviousX + ofX >= testFor.PreviousX + testFor.Width + ofXO)
                         return new CollisionData(false, X + ofX - (testFor.Right + ofXO), testFor);
+                    else if (this is Crewman && testFor is ScriptBox)
+                        return new CollisionData(true, 0, testFor);
                     if (!testFor.MultiplePositions) break;
                 }
                 if (!MultiplePositions) break;

@@ -10,14 +10,19 @@ namespace OpGL
     {
         private int currentLocation = 0;
 
+
         public delegate void FinishedDelegate(Script script);
         public event FinishedDelegate Finished;
+
+        public bool IsFinished { get; private set; }
 
         public string Name;
         public string Contents;
 
         public int WaitingFrames;
-        public bool WaitingForAction = false;
+        public Action WaitingForAction = null;
+
+        public List<VTextBox> TextBoxes = new List<VTextBox>();
 
         public Command[] Commands;
         public Script(Command[] commands, string name = "", string contents = "")
@@ -31,7 +36,10 @@ namespace OpGL
 
         public Script ExecuteFromBeginning()
         {
+            IsFinished = false;
             currentLocation = 0;
+            WaitingForAction = null;
+            WaitingFrames = 0;
             Continue();
             return this;
         }
@@ -40,11 +48,20 @@ namespace OpGL
         {
             if (currentLocation < Commands.Length)
                 Commands[currentLocation++].Execute();
+            else
+                currentLocation++;
             while (currentLocation < Commands.Length && (currentLocation == 0 || !Commands[currentLocation - 1].Wait))
             {
                 Commands[currentLocation++].Execute();
             }
-            if (Finished != null && currentLocation >= Commands.Length) Finished(this);
+            if (currentLocation >= Commands.Length && (currentLocation > Commands.Length || !Commands[currentLocation - 1].Wait))
+            {
+                Finished?.Invoke(this);
+                IsFinished = true;
+                currentLocation = 0;
+                WaitingForAction = null;
+                WaitingFrames = 0;
+            }
             return ;
         }
 

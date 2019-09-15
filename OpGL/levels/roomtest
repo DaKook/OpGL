@@ -3299,10 +3299,10 @@
 			{
 				"Type": "ScriptBox",
 				"X": 0.0,
-				"Y": 80.0,
+				"Y": 0.0,
 				"Texture": "box",
 				"Width": 40,
-				"Height": 22,
+				"Height": 30,
 				"Script": "script2"
 			}
 		  ]

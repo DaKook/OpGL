@@ -36,7 +36,6 @@ namespace OpGL
             if (crewman.CurrentTerminal == null || (crewman.CurrentTerminal != this && (Math.Abs(crewman.CurrentTerminal.CenterX - crewman.CenterX) > Math.Abs(CenterX - crewman.CenterX))))
             {
                 crewman.CurrentTerminal = this;
-                TextBox.Appear();
             }
         }
 

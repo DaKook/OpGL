@@ -30,6 +30,7 @@ namespace OpGL
             Count
         }
         private int[] inputs = new int[(int)Inputs.Count];
+        private List<Inputs> bufferInputs = new List<Inputs>();
         private int[] lastPressed = new int[(int)Inputs.Count];
         public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
             { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
@@ -65,11 +66,10 @@ namespace OpGL
             return script;
         }
 
-        public Action WaitingForAction = null;
-        public int DelayFrames;
         public bool PlayerControl = true;
         public bool Freeze = false;
-        public Script CurrentScript;
+        public bool WaitingForAction;
+        public List<Script> CurrentScripts = new List<Script>();
         public List<VTextBox> TextBoxes = new List<VTextBox>();
         private static Random r = new Random();
 
@@ -637,16 +637,9 @@ namespace OpGL
 
         private void GlControl_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Control && e.KeyCode == Keys.C)
-            {
-                sprites.Remove(ActivePlayer);
-                Clipboard.SetText(CurrentRoom.Save().ToString());
-                sprites.Add(ActivePlayer);
-            }
             if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
             {
-                inputs[(int)inputMap[e.KeyCode]]++;
-                lastPressed[(int)inputMap[e.KeyCode]] = FrameCount;
+                bufferInputs.Add(inputMap[e.KeyCode]);
             }
             if (!heldKeys.Contains(e.KeyCode))
                 heldKeys.Add(e.KeyCode);
@@ -824,6 +817,12 @@ namespace OpGL
 #if TEST
                 long fStart = stp.ElapsedTicks;
 #endif
+                for (int i = 0; i < bufferInputs.Count; i++)
+                {
+                    inputs[(int)bufferInputs[i]]++;
+                    lastPressed[(int)bufferInputs[i]] = FrameCount;
+                }
+                bufferInputs.Clear();
 
                 // begin frame
                 if (CurrentState == GameStates.Playing)
@@ -832,13 +831,6 @@ namespace OpGL
 
                     if (!Freeze && CurrentState == GameStates.Playing)
                         ProcessWorld();
-
-                    if (DelayFrames > 0)
-                    {
-                        DelayFrames -= 1;
-                        if (DelayFrames == 0)
-                            CurrentScript.Continue();
-                    }
 
                     for (int i = hudSprites.Count - 1; i >= 0; i--)
                     {
@@ -1042,7 +1034,7 @@ namespace OpGL
         {
             if (isEditor && IsInputActive(Inputs.Escape))
             {
-                CurrentScript = null;
+                CurrentScripts.Clear();
                 foreach (VTextBox box in TextBoxes)
                 {
                     box.Disappear();
@@ -1070,16 +1062,20 @@ namespace OpGL
                     Terminal t = ActivePlayer.CurrentTerminal;
                     ActivePlayer.CurrentTerminal = null;
                     Terminal.TextBox.Disappear();
-                    CurrentScript = t.Script.ExecuteFromBeginning();
+                    Script s = t.Script;
                     if (t.Repeat)
-                        CurrentScript.Finished += (script) => {
+                        s.Finished += (script) => {
                             t.AlreadyUsed = false;
                             if (t.IsOverlapping(ActivePlayer))
                             {
                                 ActivePlayer.CurrentTerminal = t;
                                 Terminal.TextBox.Appear();
                             }
+                            CurrentScripts.Remove(s);
                         };
+                    s.ExecuteFromBeginning();
+                    if (!s.IsFinished)
+                        CurrentScripts.Add(s);
                 }
             }
 
@@ -1087,11 +1083,19 @@ namespace OpGL
             {
                 if (IsInputNew(Inputs.Jump))
                 {
-                    if (WaitingForAction != null)
+                    if (WaitingForAction)
                     {
-                        Action exec = WaitingForAction;
-                        WaitingForAction = null;
-                        exec();
+                        WaitingForAction = false;
+                        for (int i = CurrentScripts.Count - 1; i >= 0; i--)
+                        {
+                            Script script = CurrentScripts[i];
+                            if (script.WaitingForAction != null)
+                            {
+                                script.WaitingForAction();
+                                script.WaitingForAction = null;
+                                script.Continue();
+                            }
+                        }
                     }
                     else if (PlayerControl)
                         ActivePlayer.FlipOrJump();
@@ -1171,6 +1175,10 @@ namespace OpGL
             {
                 ActivePlayer.CurrentTerminal = null;
                 Terminal.TextBox.Disappear();
+            }
+            else if (ActivePlayer.CurrentTerminal != null && !Terminal.TextBox.Visible)
+            {
+                Terminal.TextBox.Appear();
             }
             if (ActivePlayer.IsWarping == 0)
             {
@@ -1460,8 +1468,9 @@ namespace OpGL
                 {
                     string name = Scripts.Keys[i];
                     string contents = scriptContents[name];
-                    Scripts.Values[i].Commands = Command.ParseScript(this, contents).Commands;
-                    Scripts.Values[i].Contents = contents;
+                    Script script = Scripts.Values[i];
+                    script.Commands = Command.ParseScript(this, contents, script);
+                    script.Contents = contents;
                 }
             }
             //Load Player
@@ -1626,7 +1635,7 @@ namespace OpGL
                 int width = (int)loadFrom["Width"];
                 int height = (int)loadFrom["Height"];
                 string script = (string)loadFrom["Script"];
-                s = new ScriptBox(x, y, texture, width, height, ScriptFromName(script));
+                s = new ScriptBox(x, y, texture, width, height, ScriptFromName(script), this);
             }
 
             else s = null;

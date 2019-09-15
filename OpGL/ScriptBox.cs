@@ -11,8 +11,9 @@ namespace OpGL
     public class ScriptBox : BoxSprite
     {
         Script Script;
-        bool Activated;
-        public ScriptBox(float x, float y, Texture texture, int widthTiles, int heightTiles, Script script) : base(x, y, texture, widthTiles, heightTiles)
+        Game game;
+        public bool Activated;
+        public ScriptBox(float x, float y, Texture texture, int widthTiles, int heightTiles, Script script, Game owner) : base(x, y, texture, widthTiles, heightTiles)
         {
             Script = script;
             Solid = SolidState.Entity;
@@ -20,13 +21,17 @@ namespace OpGL
             Static = true;
             Visible = false;
             Activated = false;
+            game = owner;
         }
 
         public override void HandleCrewmanCollision(Crewman crewman)
         {
             if (!Activated)
             {
+                Script.Finished += (script) => { game.CurrentScripts.Remove(Script); };
                 Script.ExecuteFromBeginning();
+                if (!Script.IsFinished)
+                    game.CurrentScripts.Add(Script);
                 Activated = true;
             }
         }
