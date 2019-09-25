@@ -119,6 +119,7 @@
     <Compile Include="Terminal.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="Tile.cs" />
+    <Compile Include="Number.cs" />
     <Compile Include="VTextBox.cs" />
     <Compile Include="WarpLine.cs" />
     <Compile Include="WarpToken.cs" />

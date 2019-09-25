@@ -107,7 +107,8 @@ namespace OpGL
         public Texture Texture { get; protected set; }
         public virtual uint VAO { get => Texture.baseVAO; set { } }
 
-        public int IsWarping = 0;
+        public bool IsWarpingV;
+        public bool IsWarpingH;
 
         public Matrix4x4f LocMatrix;
         public Matrix4x4f TexMatrix;

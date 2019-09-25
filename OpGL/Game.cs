@@ -72,6 +72,7 @@ namespace OpGL
         public List<Script> CurrentScripts = new List<Script>();
         public List<VTextBox> TextBoxes = new List<VTextBox>();
         private static Random r = new Random();
+        public SortedList<string, Number> Vars = new SortedList<string, Number>();
 
         // OpenGL
         private GlControl glControl;
@@ -111,7 +112,9 @@ namespace OpGL
         public Music CurrentSong;
 
         // Editing
-        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal }
+        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal,
+            Select
+        }
         private Tools tool = Tools.Ground;
         private enum FocusOptions { Level, Tileset, Dialog }
         private FocusOptions CurrentEditingFocus = FocusOptions.Level;
@@ -140,6 +143,9 @@ namespace OpGL
         private FullImage tileset;
         private BoxSprite tileSelection;
         private bool isEditor;
+        private bool selecting;
+        private List<Sprite> selectedSprites = new List<Sprite>();
+        private PointF selectOrigin;
 
         // Rooms
         public Room CurrentRoom;
@@ -887,30 +893,45 @@ namespace OpGL
             }
             if (CurrentEditingFocus == FocusOptions.Level)
             {
-                if (tool == Tools.Tiles)
+                if (heldKeys.Contains(Keys.Control) || tool == Tools.Select || selecting || selectedSprites.Count > 0)
                 {
-                    if (leftMouse || rightMouse)
+                    if (leftMouse && !selecting && selectedSprites.Count == 0)
                     {
-                        TileTool(selection.X, selection.Y, leftMouse);
+                        selecting = true;
+                        selectOrigin = new PointF(selection.X, selection.Y);
                     }
-                    else if (middleMouse)
+                    else if (!leftMouse && selecting && selectedSprites.Count == 0)
                     {
-                        Tile t = null;
-                        int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
-                        if (tiles.ContainsKey(l))
-                            t = tiles[l];
-                        if (t != null)
-                        {
-                            currentTexture = t.Texture;
-                            currentTile = new Point(t.TextureX, t.TextureY);
-                        }
+
                     }
                 }
-                else if (tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes && autoTiles != null)
+                else
                 {
-                    if (leftMouse || rightMouse)
+                    if (tool == Tools.Tiles)
                     {
-                        AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
+                        if (leftMouse || rightMouse)
+                        {
+                            TileTool(selection.X, selection.Y, leftMouse);
+                        }
+                        else if (middleMouse)
+                        {
+                            Tile t = null;
+                            int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
+                            if (tiles.ContainsKey(l))
+                                t = tiles[l];
+                            if (t != null)
+                            {
+                                currentTexture = t.Texture;
+                                currentTile = new Point(t.TextureX, t.TextureY);
+                            }
+                        }
+                    }
+                    else if (tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes && autoTiles != null)
+                    {
+                        if (leftMouse || rightMouse)
+                        {
+                            AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
+                        }
                     }
                 }
             }
@@ -1113,6 +1134,10 @@ namespace OpGL
             if (isEditor && CurrentState == GameStates.Editing)
             {
                 sprites.Remove(ActivePlayer);
+                ActivePlayer.IsWarpingH = false;
+                ActivePlayer.IsWarpingV = false;
+                ActivePlayer.MultiplePositions = false;
+                ActivePlayer.Offsets.Clear();
                 RoomDatas[FocusedRoom] = CurrentRoom.Save();
             }
             FocusedRoom = x + y * WidthRooms;
@@ -1185,7 +1210,7 @@ namespace OpGL
             {
                 Terminal.TextBox.Appear();
             }
-            if (ActivePlayer.IsWarping == 0)
+            if (!ActivePlayer.IsWarpingV && !ActivePlayer.IsWarpingH)
             {
                 if (ActivePlayer.CenterX > (CurrentRoom.X + 1) * Room.ROOM_WIDTH)
                     LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);

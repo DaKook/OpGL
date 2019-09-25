@@ -23,6 +23,36 @@ namespace OpGL
             action();
         }
 
+        private static Number getNumber(string s, Game game)
+        {
+            if (s.StartsWith("?"))
+            {
+                s = s.Substring(1);
+                string[] ss = s.Split(':');
+                if (ss.Length == 2)
+                {
+                    Sprite sprite = game.SpriteFromName(ss[0]);
+                    if (sprite != null)
+                    {
+                        switch (ss[1].ToLower())
+                        {
+                            case "x":
+                                return new Number(s, sprite, Number.SourceTypes.X);
+                            case "y":
+                                return new Number(s, sprite, Number.SourceTypes.Y);
+                        }
+                    }
+                }
+            }
+            if (game.Vars.ContainsKey(s))
+                return game.Vars[s];
+            else
+            {
+                Number.TryParse(s, out Number ret);
+                return ret;
+            }
+        }
+
         private static string[] presetcolors = new string[] { "cyan", "red", "yellow", "green", "purple", "blue", "gray", "terminal" };
         private delegate Command cmd(Game game, string[] args, Script script);
         private static Dictionary<string, cmd> cmdTypes = new Dictionary<string, cmd> {
@@ -243,8 +273,8 @@ namespace OpGL
                         break;
                 }
             }
-            int.TryParse(args.ElementAtOrDefault(2 + txArgOffset), out int txX);
-            int.TryParse(args.ElementAtOrDefault(3 + txArgOffset), out int txY);
+            Number txX = getNumber(args.ElementAtOrDefault(2 + txArgOffset), game);
+            Number txY = getNumber(args.ElementAtOrDefault(3 + txArgOffset), game);
             return new Command(game, () =>
             {
                 VTextBox tb = new VTextBox(txX, txY, game.FontTexture, args.Last(), txTextBoxColor);
@@ -267,10 +297,10 @@ namespace OpGL
         }
         private static Command WaitCommand(Game game, string[] args, Script script)
         {
-            int.TryParse(args.ElementAtOrDefault(1), out int frames);
+            Number frames = getNumber(args.LastOrDefault(), game);
             return new Command(game, () =>
             {
-                script.WaitingFrames = frames;
+                script.WaitingFrames = (int)frames;
             }, true);
         }
         private static Command PlayerControlCommand(Game game, string[] args, Script script)
@@ -397,8 +427,8 @@ namespace OpGL
         }
         private static Command AddSpriteCommand(Game game, string[] args, Script script)
         {
-            int.TryParse(args.ElementAtOrDefault(2), out int x);
-            int.TryParse(args.ElementAtOrDefault(3), out int y);
+            Number x = getNumber(args.ElementAtOrDefault(2), game);
+            Number y = getNumber(args.ElementAtOrDefault(3), game);
             Sprite s = game.SpriteFromName(args.ElementAtOrDefault(1));
             return new Command(game, () =>
             {

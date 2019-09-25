@@ -210,6 +210,8 @@ namespace OpGL
                     YVelocity = 0;
                     PreviousX = X;
                     PreviousY = Y;
+                    MultiplePositions = false;
+                    Offsets.Clear();
                     Respawned?.Invoke();
                 }
             }

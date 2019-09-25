@@ -1,8 +1,8 @@
 {
   "Width": 2,
   "Height": 1,
-  "StartX": 0,
-  "StartY": 0,
+  "StartX": 20,
+  "StartY": 20,
   "StartRoomX": 0,
   "StartRoomY": 0,
   "Scripts": [
@@ -12,7 +12,7 @@
     },
     {
       "Name": "script2",
-      "Contents": "addsprite,Vermilion,20,20\nchangeai,Vermilion,follow,player"
+      "Contents": "addsprite,Vermilion,?Vermilion:X,?Vermilion:Y\nchangeai,Vermilion,follow,player"
     }
   ],
   "Objects": [
@@ -41,6 +41,24 @@
       "X": 0,
       "Y": 0,
       "Objects": [
+		{
+		  "Type": "WarpLine",
+		  "X": 320.0,
+		  "Y": 8.0,
+		  "Length": 3,
+		  "Horizontal": false,
+		  "OffsetX": -320.0,
+		  "OffsetY": 0.0
+		},
+		{
+		  "Type": "WarpLine",
+		  "X": 0.0,
+		  "Y": 8.0,
+		  "Length": 3,
+		  "Horizontal": false,
+		  "OffsetX": 320.0,
+		  "OffsetY": 0.0
+		},
         {
           "Type": "Tile",
           "X": 24.0,

@@ -73,7 +73,8 @@ namespace OpGL
                     if (sprite.Offsets.Count == 0) sprite.MultiplePositions = false;
                     Warping.RemoveAt(i);
                     warpingDatas.RemoveAt(i);
-                    sprite.IsWarping -= 1;
+                    if (Horizontal) sprite.IsWarpingV = false;
+                    else sprite.IsWarpingH = false;
                 }
             }
         }
@@ -83,10 +84,13 @@ namespace OpGL
             Sprite s = cd.CollidedWith;
             if (!Warping.Contains(s))
             {
+                if (Horizontal && s.IsWarpingV) return;
+                else if (!Horizontal && s.IsWarpingH) return;
                 s.Offsets.Add(Offset);
                 s.MultiplePositions = true;
                 Warping.Add(s);
-                s.IsWarping += 1;
+                if (Horizontal) s.IsWarpingV = true;
+                else s.IsWarpingH = true;
                 warpingDatas.Add(Math.Sign(cd.Distance));
             }
         }
