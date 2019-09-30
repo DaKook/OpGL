@@ -18,6 +18,8 @@ namespace OpGL
         public int FrameCount { get => frames.Length; }
         public int LoopStart { get; set; } = 0;
 
+        public static Animation Static(int x, int y, Texture texture) => new Animation(new Point[] { new Point(x, y) }, new Rectangle(0, 0, texture.TileSizeX, texture.TileSizeY), texture);
+
         public Animation(Point[] frames, Rectangle hitbox, Texture texture)
         {
             this.frames = new Point[frames.Length];

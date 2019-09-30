@@ -85,6 +85,8 @@
   <ItemGroup>
     <Compile Include="Animation.cs" />
     <Compile Include="AutoTileSettings.cs" />
+    <Compile Include="BackgroundSprite.cs" />
+    <Compile Include="BGSpriteCollection.cs" />
     <Compile Include="BoxSprite.cs" />
     <Compile Include="Checkpoint.cs" />
     <Compile Include="CollisionData.cs" />

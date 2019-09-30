@@ -34,6 +34,12 @@
       "Squeak": "crew6"
     }
   ],
+  "Groups": [
+	{
+	  "Rooms": [ 0, 0, 1, 0 ],
+	  "Scroll": 0
+	}
+  ]
   "Rooms": [
     {
       "EnterScript": "",
@@ -4708,17 +4714,17 @@
     "Type": "Crewman",
     "X": 123.375,
     "Y": 139.0,
-    "Texture": "viridian",
+    "Texture": "vitellary",
     "Standing": "Standing",
     "Walking": "Walking",
     "Falling": "Falling",
     "Jumping": "Jumping",
     "Dying": "Dying",
-    "Name": "Viridian",
-    "TextBox": -5987073,
+    "Name": "Vitellary",
+    "TextBox": 16777094,
     "FlipX": false,
     "Sad": false,
     "Gravity": 0.6875,
-    "Squeak": "crew1"
+    "Squeak": "crew4"
   }
 }

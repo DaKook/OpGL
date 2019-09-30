@@ -187,6 +187,7 @@ namespace OpGL
             get => CurrentRoom.Objects;
         }
         public SpriteCollection hudSprites;
+        public BGSpriteCollection BGSprites;
         public SortedList<string, Sprite> UserAccessSprites = new SortedList<string, Sprite>();
         public Sprite SpriteFromName(string name)
         {
@@ -240,6 +241,13 @@ namespace OpGL
             Texture platforms = TextureFromName("platforms");
             Texture sprites32 = TextureFromName("sprites32");
             Texture gravityline = TextureFromName("gravityline");
+            Texture background = TextureFromName("background");
+            BGSprites = new BGSpriteCollection(background);
+            BGSprites.Populate(20, new Animation[] { Animation.Static(2, 0, background), background.AnimationFromName("Star1") }, 1, new PointF(3, 0));
+            BGSprites.Populate(20, new Animation[] { Animation.Static(3, 0, background), background.AnimationFromName("Star2") }, 1, new PointF(2, 0));
+            BGSprites.Populate(20, new Animation[] { Animation.Static(4, 0, background), background.AnimationFromName("Star3") }, 1, new PointF(1, 0));
+            BGSprites.Color = Color.Gray;
+            //BGSprites.Populate(2000, new Animation[] { background.AnimationFromName("Snow1"), background.AnimationFromName("Snow2"), background.AnimationFromName("Snow3"), background.AnimationFromName("Snow4") }, 1, new PointF(14f, 1f));
             FontTexture = TextureFromName("font");
             BoxTexture = TextureFromName("box");
             Crewman.Flip1 = GetSound("jump");
@@ -848,6 +856,7 @@ namespace OpGL
                         Sprite d = hudSprites[i];
                         d.Process();
                     }
+                    BGSprites.Process();
                 }
                 else if (CurrentState == GameStates.Editing)
                 {
@@ -1272,7 +1281,7 @@ namespace OpGL
                     if (c.CollidedWith is Platform)
                     {
                         // if a previous collision means it should be bounced
-                        if (groundCollisions.Any((a) => a.CollidedWith.Solid == Sprite.SolidState.Ground && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
+                        if (groundCollisions.Any((a) => a.CollidedWith.Solid == Sprite.SolidState.Ground && a.Vertical == c.Vertical && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
                         {
                             c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
                             if (drawable is Platform) // undo duplicate direction flipping
@@ -1396,6 +1405,10 @@ namespace OpGL
                 }
                 cam.Translate(-(cameraX + offsetX), -(cameraY + offsetY), 0);
                 int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
+
+                BGSprites.RenderPrep(viewMatrixLoc, camera);
+                BGSprites.Render();
+
                 Gl.UniformMatrix4f(viewMatrixLoc, 1, false, cam);
                 sprites.Render();
 

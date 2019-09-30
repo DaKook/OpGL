@@ -40,6 +40,10 @@ namespace OpGL
                                 return new Number(s, sprite, Number.SourceTypes.X);
                             case "y":
                                 return new Number(s, sprite, Number.SourceTypes.Y);
+                            case "checkpointx":
+                                return new Number(s, sprite, Number.SourceTypes.CheckX);
+                            case "checkpointy":
+                                return new Number(s, sprite, Number.SourceTypes.CheckY);
                         }
                     }
                 }

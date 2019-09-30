@@ -27,7 +27,7 @@ namespace OpGL
             AddRange(drawables);
         }
 
-        public void Render()
+        public virtual void Render()
         {
             int modelLoc = -1;
             int texLoc = -1;
