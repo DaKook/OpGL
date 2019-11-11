@@ -62,7 +62,7 @@ namespace OpGL
         public SortedList<string, Script> Scripts = new SortedList<string, Script>();
         public Script ScriptFromName(string name)
         {
-            Scripts.TryGetValue(name, out Script script);
+            Scripts.TryGetValue(name ?? "", out Script script);
             return script;
         }
 
@@ -121,7 +121,6 @@ namespace OpGL
         private BoxSprite selection;
         private Point currentTile = new Point(0, 0);
         private Texture currentTexture;
-        private SortedList<int, Tile> tiles = new SortedList<int, Tile>();
         private AutoTileSettings autoTiles
         {
             get
@@ -153,6 +152,7 @@ namespace OpGL
         public int FocusedRoom;
         public int WidthRooms;
         public int HeightRooms;
+        public List<RoomGroup> RoomGroups = new List<RoomGroup>();
 
         public int StartX;
         public int StartY;
@@ -176,6 +176,7 @@ namespace OpGL
         private float cameraY;
         private int flashFrames;
         private bool isFlashing = false;
+        private Color flashColour = Color.White;
         private int shakeFrames;
         private int shakeIntensity;
         public const int RESOLUTION_WIDTH = 320;
@@ -857,6 +858,15 @@ namespace OpGL
                         d.Process();
                     }
                     BGSprites.Process();
+                    for (int i = 0; i < CurrentScripts.Count; i++)
+                    {
+                        Script script = CurrentScripts[i];
+                        script.Process();
+                        if (script.IsFinished)
+                        {
+                            CurrentScripts.RemoveAt(i--);
+                        }
+                    }
                 }
                 else if (CurrentState == GameStates.Editing)
                 {
@@ -878,16 +888,25 @@ namespace OpGL
             }
         }
 
-        private Tile GetTile(int x, int y)
+        private Tile GetTile(int x, int y, int layer = -2)
         {
-            if (tiles.ContainsKey(x + (y * RESOLUTION_WIDTH)))
-                return tiles[x + (y * RESOLUTION_WIDTH)];
+
+            Tile ret = null;
+            List<Sprite> spr = sprites.GetPotentialColliders(x, y);
+            if (spr.Count == 0) return null;
             else
-                return null;
+            {
+                for (int i = 0; i < spr.Count; i++)
+                {
+                    if (spr[i] is Tile && spr[i].Layer == layer) return spr[i] as Tile;
+                }
+            }
+            return ret;
         }
 
         private void HandleEditingInputs()
         {
+            sprites.SortForCollisions();
             if (mouseX > -1 && mouseY > -1 || CurrentEditingFocus == FocusOptions.Dialog)
             {
                 selection.Visible = true;
@@ -920,14 +939,11 @@ namespace OpGL
                     {
                         if (leftMouse || rightMouse)
                         {
-                            TileTool(selection.X, selection.Y, leftMouse);
+                            TileTool(selection.X + cameraX, selection.Y + cameraY, leftMouse);
                         }
                         else if (middleMouse)
                         {
-                            Tile t = null;
-                            int l = (int)(selection.X + selection.Y * RESOLUTION_WIDTH);
-                            if (tiles.ContainsKey(l))
-                                t = tiles[l];
+                            Tile t = GetTile((int)(selection.X + cameraX), (int)(selection.Y + cameraY));
                             if (t != null)
                             {
                                 currentTexture = t.Texture;
@@ -939,7 +955,7 @@ namespace OpGL
                     {
                         if (leftMouse || rightMouse)
                         {
-                            AutoTilesTool(selection.X, selection.Y, leftMouse, tool == Tools.Background);
+                            AutoTilesTool(selection.X + cameraX, selection.Y + cameraY, leftMouse, tool == Tools.Background);
                         }
                     }
                 }
@@ -999,35 +1015,31 @@ namespace OpGL
 
         private void TileTool(float x, float y, bool leftClick)
         {
-            int l = (int)(x + y * RESOLUTION_WIDTH);
-            if (tiles.ContainsKey(l))
+            Tile tile = GetTile((int)x, (int)y);
+            if (tile != null)
             {
-                sprites.Remove(tiles[l]);
-                tiles.Remove(l);
+                sprites.RemoveFromCollisions(tile);
             }
             if (leftClick)
             {
                 Tile t = new Tile((int)x, (int)y, currentTexture, currentTile.X, currentTile.Y);
-                sprites.Add(t);
-                tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
+                sprites.AddForCollisions(t);
             }
         }
 
         private void AutoTilesTool(float x, float y, bool leftClick, bool isBackground)
         {
-            int l = (int)(x + y * RESOLUTION_WIDTH);
-            if (tiles.ContainsKey(l))
+            Tile tile = GetTile((int)x, (int)y);
+            if (tile != null)
             {
-                sprites.Remove(tiles[l]);
-                tiles.Remove(l);
+                sprites.RemoveFromCollisions(tile);
             }
             if (leftClick)
             {
-                Point p = autoTiles.GetTile(AutoTilesPredicate((int)selection.X, (int)selection.Y));
+                Point p = autoTiles.GetTile(AutoTilesPredicate((int)x, (int)y));
                 Tile t = new Tile((int)x, (int)y, currentTexture, p.X, p.Y);
                 t.Tag = autoTiles.Name;
-                tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
-                sprites.Add(t);
+                sprites.AddForCollisions(t);
             }
             for (int i = -1; i < 2; i++)
             {
@@ -1039,14 +1051,15 @@ namespace OpGL
                         int yy = (int)y + (j * 8);
                         if (GetTile(xx, yy)?.Tag == autoTiles.Name)
                         {
-                            l = xx + yy * RESOLUTION_WIDTH;
-                            sprites.Remove(tiles[l]);
-                            tiles.Remove(l);
+                            tile = GetTile(xx, yy);
+                            if (tile != null)
+                            {
+                                sprites.RemoveFromCollisions(tile);
+                            }
                             Point p = autoTiles.GetTile(AutoTilesPredicate(xx, yy));
                             Tile t = new Tile(xx, yy, currentTexture, p.X, p.Y);
                             t.Tag = autoTiles.Name;
-                            tiles.Add((int)(t.X + t.Y * RESOLUTION_WIDTH), t);
-                            sprites.Add(t);
+                            sprites.AddForCollisions(t);
                         }
                     }
                 }
@@ -1106,7 +1119,6 @@ namespace OpGL
                                 ActivePlayer.CurrentTerminal = t;
                                 Terminal.TextBox.Appear();
                             }
-                            CurrentScripts.Remove(s);
                         };
                     s.ExecuteFromBeginning();
                     if (!s.IsFinished)
@@ -1157,21 +1169,23 @@ namespace OpGL
                 r.Y = y;
                 RoomDatas.Add(FocusedRoom, r.Save());
             }
-            CurrentRoom = LoadRoom(RoomDatas[FocusedRoom]);
+            CurrentRoom = Room.LoadRoom(RoomDatas[FocusedRoom], this);
             cameraX = CurrentRoom.X * Room.ROOM_WIDTH;
             cameraY = CurrentRoom.Y * Room.ROOM_HEIGHT;
             CurrentRoom.Objects.Add(ActivePlayer);
             ActivePlayer.CenterX = (ActivePlayer.CenterX + Room.ROOM_WIDTH) % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
             ActivePlayer.CenterY = (ActivePlayer.CenterY + Room.ROOM_HEIGHT) % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
-            for (int i = 0; i < sprites.Count; i++)
-            {
-                if (sprites[i] is Tile)
-                {
-                    int l = (int)(sprites[i].X + sprites[i].Y * RESOLUTION_WIDTH);
-                    if (tiles.ContainsKey(l)) tiles.Remove(l);
-                    tiles.Add(l, sprites[i] as Tile);
-                }
-            }
+
+            //for (int i = 0; i < sprites.Count; i++)
+            //{
+            //    if (sprites[i] is Tile)
+            //    {
+            //        int l = (int)(sprites[i].X + sprites[i].Y * RESOLUTION_WIDTH);
+            //        if (tiles.ContainsKey(l)) tiles.Remove(l);
+            //        tiles.Add(l, sprites[i] as Tile);
+            //    }
+            //}
+
             //ActivePlayer.PreviousX = ActivePlayer.PreviousX % Room.ROOM_WIDTH + CurrentRoom.X * Room.ROOM_WIDTH;
             //ActivePlayer.PreviousY = ActivePlayer.PreviousY % Room.ROOM_HEIGHT + CurrentRoom.Y * Room.ROOM_HEIGHT;
         }
@@ -1351,9 +1365,10 @@ namespace OpGL
         }
         public void StopGame() { IsPlaying = false; }
 
-        public void Flash(int frames)
+        public void Flash(int frames, int r = 255, int g = 255, int b = 255)
         {
             flashFrames = frames;
+            flashColour = Color.FromArgb(r, g, b);
         }
         public void Shake(int frames, int intensity = 2)
         {
@@ -1381,7 +1396,7 @@ namespace OpGL
                 if (!isFlashing)
                 {
                     isFlashing = true;
-                    Gl.ClearColor(1f, 1f, 1f, 1f);
+                    Gl.ClearColor((float)flashColour.R / 255, (float)flashColour.G / 255, (float)flashColour.B / 255, 1f);
                 }
                 flashFrames -= 1;
             }
@@ -1489,7 +1504,7 @@ namespace OpGL
                 JArray objects = (JArray)loadFrom["Objects"];
                 foreach (JToken sprite in objects)
                 {
-                    Sprite s = LoadSprite(sprite);
+                    Sprite s = Sprite.LoadSprite(sprite, this);
                     if (s != null)
                         UserAccessSprites.Add(s.Name, s);
                 }
@@ -1518,172 +1533,39 @@ namespace OpGL
             }
             //Load Player
             {
-                Crewman player = LoadSprite(loadFrom["Player"]) as Crewman;
+                Crewman player = Sprite.LoadSprite(loadFrom["Player"], this) as Crewman;
                 SetPlayer(player);
                 ActivePlayer.X = startX;
                 ActivePlayer.Y = startY;
                 LoadRoom(startRoomX, startRoomY);
             }
+            //Load Room Groups
+            {
+                JArray groups = (JArray)loadFrom["Groups"];
+                if (groups != null)
+                    foreach (JToken group in groups)
+                    {
+                        string enterScript = (string)group["EnterScript"];
+                        string exitScript = (string)group["ExitScript"];
+                        JArray corners = (JArray)group["Rooms"];
+                        if (corners.Count == 4)
+                        {
+                            RoomGroup newGroup = new RoomGroup(ScriptFromName(enterScript), ScriptFromName(exitScript));
+                            Point topLeft = new Point((int)corners[0], (int)corners[1]);
+                            Point bottomRight = new Point((int)corners[2], (int)corners[3]);
+                            for (int x = topLeft.X; x < bottomRight.X + 1; x++)
+                            {
+                                for (int y = topLeft.Y; y < bottomRight.Y + 1; y++)
+                                {
+                                    int id = y * WidthRooms + x;
+                                    newGroup.RoomDatas.Add(id, RoomDatas[id]);
+                                }
+                            }
+                        }
+                    }
+            }
         }
 
-        public Room LoadRoom(JToken loadFrom, int xOffset = 0, int yOffset = 0)
-        {
-            JArray sArr = loadFrom["Objects"] as JArray;
-            Room ret = new Room(new SpriteCollection(), null, null);
-            ret.X = (int)loadFrom["X"];
-            ret.Y = (int)loadFrom["Y"];
-            foreach (JToken sprite in sArr)
-            {
-                Sprite s = LoadSprite(sprite);
-                s.X += ret.X * Room.ROOM_WIDTH + xOffset;
-                s.Y += ret.Y * Room.ROOM_HEIGHT + yOffset;
-                s.PreviousX = s.X;
-                s.PreviousY = s.Y;
-                if (s != null)
-                    ret.Objects.Add(s);
-                if (s is Checkpoint && ActivePlayer.CurrentCheckpoint != null && s.X == ActivePlayer.CurrentCheckpoint.X && s.Y == ActivePlayer.CurrentCheckpoint.Y)
-                {
-                    (s as Checkpoint).Activate(false);
-                    ActivePlayer.CurrentCheckpoint = s as Checkpoint;
-                }
-            }
-            ret.EnterScript = ScriptFromName((string)loadFrom["EnterScript"]) ?? Script.Empty;
-            ret.ExitScript = ScriptFromName((string)loadFrom["ExitScript"]) ?? Script.Empty;
-            return ret;
-        }
-
-        public Sprite LoadSprite(JToken loadFrom)
-        {
-            string type = (string)loadFrom["Type"];
-            //Type t = typeof(Sprite);
-            Sprite s;
-            float x = (float)loadFrom["X"];
-            float y = (float)loadFrom["Y"];
-            string textureName = (string)loadFrom["Texture"];
-            Texture texture = TextureFromName(textureName ?? "");
-            if (type == "Tile")
-            {
-                int tileX = (int)loadFrom["TileX"];
-                int tileY = (int)loadFrom["TileY"];
-                string tag = (string)loadFrom["Tag"];
-                s = new Tile((int)x, (int)y, texture, tileX, tileY) { Tag = tag };
-            }
-            else if (type == "Enemy")
-            {
-                string animationName = (string)loadFrom["Animation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
-                string name = (string)loadFrom["Name"];
-                int color = (int)loadFrom["Color"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
-                s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, Color.FromArgb(color));
-                s.Name = name;
-                (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "Crewman")
-            {
-                string standName = (string)loadFrom["Standing"];
-                string walkName = (string)loadFrom["Walking"];
-                string fallName = (string)loadFrom["Falling"];
-                string jumpName = (string)loadFrom["Jumping"];
-                string dieName = (string)loadFrom["Dying"];
-                string name = (string)loadFrom["Name"];
-                int textBoxColor = (int)loadFrom["TextBox"];
-                bool sad = (bool)loadFrom["Sad"];
-                float gravity = (float)loadFrom["Gravity"];
-                bool flipX = (bool)loadFrom["FlipX"];
-                string squeakName = (string)loadFrom["Squeak"];
-                s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
-                (s as Crewman).Sad = sad;
-                (s as Crewman).Squeak = GetSound(squeakName);
-                s.Gravity = gravity;
-                s.FlipX = flipX;
-            }
-            else if (type == "Checkpoint")
-            {
-                string deactivatedName = (string)loadFrom["Deactivated"];
-                string activatedName = (string)loadFrom["Activated"];
-                bool flipX = (bool)loadFrom["FlipX"];
-                bool flipY = (bool)loadFrom["FlipY"];
-                s = new Checkpoint(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), flipX, flipY);
-            }
-            else if (type == "Platform")
-            {
-                string animationName = (string)loadFrom["Animation"];
-                string disappearName = (string)loadFrom["DisappearAnimation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
-                float conveyor = (float)loadFrom["Conveyor"];
-                string name = (string)loadFrom["Name"];
-                bool disappear = (bool)loadFrom["Disappear"];
-                int color = (int)loadFrom["Color"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
-                s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
-                s.Name = name;
-                s.Color = Color.FromArgb(color);
-                (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "Terminal")
-            {
-                string deactivatedName = (string)loadFrom["Deactivated"];
-                string activatedName = (string)loadFrom["Activated"];
-                string script = (string)loadFrom["Script"];
-                bool repeat = (bool)loadFrom["Repeat"];
-                bool flipX = (bool)loadFrom["FlipX"];
-                bool flipY = (bool)loadFrom["FlipY"];
-                s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), ScriptFromName(script), repeat);
-                s.FlipX = flipX;
-                s.FlipY = flipY;
-            }
-            else if (type == "GravityLine")
-            {
-                int length = (int)loadFrom["Length"];
-                bool horizontal = (bool)loadFrom["Horizontal"];
-                string animationName = (string)loadFrom["Animation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
-                s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
-                (s as GravityLine).XSpeed = xSpeed;
-                (s as GravityLine).YSpeed = ySpeed;
-                (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "WarpLine")
-            {
-                int length = (int)loadFrom["Length"];
-                bool horizontal = (bool)loadFrom["Horizontal"];
-                float offX = (float)loadFrom["OffsetX"];
-                float offY = (float)loadFrom["OffsetY"];
-                s = new WarpLine(x, y, length, horizontal, offX, offY);
-            }
-            else if (type == "WarpToken")
-            {
-                Animation animation = texture.AnimationFromName((string)loadFrom["Animation"]);
-                float outX = (float)loadFrom["OutX"];
-                float outY = (float)loadFrom["OutY"];
-                int settings = (int)loadFrom["Flip"];
-                s = new WarpToken(x, y, texture, animation, outX, outY, this, (WarpToken.FlipSettings)settings);
-            }
-            else if (type == "ScriptBox")
-            {
-                int width = (int)loadFrom["Width"];
-                int height = (int)loadFrom["Height"];
-                string script = (string)loadFrom["Script"];
-                s = new ScriptBox(x, y, texture, width, height, ScriptFromName(script), this);
-            }
-
-            else s = null;
-
-            return s;
-        }
+        
     }
 }

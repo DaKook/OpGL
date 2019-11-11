@@ -362,6 +362,143 @@ namespace OpGL
             ret.Add("Texture", Texture.Name);
             return ret;
         }
+
+        public static Sprite LoadSprite(JToken loadFrom, Game game)
+        {
+            string type = (string)loadFrom["Type"];
+            //Type t = typeof(Sprite);
+            Sprite s;
+            float x = (float)loadFrom["X"];
+            float y = (float)loadFrom["Y"];
+            string textureName = (string)loadFrom["Texture"];
+            Texture texture = game.TextureFromName(textureName ?? "");
+            int? layer = loadFrom["Layer"] != null ? (int)loadFrom["Layer"] : (int?)null;
+            if (type == "Tile")
+            {
+                int tileX = (int)loadFrom["TileX"];
+                int tileY = (int)loadFrom["TileY"];
+                string tag = (string)loadFrom["Tag"];
+                s = new Tile((int)x, (int)y, texture, tileX, tileY) { Tag = tag };
+            }
+            else if (type == "Enemy")
+            {
+                string animationName = (string)loadFrom["Animation"];
+                float xSpeed = (float)loadFrom["XSpeed"];
+                float ySpeed = (float)loadFrom["YSpeed"];
+                string name = (string)loadFrom["Name"];
+                int color = (int)loadFrom["Color"];
+                int boundX = (int)loadFrom["BoundsX"];
+                int boundY = (int)loadFrom["BoundsY"];
+                int boundW = (int)loadFrom["BoundsWidth"];
+                int boundH = (int)loadFrom["BoundsHeight"];
+                s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, Color.FromArgb(color));
+                s.Name = name;
+                (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+            }
+            else if (type == "Crewman")
+            {
+                string standName = (string)loadFrom["Standing"];
+                string walkName = (string)loadFrom["Walking"];
+                string fallName = (string)loadFrom["Falling"];
+                string jumpName = (string)loadFrom["Jumping"];
+                string dieName = (string)loadFrom["Dying"];
+                string name = (string)loadFrom["Name"];
+                int textBoxColor = (int)loadFrom["TextBox"];
+                bool sad = (bool)loadFrom["Sad"];
+                float gravity = (float)loadFrom["Gravity"];
+                bool flipX = (bool)loadFrom["FlipX"];
+                string squeakName = (string)loadFrom["Squeak"];
+                s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
+                (s as Crewman).Sad = sad;
+                (s as Crewman).Squeak = game.GetSound(squeakName);
+                s.Gravity = gravity;
+                s.FlipX = flipX;
+            }
+            else if (type == "Checkpoint")
+            {
+                string deactivatedName = (string)loadFrom["Deactivated"];
+                string activatedName = (string)loadFrom["Activated"];
+                bool flipX = (bool)loadFrom["FlipX"];
+                bool flipY = (bool)loadFrom["FlipY"];
+                s = new Checkpoint(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), flipX, flipY);
+            }
+            else if (type == "Platform")
+            {
+                string animationName = (string)loadFrom["Animation"];
+                string disappearName = (string)loadFrom["DisappearAnimation"];
+                float xSpeed = (float)loadFrom["XSpeed"];
+                float ySpeed = (float)loadFrom["YSpeed"];
+                float conveyor = (float)loadFrom["Conveyor"];
+                string name = (string)loadFrom["Name"];
+                bool disappear = (bool)loadFrom["Disappear"];
+                int color = (int)loadFrom["Color"];
+                int boundX = (int)loadFrom["BoundsX"];
+                int boundY = (int)loadFrom["BoundsY"];
+                int boundW = (int)loadFrom["BoundsWidth"];
+                int boundH = (int)loadFrom["BoundsHeight"];
+                s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
+                s.Name = name;
+                s.Color = Color.FromArgb(color);
+                (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+            }
+            else if (type == "Terminal")
+            {
+                string deactivatedName = (string)loadFrom["Deactivated"];
+                string activatedName = (string)loadFrom["Activated"];
+                string script = (string)loadFrom["Script"];
+                bool repeat = (bool)loadFrom["Repeat"];
+                bool flipX = (bool)loadFrom["FlipX"];
+                bool flipY = (bool)loadFrom["FlipY"];
+                s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), game.ScriptFromName(script), repeat);
+                s.FlipX = flipX;
+                s.FlipY = flipY;
+            }
+            else if (type == "GravityLine")
+            {
+                int length = (int)loadFrom["Length"];
+                bool horizontal = (bool)loadFrom["Horizontal"];
+                string animationName = (string)loadFrom["Animation"];
+                float xSpeed = (float)loadFrom["XSpeed"];
+                float ySpeed = (float)loadFrom["YSpeed"];
+                int boundX = (int)loadFrom["BoundsX"];
+                int boundY = (int)loadFrom["BoundsY"];
+                int boundW = (int)loadFrom["BoundsWidth"];
+                int boundH = (int)loadFrom["BoundsHeight"];
+                s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
+                (s as GravityLine).XSpeed = xSpeed;
+                (s as GravityLine).YSpeed = ySpeed;
+                (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+            }
+            else if (type == "WarpLine")
+            {
+                int length = (int)loadFrom["Length"];
+                bool horizontal = (bool)loadFrom["Horizontal"];
+                float offX = (float)loadFrom["OffsetX"];
+                float offY = (float)loadFrom["OffsetY"];
+                s = new WarpLine(x, y, length, horizontal, offX, offY);
+            }
+            else if (type == "WarpToken")
+            {
+                Animation animation = texture.AnimationFromName((string)loadFrom["Animation"]);
+                float outX = (float)loadFrom["OutX"];
+                float outY = (float)loadFrom["OutY"];
+                int settings = (int)loadFrom["Flip"];
+                s = new WarpToken(x, y, texture, animation, outX, outY, game, (WarpToken.FlipSettings)settings);
+            }
+            else if (type == "ScriptBox")
+            {
+                int width = (int)loadFrom["Width"];
+                int height = (int)loadFrom["Height"];
+                string script = (string)loadFrom["Script"];
+                s = new ScriptBox(x, y, texture, width, height, game.ScriptFromName(script), game);
+            }
+
+            else s = null;
+            if (s != null && layer != null)
+                s.Layer = layer.Value;
+
+            return s;
+        }
     }
 
 }

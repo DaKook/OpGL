@@ -8,7 +8,7 @@
   "Scripts": [
     {
       "Name": "script",
-      "Contents": "playercontrol,false\nsay,1,player\nOFFICER DID YOU SEE THAT???\nsay,1,Vermilion\nSee what...?\nsay,1,player\nNothing I guess...\nchangefont,evilfont\nplayef,crew8e\nsay,1,180,0,0\n\"Nothing\" he says... Ha ha ha ha ha!\nchangefont,font\nplayef,crew7\nsay,1,200,200,200\nOh shut up, you.\nplayercontrol,true"
+      "Contents": "playercontrol,false\nshake,60,1\ndelay,60\nshake,60,2\ndelay,60\nshake,60,3\ndelay,60\nshake,60,4\ndelay,60\nshake,20,3\ndelay,20\nshake,10,2\ndelay,10\nshake,10,1\ndelay,40\nflash,4,255,0,0\ndelay,8\nflash,4,0,0,255\ndelay,8\nflash,4,0,255,0\ndelay,8\nplayercontrol,true"
     },
     {
       "Name": "script2",
@@ -39,7 +39,7 @@
 	  "Rooms": [ 0, 0, 1, 0 ],
 	  "Scroll": 0
 	}
-  ]
+  ],
   "Rooms": [
     {
       "EnterScript": "",

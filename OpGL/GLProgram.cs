@@ -14,7 +14,7 @@ namespace OpGL
         private static string CheckCompileError(uint shader)
         {
             StringBuilder errorMsg = new StringBuilder(512);
-            Gl.GetProgramInfoLog(shader, 512, out int len, errorMsg);
+            Gl.GetShaderInfoLog(shader, 512, out int len, errorMsg);
             if (errorMsg.Length == 0)
                 return null;
             else

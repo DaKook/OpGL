@@ -25,6 +25,7 @@ namespace OpGL
 
         private static Number getNumber(string s, Game game)
         {
+            if (s == null) return new Number("", 0f);
             if (s.StartsWith("?"))
             {
                 s = s.Substring(1);
@@ -75,7 +76,9 @@ namespace OpGL
             { "playef", PlaySoundCommand },
             { "playsound", PlaySoundCommand },
             { "addsprite", AddSpriteCommand },
-            { "changeai", ChangeAICommand }
+            { "changeai", ChangeAICommand },
+            { "shake", ShakeCommand },
+            { "flash", FlashCommand }
        };
 
         public static Command[] ParseScript(Game game, string script, Script parent)
@@ -467,6 +470,27 @@ namespace OpGL
                         crewman1.Target = crewman2;
                 }
             }, false);
+        }
+        private static Command ShakeCommand(Game game, string[] args, Script script)
+        {
+            Number frames = getNumber(args.ElementAtOrDefault(1), game);
+            Number intensity = getNumber(args.ElementAtOrDefault(2), game);
+            return new Command(game, () =>
+            {
+                game.Shake((int)frames, (int)intensity);
+            });
+        }
+        private static Command FlashCommand(Game game, string[] args, Script script)
+        {
+            Number frames = getNumber(args.ElementAtOrDefault(1), game);
+            Number r = getNumber(args.ElementAtOrDefault(2), game);
+            Number g = getNumber(args.ElementAtOrDefault(3), game);
+            Number b = getNumber(args.ElementAtOrDefault(4), game);
+            if (args.Length < 5) r = g = b = 255;
+            return new Command(game, () =>
+            {
+                game.Flash((int)frames, (int)r, (int)g, (int)b);
+            });
         }
 
     }

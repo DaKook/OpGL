@@ -46,5 +46,30 @@ namespace OpGL
             ret.Add("Objects", new JArray(objs));
             return ret;
         }
+        public static Room LoadRoom(JToken loadFrom, Game game, int xOffset = 0, int yOffset = 0)
+        {
+            JArray sArr = loadFrom["Objects"] as JArray;
+            Room ret = new Room(new SpriteCollection(), null, null);
+            ret.X = (int)loadFrom["X"];
+            ret.Y = (int)loadFrom["Y"];
+            foreach (JToken sprite in sArr)
+            {
+                Sprite s = Sprite.LoadSprite(sprite, game);
+                s.X += ret.X * ROOM_WIDTH + xOffset;
+                s.Y += ret.Y * ROOM_HEIGHT + yOffset;
+                s.PreviousX = s.X;
+                s.PreviousY = s.Y;
+                if (s != null)
+                    ret.Objects.Add(s);
+                if (s is Checkpoint && game.ActivePlayer.CurrentCheckpoint != null && s.X == game.ActivePlayer.CurrentCheckpoint.X && s.Y == game.ActivePlayer.CurrentCheckpoint.Y)
+                {
+                    (s as Checkpoint).Activate(false);
+                    game.ActivePlayer.CurrentCheckpoint = s as Checkpoint;
+                }
+            }
+            ret.EnterScript = game.ScriptFromName((string)loadFrom["EnterScript"]) ?? Script.Empty;
+            ret.ExitScript = game.ScriptFromName((string)loadFrom["ExitScript"]) ?? Script.Empty;
+            return ret;
+        }
     }
 }

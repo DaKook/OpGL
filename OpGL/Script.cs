@@ -69,7 +69,7 @@ namespace OpGL
         {
             if (WaitingFrames > 0)
             {
-                if (WaitingFrames-- <= 0)
+                if (--WaitingFrames <= 0)
                 {
                     Continue();
                 }
