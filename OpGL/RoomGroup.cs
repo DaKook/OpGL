@@ -10,7 +10,7 @@ namespace OpGL
     public class RoomGroup : Room
     {
         public SortedList<int, JObject> RoomDatas = new SortedList<int, JObject>();
-        public bool ContainsRoom(int x, int y, Game game) => RoomDatas.ContainsKey(x * game.WidthRooms + y);
+        public bool ContainsRoom(int x, int y, Game game) => RoomDatas.ContainsKey(x * 100 + y);
         public void Load(Game game)
         {
             Objects.Clear();

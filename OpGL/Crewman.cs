@@ -117,8 +117,8 @@ namespace OpGL
 
                 YVelocity += Gravity;
                 if (JumpBuffer > 0) JumpBuffer -= 1;
-                if (YVelocity > TerminalVelocity) YVelocity = TerminalVelocity;
-                else if (YVelocity < -TerminalVelocity) YVelocity = -TerminalVelocity;
+                if (YVelocity > TerminalVelocity && Gravity > 0) YVelocity = TerminalVelocity;
+                else if (YVelocity < -TerminalVelocity && Gravity < 0) YVelocity = -TerminalVelocity;
                 if (OnGround)
                 {
                     changeAnimationOnGround();
@@ -394,16 +394,23 @@ namespace OpGL
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);
-            ret.Add("Standing", StandingAnimation?.Name ?? "");
-            ret.Add("Walking", WalkingAnimation?.Name ?? "");
-            ret.Add("Falling", FallingAnimation?.Name ?? "");
-            ret.Add("Jumping", JumpingAnimation?.Name ?? "");
-            ret.Add("Dying", DyingAnimation?.Name ?? "");
+            if (StandingAnimation.Name != "Standing")
+                ret.Add("Standing", StandingAnimation?.Name ?? "");
+            if (WalkingAnimation.Name != "Walking")
+                ret.Add("Walking", WalkingAnimation?.Name ?? "");
+            if (FallingAnimation.Name != "Falling")
+                ret.Add("Falling", FallingAnimation?.Name ?? "");
+            if (JumpingAnimation.Name != "Jumping")
+                ret.Add("Jumping", JumpingAnimation?.Name ?? "");
+            if (DyingAnimation.Name != "Dying")
+                ret.Add("Dying", DyingAnimation?.Name ?? "");
             ret.Add("Name", Name);
             ret.Add("TextBox", TextBoxColor.ToArgb());
             ret.Add("FlipX", flipX);
-            ret.Add("Sad", Sad);
-            ret.Add("Gravity", Gravity);
+            if (Sad)
+                ret.Add("Sad", Sad);
+            if (Gravity != 0.6875f)
+                ret.Add("Gravity", Gravity);
             ret.Add("Squeak", Squeak?.Name ?? "");
             return ret;
         }

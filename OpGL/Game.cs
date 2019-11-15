@@ -112,9 +112,11 @@ namespace OpGL
         public Music CurrentSong;
 
         // Editing
-        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Enemy, Platform, Terminal,
+        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Trinket, Enemy, Platform, Terminal, WarpToken, ScriptBox, GravityLine, WarpLine, CustomSprite,
             Select
         }
+        private int tileToolW = 1;
+        private int tileToolH = 1;
         private Tools tool = Tools.Ground;
         private enum FocusOptions { Level, Tileset, Dialog }
         private FocusOptions CurrentEditingFocus = FocusOptions.Level;
@@ -671,6 +673,10 @@ namespace OpGL
                     {
                         sprites.Remove(ActivePlayer);
                         RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        if (e.Shift && CurrentRoom.X == WidthRooms - 1)
+                        {
+                            WidthRooms += 1;
+                        }
                         LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
                     }
                     else if (e.KeyCode == Keys.Left)
@@ -685,6 +691,10 @@ namespace OpGL
                     {
                         sprites.Remove(ActivePlayer);
                         RoomDatas[FocusedRoom] = CurrentRoom.Save();
+                        if (e.Shift && CurrentRoom.Y == HeightRooms - 1)
+                        {
+                            HeightRooms += 1;
+                        }
                         LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
                     }
                     else if (e.KeyCode == Keys.Up)
@@ -872,6 +882,7 @@ namespace OpGL
                 {
                     HandleEditingInputs();
                 }
+                CurrentSong.Process();
 
                 // end frame
                 FrameCount %= int.MaxValue;
@@ -910,10 +921,59 @@ namespace OpGL
             if (mouseX > -1 && mouseY > -1 || CurrentEditingFocus == FocusOptions.Dialog)
             {
                 selection.Visible = true;
+                if (heldKeys.Contains(Keys.Z))
+                {
+                    tileToolW = 3;
+                    tileToolH = 3;
+                }
+                else if (heldKeys.Contains(Keys.X))
+                {
+                    tileToolW = 5;
+                    tileToolH = 5;
+                }
+                else
+                {
+                    tileToolW = 1;
+                    tileToolH = 1;
+                }
+                if (CurrentEditingFocus == FocusOptions.Level)
+                    switch (tool)
+                {
+                    case Tools.Ground:
+                    case Tools.Background:
+                    case Tools.Spikes:
+                    case Tools.Tiles:
+                        selection.SetSize(tileToolW, tileToolH);
+                        break;
+                    case Tools.Checkpoint:
+                        break;
+                    case Tools.Trinket:
+                        break;
+                    case Tools.Enemy:
+                        break;
+                    case Tools.Platform:
+                        break;
+                    case Tools.Terminal:
+                        break;
+                    case Tools.WarpToken:
+                        break;
+                    case Tools.ScriptBox:
+                        break;
+                    case Tools.GravityLine:
+                        break;
+                    case Tools.WarpLine:
+                        break;
+                    case Tools.CustomSprite:
+                        break;
+                    case Tools.Select:
+                        break;
+                    default:
+                        break;
+                }
                 if (!heldKeys.Contains(Keys.OemCloseBrackets))
-                    selection.X = mouseX - mouseX % 8;
+                    selection.X = (mouseX - (8 * (selection.WidthTiles / 2))) / 8 * 8;
                 if (!heldKeys.Contains(Keys.OemOpenBrackets))
-                    selection.Y = mouseY - mouseY % 8;
+                    selection.Y = (mouseY - (8 * (selection.HeightTiles / 2))) / 8 * 8;
             }
             else
             {
@@ -939,7 +999,14 @@ namespace OpGL
                     {
                         if (leftMouse || rightMouse)
                         {
-                            TileTool(selection.X + cameraX, selection.Y + cameraY, leftMouse);
+                            bool lm = leftMouse;
+                            for (int tileX = 0; tileX < tileToolW; tileX++)
+                            {
+                                for (int tileY = 0; tileY < tileToolH; tileY++)
+                                {
+                                    TileTool(selection.X + cameraX + tileX * 8, selection.Y + cameraY + tileY * 8, lm);
+                                }
+                            }
                         }
                         else if (middleMouse)
                         {
@@ -955,7 +1022,14 @@ namespace OpGL
                     {
                         if (leftMouse || rightMouse)
                         {
-                            AutoTilesTool(selection.X + cameraX, selection.Y + cameraY, leftMouse, tool == Tools.Background);
+                            bool lm = leftMouse;
+                            for (int tileX = 0; tileX < tileToolW; tileX++)
+                            {
+                                for (int tileY = 0; tileY < tileToolH; tileY++)
+                                {
+                                    AutoTilesTool(selection.X + cameraX + tileX * 8, selection.Y + cameraY + tileY * 8, lm, tool == Tools.Background);
+                                }
+                            }
                         }
                     }
                 }
@@ -1015,6 +1089,7 @@ namespace OpGL
 
         private void TileTool(float x, float y, bool leftClick)
         {
+            if (x < cameraX || x > cameraX + Room.ROOM_WIDTH || y < cameraY || y > cameraY + Room.ROOM_HEIGHT) return;
             Tile tile = GetTile((int)x, (int)y);
             if (tile != null)
             {
@@ -1029,6 +1104,7 @@ namespace OpGL
 
         private void AutoTilesTool(float x, float y, bool leftClick, bool isBackground)
         {
+            if (x < cameraX || x > cameraX + Room.ROOM_WIDTH || y < cameraY || y > cameraY + Room.ROOM_HEIGHT) return;
             Tile tile = GetTile((int)x, (int)y);
             if (tile != null)
             {
@@ -1072,10 +1148,10 @@ namespace OpGL
             bool sp = tool == Tools.Spikes;
             Tile gt;
             return (p) => (gt = GetTile(p.X + x, p.Y + y)) != null && ((!sp && gt.Tag == autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) ||
-            (p.X < 0 && x == 0) ||
-            (p.X > 0 && x == RESOLUTION_WIDTH - 8) ||
-            (p.Y < 0 && y == 0) ||
-            (p.Y > 0 && y == RESOLUTION_HEIGHT - 8);
+            (p.X < 0 && x % Room.ROOM_WIDTH == 0) ||
+            (p.X > 0 && x % Room.ROOM_WIDTH == RESOLUTION_WIDTH - 8) ||
+            (p.Y < 0 && y % Room.ROOM_HEIGHT == 0) ||
+            (p.Y > 0 && y % Room.ROOM_HEIGHT == RESOLUTION_HEIGHT - 8);
         }
 
         private void HandleUserInputs()
@@ -1161,7 +1237,7 @@ namespace OpGL
                 ActivePlayer.Offsets.Clear();
                 RoomDatas[FocusedRoom] = CurrentRoom.Save();
             }
-            FocusedRoom = x + y * WidthRooms;
+            FocusedRoom = x + y * 100;
             if (!RoomDatas.ContainsKey(FocusedRoom))
             {
                 Room r = new Room(new SpriteCollection(), Script.Empty, Script.Empty);
@@ -1516,7 +1592,7 @@ namespace OpGL
                 {
                     int x = (int)room["X"];
                     int y = (int)room["Y"];
-                    int id = x + y * WidthRooms;
+                    int id = x + y * 100;
                     RoomDatas.Add(id, (JObject)room);
                 }
             }
@@ -1557,7 +1633,7 @@ namespace OpGL
                             {
                                 for (int y = topLeft.Y; y < bottomRight.Y + 1; y++)
                                 {
-                                    int id = y * WidthRooms + x;
+                                    int id = y * 100 + x;
                                     newGroup.RoomDatas.Add(id, RoomDatas[id]);
                                 }
                             }

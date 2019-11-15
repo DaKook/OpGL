@@ -397,20 +397,28 @@ namespace OpGL
             }
             else if (type == "Crewman")
             {
-                string standName = (string)loadFrom["Standing"];
-                string walkName = (string)loadFrom["Walking"];
-                string fallName = (string)loadFrom["Falling"];
-                string jumpName = (string)loadFrom["Jumping"];
-                string dieName = (string)loadFrom["Dying"];
+                string standName = (string)loadFrom["Standing"] ?? "Standing";
+                string walkName = (string)loadFrom["Walking"] ?? "Walking";
+                string fallName = (string)loadFrom["Falling"] ?? "Falling";
+                string jumpName = (string)loadFrom["Jumping"] ?? "Jumping";
+                string dieName = (string)loadFrom["Dying"] ?? "Dying";
                 string name = (string)loadFrom["Name"];
                 int textBoxColor = (int)loadFrom["TextBox"];
-                bool sad = (bool)loadFrom["Sad"];
-                float gravity = (float)loadFrom["Gravity"];
+                bool sad = (bool)(loadFrom["Sad"] ?? false);
+                float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
                 bool flipX = (bool)loadFrom["FlipX"];
                 string squeakName = (string)loadFrom["Squeak"];
+                bool canFlip = (bool)(loadFrom["Flip"] ?? true);
+                float jump = (float)(loadFrom["Jump"] ?? 1.6875f);
+                float speed = (float)(loadFrom["Speed"] ?? 3f);
+                float acceleration = (float)(loadFrom["Acceleration"] ?? 0.375f);
                 s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
                 (s as Crewman).Sad = sad;
                 (s as Crewman).Squeak = game.GetSound(squeakName);
+                (s as Crewman).CanFlip = canFlip;
+                (s as Crewman).Jump = jump;
+                (s as Crewman).MaxSpeed = speed;
+                (s as Crewman).Acceleration = acceleration;
                 s.Gravity = gravity;
                 s.FlipX = flipX;
             }

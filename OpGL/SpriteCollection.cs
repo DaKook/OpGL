@@ -116,8 +116,10 @@ namespace OpGL
         public void SortForCollisions()
         {
             perTile = new SortedList<Point, List<Sprite>>(pointComparer);
-            foreach (Sprite d in this)
+            SpriteCollection list = this;
+            for (int i1 = 0; i1 < list.Count; i1++)
             {
+                Sprite d = list[i1];
                 TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
                 do
                 {

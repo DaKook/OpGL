@@ -14,8 +14,14 @@ namespace OpGL
         WaveOut wo;
         VorbisLoop vl;
         public string Name;
+        public int Volume = 80;
+        private float vol = 80;
+        private float previousVolume = -1;
+        private float fadeSpeed;
+        public bool isFaded => (vol == 0) || (vol == Volume);
         public int LoopStart { get => vl.LoopStart; set => vl.LoopStart = value; }
         public bool EnableLooping { get => vl.EnableLooping; set => vl.EnableLooping = value; }
+        public bool IsPlaying { get; private set; }
         public Music(string path)
         {
             string fName = path.Split('/').Last();
@@ -39,15 +45,73 @@ namespace OpGL
             wo.Init(vl);
         }
 
+        public void FadeOut(float speed = 1)
+        {
+            fadeSpeed = -speed;
+        }
+        public void FadeIn(float speed = 1)
+        {
+            if (!IsPlaying) Resume();
+            fadeSpeed = speed;
+        }
+
+        public void Process()
+        {
+            if (fadeSpeed < 0)
+            {
+                if (vol > 0)
+                {
+                    vol += fadeSpeed * (Volume / 100f);
+                    if (vol <= 0)
+                    {
+                        vol = 0;
+                        Pause();
+                        fadeSpeed = 0;
+                    }
+                }
+            }
+            else if (fadeSpeed > 0)
+            {
+                if (vol < Volume)
+                {
+                    vol += fadeSpeed * (Volume / 100f);
+                    if (vol >= Volume)
+                    {
+                        vol = Volume;
+                        fadeSpeed = 0;
+                    }
+                }
+            }
+            if (vol != previousVolume)
+            {
+                wo.Volume = (vol / 100);
+                previousVolume = vol;
+            }
+        }
+
         public void Play()
         {
             vl.Position = 0;
             wo.Play();
+            IsPlaying = true;
         }
 
         public void Stop()
         {
             wo.Stop();
+            IsPlaying = false;
+        }
+
+        public void Resume()
+        {
+            wo.Resume();
+            IsPlaying = true;
+        }
+
+        public void Pause()
+        {
+            wo.Pause();
+            IsPlaying = false;
         }
     }
 

@@ -78,7 +78,9 @@ namespace OpGL
             { "addsprite", AddSpriteCommand },
             { "changeai", ChangeAICommand },
             { "shake", ShakeCommand },
-            { "flash", FlashCommand }
+            { "flash", FlashCommand },
+            { "musicfadeout", MusicFadeOutCommand },
+            { "musicfadein", MusicFadeInCommand }
        };
 
         public static Command[] ParseScript(Game game, string script, Script parent)
@@ -492,6 +494,23 @@ namespace OpGL
                 game.Flash((int)frames, (int)r, (int)g, (int)b);
             });
         }
-
+        private static Command MusicFadeOutCommand(Game game, string[] args, Script script)
+        {
+            Number speed = getNumber(args.LastOrDefault(), game);
+            return new Command(game, () =>
+            {
+                if (speed == 0) speed = 1;
+                game.CurrentSong.FadeOut(speed);
+            }, false);
+        }
+        private static Command MusicFadeInCommand(Game game, string[] args, Script script)
+        {
+            Number speed = getNumber(args.LastOrDefault(), game);
+            return new Command(game, () =>
+            {
+                if (speed == 0) speed = 1;
+                game.CurrentSong.FadeIn(speed);
+            }, false);
+        }
     }
 }
