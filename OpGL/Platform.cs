@@ -10,6 +10,7 @@ namespace OpGL
 {
     public class Platform : Sprite
     {
+        public override Pushability Pushability => Pushability.Solid;
         public float XSpeed;
         public float YSpeed;
         public float XVel;
@@ -94,23 +95,23 @@ namespace OpGL
             }
         }
 
-        public override CollisionData TestCollision(Sprite testFor)
-        {
-            if (testFor == this) return null;
+        //public override CollisionData TestCollision(Sprite testFor)
+        //{
+        //    if (testFor == this) return null;
 
-            // Platforms colliding with an entity should cause the entity to do a collision check. This collision should not be used as such. Thus, NaN.
-            CollisionData ret = null;
-            if (testFor.Solid == SolidState.Entity && IsOverlapping(testFor))
-            {
-                ret = GetCollisionData(testFor);
-                if (ret != null)
-                    ret.Distance = float.NaN;
-            }
-            else
-                ret = base.TestCollision(testFor);
+        //    // Platforms colliding with an entity should cause the entity to do a collision check. This collision should not be used as such. Thus, NaN.
+        //    CollisionData ret = null;
+        //    if ((testFor.Solid == SolidState.Entity || testFor is PushSprite) && IsOverlapping(testFor))
+        //    {
+        //        ret = GetCollisionData(testFor);
+        //        if (ret != null)
+        //            ret.Distance = float.NaN;
+        //    }
+        //    else
+        //        ret = base.TestCollision(testFor);
 
-            return ret;
-        }
+        //    return ret;
+        //}
 
         public override void CollideX(float distance, Sprite collision)
         {

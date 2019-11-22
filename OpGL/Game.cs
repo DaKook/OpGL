@@ -14,6 +14,7 @@ using System.Windows.Forms;
 
 namespace OpGL
 {
+    public enum Pushability { Pushable, Solid, Immovable }
     public class Game
     {
         // Input
@@ -260,6 +261,7 @@ namespace OpGL
             Checkpoint.ActivateSound = GetSound("save");
             Terminal.ActivateSound = GetSound("terminal");
             WarpToken.WarpSound = GetSound("teleport");
+            GravityLine.Sound = GetSound("blip");
             selection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Blue);
             hudSprites.Add(selection);
             tileSelection = new BoxSprite(0, 0, BoxTexture, 1, 1, Color.Red);
@@ -1275,31 +1277,32 @@ namespace OpGL
                     sprites[i].Process();
             }
 
-            sprites.SortForCollisions();
-            Sprite[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
-            PointF[] endLocation = new PointF[checkCollisions.Length];
-            for (int i = 0; i < checkCollisions.Length; i++)
-            {
-                Sprite drawable = checkCollisions[i];
-                PerformCollisionChecks(drawable);
-                endLocation[i] = new PointF(drawable.X, drawable.Y);
-            }
-            // check again any that have moved since completing their collisions
-            bool collisionPerformed;
-            do
-            {
-                collisionPerformed = false;
-                for (int i = 0; i < checkCollisions.Length; i++)
-                {
-                    Sprite drawable = checkCollisions[i];
-                    if (endLocation[i] != new PointF(drawable.X, drawable.Y))
-                    {
-                        collisionPerformed = true;
-                        PerformCollisionChecks(drawable);
-                        endLocation[i] = new PointF(drawable.X, drawable.Y);
-                    }
-                }
-            } while (collisionPerformed);
+            //sprites.SortForCollisions();
+            //Sprite[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+            //PointF[] endLocation = new PointF[checkCollisions.Length];
+            //for (int i = 0; i < checkCollisions.Length; i++)
+            //{
+            //    Sprite drawable = checkCollisions[i];
+            //    PerformCollisionChecks2(drawable);
+            //    endLocation[i] = new PointF(drawable.X, drawable.Y);
+            //}
+            //// check again any that have moved since completing their collisions
+            //bool collisionPerformed;
+            //do
+            //{
+            //    collisionPerformed = false;
+            //    for (int i = 0; i < checkCollisions.Length; i++)
+            //    {
+            //        Sprite drawable = checkCollisions[i];
+            //        if (endLocation[i] != new PointF(drawable.X, drawable.Y))
+            //        {
+            //            collisionPerformed = true;
+            //            PerformCollisionChecks2(drawable);
+            //            endLocation[i] = new PointF(drawable.X, drawable.Y);
+            //        }
+            //    }
+            //} while (collisionPerformed);
+            PerformAllCollisionChecks();
             if (ActivePlayer.CurrentTerminal != null && !ActivePlayer.IsOverlapping(ActivePlayer.CurrentTerminal))
             {
                 ActivePlayer.CurrentTerminal = null;
@@ -1340,7 +1343,65 @@ namespace OpGL
         //    return ret;
         //}
 
-        private void PerformCollisionChecks(Sprite drawable)
+        private void PerformAllCollisionChecks()
+        {
+            sprites.SortForCollisions();
+            Sprite[] checkCollisions = sprites.Where((d) => !d.Static && !d.Immovable).ToArray();
+            PointF[] endLocation = new PointF[checkCollisions.Length];
+            for (int i = 0; i < checkCollisions.Length; i++)
+            {
+                Sprite drawable = checkCollisions[i];
+                RectangleF startLocation = new RectangleF(drawable.X, drawable.Y, drawable.Width, drawable.Height);
+                PerformCollisionChecks(drawable);
+                sprites.MoveForCollisions(drawable, startLocation);
+                endLocation[i] = new PointF(drawable.X, drawable.Y);
+            }
+            // check again any that have moved since completing their collisions
+            bool collisionPerformed;
+            do
+            {
+                collisionPerformed = false;
+                for (int i = 0; i < checkCollisions.Length; i++)
+                {
+                    Sprite drawable = checkCollisions[i];
+                    if (endLocation[i] != new PointF(drawable.X, drawable.Y))
+                    {
+                        collisionPerformed = true;
+                        RectangleF startLocation = new RectangleF(drawable.X, drawable.Y, drawable.Width, drawable.Height);
+                        PerformCollisionChecks(drawable);
+                        sprites.MoveForCollisions(drawable, startLocation);
+                        endLocation[i] = new PointF(drawable.X, drawable.Y);
+                    }
+                }
+            } while (collisionPerformed);
+        }
+        private PushData PerformCollisionChecks(Sprite sprite)
+        {
+            PushData push = new PushData();
+            List<CollisionData> entityCollisions = new List<CollisionData>();
+            //Exits when there are no remaining collisions to be handled.
+            while (true)
+            {
+                List<Sprite> colliders = sprites.GetPotentialColliders(sprite);
+                List<CollisionData> datas = new List<CollisionData>();
+                for (int i = 0; i < colliders.Count; i++)
+                {
+                    CollisionData cd = sprite.TestCollision(colliders[i]);
+                    if (cd != null && !entityCollisions.Any((a) => a.CollidedWith == cd.CollidedWith)
+                        //&& !(cd.CollidedWith.Solid == Sprite.SolidState.Entity && (cd.CollidedWith.Static || cd.CollidedWith.Immovable))
+                        ) datas.Add(cd);
+                }
+                CollisionData data = sprite.GetFirstCollision(datas);
+
+                //If no collisions, exit loop.
+                if (data is null) break;
+
+                if (data.CollidedWith.Solid != Sprite.SolidState.Ground) entityCollisions.Add(data);
+                push = DoCollision(sprite, data, push);
+            }
+            return push;
+        }
+        private void PerformCollisionChecks2(Sprite drawable)
         {
             List<CollisionData> groundCollisions = new List<CollisionData>();
             List<CollisionData> entityCollisions = new List<CollisionData>();
@@ -1360,20 +1421,24 @@ namespace OpGL
                 }
                 CollisionData c = drawable.GetFirstCollision(collisionDatas);
 
+                //if (drawable is Platform && c is object && c.CollidedWith is PushSprite)
+                //    ;
+
                 // exit condition: there is nothing to collide with
                 if (c == null) break;
 
                 // entity colliding with ground must be handled in a way that allows bouncing platforms
-                if (drawable.Solid == Sprite.SolidState.Entity && c.CollidedWith.Solid == Sprite.SolidState.Ground)
+                if ((drawable.Solid == Sprite.SolidState.Entity || drawable is PushSprite) && c.CollidedWith.Solid == Sprite.SolidState.Ground)
                 {
                     groundCollisions.Add(c);
                     CollisionData platformCollision = c.Vertical ? vPlatform : hPlatform;
-                    if (c.CollidedWith is Platform)
+                    if (c.CollidedWith is Platform || c.CollidedWith is PushSprite)
                     {
                         // if a previous collision means it should be bounced
                         if (groundCollisions.Any((a) => a.CollidedWith.Solid == Sprite.SolidState.Ground && a.Vertical == c.Vertical && Math.Sign(c.Distance) != Math.Sign(a.Distance)))
                         {
-                            c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
+                            if (c.CollidedWith is Platform)
+                                c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
                             if (drawable is Platform) // undo duplicate direction flipping
                                 c.CollidedWith.Collide(new CollisionData(c.Vertical, 0, drawable));
                         }
@@ -1387,7 +1452,13 @@ namespace OpGL
                     }
                     // collide here because (1) after distance is potentially set to 0 because platform has bounced away
                     // (2) collision should happen before getting distance for bouncing a previously-collided platform or that will be 0
-                    drawable.Collide(c);
+                    if (c.CollidedWith is PushSprite)
+                    {
+                        c.CollidedWith.Collide(new CollisionData(c.Vertical, -c.Distance, drawable));
+                        PerformCollisionChecks2(c.CollidedWith);
+                    }
+                    else
+                        drawable.Collide(c);
                     // entity has previously collided with a platform, and this collision means it should be bounced
                     if (platformCollision != null && Math.Sign(platformCollision.Distance) != Math.Sign(c.Distance))
                     {
@@ -1409,7 +1480,7 @@ namespace OpGL
                 // otherwise, a simple collision should suffice
                 else
                 {
-                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity || c.CollidedWith is GravityLine || c.CollidedWith is WarpLine)
+                    if (c.CollidedWith.Solid == Sprite.SolidState.Entity || c.CollidedWith is GravityLine || c.CollidedWith is WarpLine || c.CollidedWith is PushSprite)
                     {
                         entityCollisions.Add(c);
                         if (c.CollidedWith is WarpLine)
@@ -1418,16 +1489,52 @@ namespace OpGL
                         }
                         else
                         {
-                            if (drawable is Platform)
-                                PerformCollisionChecks(c.CollidedWith);
+                            if (drawable is Platform || drawable is PushSprite)
+                                PerformCollisionChecks2(c.CollidedWith);
                             else
                                 drawable.Collide(c);
                         }
                     }
                     else // only Crewman can collide with entities, but that check is elsewhere
+                    {
                         drawable.Collide(c);
+                    }
                 }
             }
+        }
+
+        private PushData DoCollision(Sprite sprite, CollisionData collision, PushData currentPush)
+        {
+            Pushability ownPushable = sprite.FramePush.GetOppositePushability(collision);
+            Pushability otherPushable = collision.CollidedWith.FramePush.GetPushability(collision);
+            if (collision.CollidedWith.Solid == Sprite.SolidState.Ground && (collision.CollidedWith.Static || collision.CollidedWith.Immovable)) otherPushable = Pushability.Immovable;
+            if (sprite.Pushability > ownPushable) ownPushable = sprite.Pushability;
+            bool canPush = true;
+            PushData ret = currentPush;
+            PushData otherPush = new PushData(otherPushable);
+            if (ownPushable > otherPushable)
+            {
+                canPush = collision.CollidedWith.CollideWith(new CollisionData(collision.Vertical, -collision.Distance, sprite));
+                otherPush.SetPushability(collision, ownPushable);
+                if (!canPush)
+                {
+                    otherPush.SetPushability(collision, Pushability.Immovable);
+                    canPush = sprite.CollideWith(collision);
+                }
+            }
+            else
+            {
+                canPush = sprite.CollideWith(collision);
+                ret.SetPushability(collision, otherPushable);
+                if (!canPush)
+                {
+                    ret.SetPushability(collision, Pushability.Immovable);
+                    canPush = collision.CollidedWith.CollideWith(new CollisionData(collision.Vertical, -collision.Distance, sprite));
+                }
+            }
+            sprite.FramePush = ret;
+            collision.CollidedWith.FramePush = otherPush;
+            return ret;
         }
 
         public void StartGame()

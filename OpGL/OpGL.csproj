@@ -97,6 +97,8 @@
     <Compile Include="LoopStream.cs" />
     <Compile Include="Music.cs" />
     <Compile Include="ProgramData.cs" />
+    <Compile Include="PushData.cs" />
+    <Compile Include="PushSprite.cs" />
     <Compile Include="RoomGroup.cs" />
     <Compile Include="ScriptBox.cs" />
     <Compile Include="SoundEffect.cs" />

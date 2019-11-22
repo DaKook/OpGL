@@ -289,6 +289,11 @@ namespace OpGL
         public void RemoveFromCollisions(Sprite d)
         {
             Remove(d);
+            if (perTile == null)
+            {
+                SortForCollisions();
+                return;
+            }
             TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
             do
             {
@@ -304,6 +309,53 @@ namespace OpGL
                     {
                         if (perTile.ContainsKey(te.Current))
                             perTile[te.Current].Remove(d);
+                    } while (te.MoveNext());
+                }
+            }
+        }
+
+        public void MoveForCollisions(Sprite d, RectangleF position)
+        {
+            if (perTile == null)
+            {
+                SortForCollisions();
+                return;
+            }
+            TileEnumerator te = new TileEnumerator(position);
+            do
+            {
+                if (perTile.ContainsKey(te.Current))
+                    perTile[te.Current].Remove(d);
+            } while (te.MoveNext());
+            if (d.MultiplePositions)
+            {
+                for (int i = 0; i < d.Offsets.Count; i++)
+                {
+                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
+                    do
+                    {
+                        if (perTile.ContainsKey(te.Current))
+                            perTile[te.Current].Remove(d);
+                    } while (te.MoveNext());
+                }
+            }
+            te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
+            do
+            {
+                if (!perTile.ContainsKey(te.Current))
+                    perTile.Add(te.Current, new List<Sprite>());
+                perTile[te.Current].Add(d);
+            } while (te.MoveNext());
+            if (d.MultiplePositions)
+            {
+                for (int i = 0; i < d.Offsets.Count; i++)
+                {
+                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
+                    do
+                    {
+                        if (!perTile.ContainsKey(te.Current))
+                            perTile.Add(te.Current, new List<Sprite>());
+                        perTile[te.Current].Add(d);
                     } while (te.MoveNext());
                 }
             }

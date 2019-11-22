@@ -18,6 +18,7 @@ namespace OpGL
         public float XSpeed;
         public float YSpeed;
         public Rectangle Bounds;
+        public static SoundEffect Sound;
 
         public override float Width => Horizontal ? length * Texture.TileSizeX : base.Width;
         public override float Height => Horizontal ? base.Height : length * Texture.TileSizeY;
@@ -129,6 +130,7 @@ namespace OpGL
         {
             if (!touching.Contains(crewman))
             {
+                Sound?.Play();
                 touching.Add(crewman);
                 crewman.Gravity *= -1;
                 crewman.YVelocity = 0;

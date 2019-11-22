@@ -14,6 +14,8 @@ namespace OpGL
         protected bool flipX;
         protected bool flipY;
         protected Platform onPlatform;
+        public virtual Pushability Pushability => Pushability.Pushable;
+        public PushData FramePush;
 
         public string Name { get; set; } = "";
 
@@ -52,6 +54,7 @@ namespace OpGL
         public float PreviousY { get; set; }
         public virtual float Width { get => Animation.Hitbox.Width; }
         public virtual float Height { get => Animation.Hitbox.Height; }
+        public bool Pushable = false;
 
         public virtual bool IsCrewman { get => false; }
 
@@ -244,6 +247,7 @@ namespace OpGL
 
         public virtual void Process()
         {
+            FramePush = new PushData(Pushability);
             //Advance animation frame and change TextureX and TextureY accordingly
             if (animFrame + 1 >= Animation.FrameCount)
                 animFrame = Animation.LoopStart;
@@ -268,7 +272,7 @@ namespace OpGL
             if (testFor == this || Immovable || Static) return null;
 
             CollisionData ret = null;
-            if ((Solid == SolidState.Entity || Solid == SolidState.Ground) && testFor.Solid == SolidState.Ground || testFor is WarpLine)
+            if ((Solid != SolidState.NonSolid) && testFor.Solid != SolidState.NonSolid || testFor is WarpLine)
             {
                 if (IsOverlapping(testFor))
                     ret = GetCollisionData(testFor);
@@ -348,6 +352,22 @@ namespace OpGL
             }
         }
 
+        public virtual bool CollideWith(CollisionData data)
+        {
+            if (Static || Immovable) return false;
+            if (data.CollidedWith is WarpLine) data.CollidedWith.Collide(new CollisionData(data.Vertical, -data.Distance, this));
+            if (data.CollidedWith.Solid == SolidState.Entity && (data.CollidedWith.Static || data.CollidedWith.Immovable)) return true;
+            if (data.Vertical)
+            {
+                CollideY(data.Distance, data.CollidedWith);
+            }
+            else
+            {
+                CollideX(data.Distance, data.CollidedWith);
+            }
+            return true;
+        }
+
         public virtual void HandleCrewmanCollision(Crewman crewman)
         {
             //Do nothing
@@ -360,6 +380,8 @@ namespace OpGL
             ret.Add("X", X);
             ret.Add("Y", Y);
             ret.Add("Texture", Texture.Name);
+            ret.Add("Animation", Animation.Name);
+            ret.Add("Color", Color.ToArgb());
             return ret;
         }
 
@@ -373,6 +395,7 @@ namespace OpGL
             string textureName = (string)loadFrom["Texture"];
             Texture texture = game.TextureFromName(textureName ?? "");
             int? layer = loadFrom["Layer"] != null ? (int)loadFrom["Layer"] : (int?)null;
+            Color color = Color.FromArgb((int)(loadFrom["Color"] ?? -1));
             if (type == "Tile")
             {
                 int tileX = (int)loadFrom["TileX"];
@@ -386,12 +409,11 @@ namespace OpGL
                 float xSpeed = (float)loadFrom["XSpeed"];
                 float ySpeed = (float)loadFrom["YSpeed"];
                 string name = (string)loadFrom["Name"];
-                int color = (int)loadFrom["Color"];
                 int boundX = (int)loadFrom["BoundsX"];
                 int boundY = (int)loadFrom["BoundsY"];
                 int boundW = (int)loadFrom["BoundsWidth"];
                 int boundH = (int)loadFrom["BoundsHeight"];
-                s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, Color.FromArgb(color));
+                s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, color);
                 s.Name = name;
                 (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
             }
@@ -439,14 +461,12 @@ namespace OpGL
                 float conveyor = (float)loadFrom["Conveyor"];
                 string name = (string)loadFrom["Name"];
                 bool disappear = (bool)loadFrom["Disappear"];
-                int color = (int)loadFrom["Color"];
                 int boundX = (int)loadFrom["BoundsX"];
                 int boundY = (int)loadFrom["BoundsY"];
                 int boundW = (int)loadFrom["BoundsWidth"];
                 int boundH = (int)loadFrom["BoundsHeight"];
                 s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
                 s.Name = name;
-                s.Color = Color.FromArgb(color);
                 (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
             }
             else if (type == "Terminal")
@@ -466,12 +486,12 @@ namespace OpGL
                 int length = (int)loadFrom["Length"];
                 bool horizontal = (bool)loadFrom["Horizontal"];
                 string animationName = (string)loadFrom["Animation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
+                float xSpeed = (float)(loadFrom["XSpeed"] ?? 0f);
+                float ySpeed = (float)(loadFrom["YSpeed"] ?? 0f);
+                int boundX = (int)(loadFrom["BoundsX"] ?? 0);
+                int boundY = (int)(loadFrom["BoundsY"] ?? 0);
+                int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
+                int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
                 s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
                 (s as GravityLine).XSpeed = xSpeed;
                 (s as GravityLine).YSpeed = ySpeed;
@@ -500,10 +520,24 @@ namespace OpGL
                 string script = (string)loadFrom["Script"];
                 s = new ScriptBox(x, y, texture, width, height, game.ScriptFromName(script), game);
             }
+            else if (type == "Sprite")
+            {
+                string animationName = (string)loadFrom["Animation"] ?? "";
+                s = new Sprite(x, y, texture, texture.AnimationFromName(animationName));
+            }
+            else if (type == "Push")
+            {
+                string animationName = (string)loadFrom["Animation"] ?? "";
+                float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
+                s = new PushSprite(x, y, texture, texture.AnimationFromName(animationName));
+                s.Gravity = gravity;
+            }
 
             else s = null;
             if (s != null && layer != null)
                 s.Layer = layer.Value;
+            if (s != null)
+                s.Color = color;
 
             return s;
         }

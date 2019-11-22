@@ -213,6 +213,7 @@ namespace OpGL
                     MultiplePositions = false;
                     Offsets.Clear();
                     Respawned?.Invoke();
+                    Solid = SolidState.Entity;
                 }
             }
         }
@@ -255,6 +256,7 @@ namespace OpGL
             Animation = DyingAnimation;
             ResetAnimation();
             DyingFrames = 60;
+            Solid = SolidState.NonSolid;
         }
 
         public override void CollideY(float distance, Sprite collision)
@@ -355,11 +357,12 @@ namespace OpGL
                 return base.TestCollision(testFor);
         }
 
-        public override void Collide(CollisionData cd)
+        public override bool CollideWith(CollisionData data)
         {
-            if (cd.CollidedWith.KillCrewmen)
+            if (data.CollidedWith is WarpLine) data.CollidedWith.Collide(new CollisionData(data.Vertical, -data.Distance, this));
+            if (data.CollidedWith.KillCrewmen)
             {
-                if (!OnGround && cd.CollidedWith is Tile)
+                if (!OnGround && data.CollidedWith is Tile)
                 {
                     spikeMercy -= 2;
                     if (spikeMercy <= 0)
@@ -371,12 +374,13 @@ namespace OpGL
                 else
                     Die();
             }
-            else if (cd.CollidedWith.Solid != SolidState.Ground)
+            else if (data.CollidedWith.Solid != SolidState.Ground)
             {
-                cd.CollidedWith.HandleCrewmanCollision(this);
+                data.CollidedWith.HandleCrewmanCollision(this);
             }
             else
-                base.Collide(cd);
+                base.Collide(data);
+            return true;
         }
 
         public void KillSelf()
