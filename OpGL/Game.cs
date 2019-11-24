@@ -113,7 +113,7 @@ namespace OpGL
         public Music CurrentSong;
 
         // Editing
-        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Trinket, Enemy, Platform, Terminal, WarpToken, ScriptBox, GravityLine, WarpLine, CustomSprite,
+        private enum Tools { Ground, Background, Spikes, Tiles, Checkpoint, Trinket, Enemy, Platform, Terminal, WarpToken, ScriptBox, GravityLine, Start, WarpLine, CustomSprite,
             Select
         }
         private int tileToolW = 1;
@@ -148,6 +148,8 @@ namespace OpGL
         private bool selecting;
         private List<Sprite> selectedSprites = new List<Sprite>();
         private PointF selectOrigin;
+        private bool flipToolX;
+        private bool flipToolY;
 
         // Rooms
         public Room CurrentRoom;
@@ -211,13 +213,22 @@ namespace OpGL
         }
         public void RespawnPlatforms()
         {
-            foreach (Sprite sprite in sprites)
+            int rx = (int)Math.Floor(ActivePlayer.CheckpointX / Room.ROOM_WIDTH);
+            int ry = (int)Math.Floor(ActivePlayer.CheckpointY / Room.ROOM_HEIGHT);
+            if (!(CurrentRoom.X == rx && CurrentRoom.Y == ry))
             {
-                if (!(sprite is Platform)) continue;
-                Platform platform = sprite as Platform;
-                if (!platform.Visible && platform.Animation == platform.DisappearAnimation)
+                LoadRoom(rx, ry);
+            }
+            else
+            {
+                foreach (Sprite sprite in sprites)
                 {
-                    platform.Reappear();
+                    if (!(sprite is Platform)) continue;
+                    Platform platform = sprite as Platform;
+                    if (!platform.Visible && platform.Animation == platform.DisappearAnimation)
+                    {
+                        platform.Reappear();
+                    }
                 }
             }
         }
@@ -346,8 +357,27 @@ namespace OpGL
                     //sprites.Add(new Tile((int)(selection.X + cameraX), (int)(selection.Y + cameraY), currentTexture, currentTile.X, currentTile.Y));
                 }
             }
-            else
-                ActivePlayer.X += 100;
+            else if (CurrentState == GameStates.Playing)
+            {
+                List<Sprite> spr = sprites.GetPotentialColliders(mouseX + cameraX, mouseY + cameraY, 1, 1);
+                foreach (Sprite sprite in spr)
+                {
+                    if (sprite is Checkpoint)
+                    {
+                        ActivePlayer.CenterX = sprite.CenterX;
+                        if (sprite.FlipY)
+                        {
+                            ActivePlayer.Gravity = -Math.Abs(ActivePlayer.Gravity);
+                            ActivePlayer.Y = sprite.Y;
+                        }
+                        else
+                        {
+                            ActivePlayer.Gravity = Math.Abs(ActivePlayer.Gravity);
+                            ActivePlayer.Bottom = sprite.Bottom;
+                        }
+                    }
+                }
+            }
         }
 
         private void GlControl_MouseMove(object sender, MouseEventArgs e)
@@ -737,6 +767,18 @@ namespace OpGL
                     {
                         tool = Tools.Spikes;
                     }
+                    else if (e.KeyCode == Keys.D5)
+                    {
+                        tool = Tools.Checkpoint;
+                    }
+                    else if (e.KeyCode == Keys.D0)
+                    {
+                        tool = Tools.GravityLine;
+                    }
+                    else if (e.KeyCode == Keys.P)
+                    {
+                        tool = Tools.Start;
+                    }
                     else if (e.KeyCode == Keys.OemMinus)
                     {
                         tool = Tools.Tiles;
@@ -923,55 +965,83 @@ namespace OpGL
             if (mouseX > -1 && mouseY > -1 || CurrentEditingFocus == FocusOptions.Dialog)
             {
                 selection.Visible = true;
-                if (heldKeys.Contains(Keys.Z))
+                if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Tiles)
                 {
-                    tileToolW = 3;
-                    tileToolH = 3;
+                    if (heldKeys.Contains(Keys.Z))
+                    {
+                        tileToolW = 3;
+                        tileToolH = 3;
+                    }
+                    else if (heldKeys.Contains(Keys.X))
+                    {
+                        tileToolW = 5;
+                        tileToolH = 5;
+                    }
+                    else
+                    {
+                        tileToolW = 1;
+                        tileToolH = 1;
+                    }
                 }
-                else if (heldKeys.Contains(Keys.X))
+                else if (tool == Tools.Checkpoint || tool == Tools.Start || tool == Tools.Terminal)
                 {
-                    tileToolW = 5;
-                    tileToolH = 5;
-                }
-                else
-                {
-                    tileToolW = 1;
-                    tileToolH = 1;
+                    if (heldKeys.Contains(Keys.Z))
+                    {
+                        flipToolY = true;
+                    }
+                    else
+                    {
+                        flipToolY = false;
+                    }
+                    if (heldKeys.Contains(Keys.X))
+                    {
+                        flipToolX = true;
+                    }
+                    else
+                    {
+                        flipToolX = false;
+                    }
                 }
                 if (CurrentEditingFocus == FocusOptions.Level)
                     switch (tool)
-                {
-                    case Tools.Ground:
-                    case Tools.Background:
-                    case Tools.Spikes:
-                    case Tools.Tiles:
-                        selection.SetSize(tileToolW, tileToolH);
-                        break;
-                    case Tools.Checkpoint:
-                        break;
-                    case Tools.Trinket:
-                        break;
-                    case Tools.Enemy:
-                        break;
-                    case Tools.Platform:
-                        break;
-                    case Tools.Terminal:
-                        break;
-                    case Tools.WarpToken:
-                        break;
-                    case Tools.ScriptBox:
-                        break;
-                    case Tools.GravityLine:
-                        break;
-                    case Tools.WarpLine:
-                        break;
-                    case Tools.CustomSprite:
-                        break;
-                    case Tools.Select:
-                        break;
-                    default:
-                        break;
-                }
+                    {
+                        case Tools.Ground:
+                        case Tools.Background:
+                        case Tools.Spikes:
+                        case Tools.Tiles:
+                            selection.SetSize(tileToolW, tileToolH);
+                            break;
+                        case Tools.Checkpoint:
+                            selection.SetSize(2, 2);
+                            break;
+                        case Tools.Trinket:
+                            break;
+                        case Tools.Enemy:
+                            break;
+                        case Tools.Platform:
+                            break;
+                        case Tools.Terminal:
+                            break;
+                        case Tools.WarpToken:
+                            break;
+                        case Tools.ScriptBox:
+                            break;
+                        case Tools.GravityLine:
+                            selection.SetSize(1, 1);
+                            break;
+                        case Tools.WarpLine:
+                            break;
+                        case Tools.Start:
+                            selection.SetSize((int)Math.Ceiling(ActivePlayer.Width / 8), (int)Math.Ceiling(ActivePlayer.Height / 8));
+                            break;
+                        case Tools.CustomSprite:
+                            break;
+                        case Tools.Select:
+                            selection.SetSize(1, 1);
+                            break;
+                        default:
+                            break;
+                    }
                 if (!heldKeys.Contains(Keys.OemCloseBrackets))
                     selection.X = (mouseX - (8 * (selection.WidthTiles / 2))) / 8 * 8;
                 if (!heldKeys.Contains(Keys.OemOpenBrackets))
@@ -983,16 +1053,22 @@ namespace OpGL
             }
             if (CurrentEditingFocus == FocusOptions.Level)
             {
-                if (heldKeys.Contains(Keys.Control) || tool == Tools.Select || selecting || selectedSprites.Count > 0)
+                if (heldKeys.Contains(Keys.Control) || tool == Tools.Select || selectedSprites.Count > 0)
                 {
                     if (leftMouse && !selecting && selectedSprites.Count == 0)
                     {
+                        if (!heldKeys.Contains(Keys.Shift))
+                        {
+                            selectedSprites.Clear();
+                        }
                         selecting = true;
                         selectOrigin = new PointF(selection.X, selection.Y);
                     }
                     else if (!leftMouse && selecting && selectedSprites.Count == 0)
                     {
-
+                        selecting = false;
+                        List<Sprite> sel = sprites.GetPotentialColliders(selection.X + cameraX, selection.Y + cameraY, selection.Width, selection.Height);
+                        selectedSprites.AddRange(sel);
                     }
                 }
                 else
@@ -1031,6 +1107,118 @@ namespace OpGL
                                 {
                                     AutoTilesTool(selection.X + cameraX + tileX * 8, selection.Y + cameraY + tileY * 8, lm, tool == Tools.Background);
                                 }
+                            }
+                        }
+                    }
+                    else if (tool == Tools.GravityLine)
+                    {
+                        if (selecting)
+                        {
+                            int w = (int)Math.Floor((mouseX - selectOrigin.X) / 8);
+                            int h = (int)Math.Floor((mouseY - selectOrigin.Y) / 8);
+                            if (Math.Abs(w) > Math.Abs(h)) h = 0;
+                            else w = 0;
+                            if (w >= 0) w += 1;
+                            else w -= 1;
+                            if (h >= 0) h += 1;
+                            else h -= 1;
+                            selection.X = Math.Min(selectOrigin.X, selectOrigin.X + ((w + 1) * 8));
+                            selection.Y = Math.Min(selectOrigin.Y, selectOrigin.Y + ((h + 1) * 8));
+                            selection.SetSize(Math.Abs(w), Math.Abs(h));
+                            if (!leftMouse)
+                            {
+                                selecting = false;
+                                Texture gr = TextureFromName("gravityline");
+                                bool hor = h == 1;
+                                float x = selection.X;
+                                float y = selection.Y;
+                                if (hor)
+                                    y += 3;
+                                else
+                                    x += 3;
+                                sprites.AddForCollisions(new GravityLine(x + cameraX, y + cameraY, gr, hor ? gr.AnimationFromName("HGravLine") : gr.AnimationFromName("VGravLine"), hor, (int)Math.Max(selection.Width / 8, selection.Height / 8)));
+                            }
+                        }
+                        else
+                        {
+                            if (leftMouse)
+                            {
+                                selecting = true;
+                                selectOrigin = new PointF(selection.X, selection.Y);
+                            }
+                            else if (rightMouse)
+                            {
+                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + cameraX, selection.Y + cameraY);
+                                foreach (Sprite sprite in spr)
+                                {
+                                    if (sprite is GravityLine)
+                                    {
+                                        sprites.RemoveFromCollisions(sprite);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (tool == Tools.Checkpoint)
+                    {
+                        if (leftMouse & !selecting)
+                        {
+                            selecting = true;
+                            Texture sp32 = TextureFromName("sprites32");
+                            Checkpoint cp = new Checkpoint(selection.X + cameraX, selection.Y + cameraY, sp32, sp32.AnimationFromName("CheckOff"), sp32.AnimationFromName("CheckOn"), flipToolX, flipToolY);
+                            cp.CenterX = selection.CenterX;
+                            if (!flipToolY)
+                                cp.Bottom = selection.Bottom;
+                            sprites.Add(cp);
+                        }
+                        else if (!leftMouse & selecting)
+                            selecting = false;
+                        else if (rightMouse)
+                        {
+                            List<Sprite> spr = sprites.GetPotentialColliders(mouseX + cameraX, mouseY + cameraY, 2, 2);
+                            foreach (Sprite sprite in spr)
+                            {
+                                if (sprite is Checkpoint)
+                                {
+                                    sprites.RemoveFromCollisions(sprite);
+                                }
+                            }
+                        }
+                    }
+                    else if (tool == Tools.Start)
+                    {
+                        if (leftMouse)
+                        {
+                            if (!sprites.Contains(ActivePlayer))
+                            {
+                                sprites.Add(ActivePlayer);
+                            }
+                            ActivePlayer.Visible = true;
+                            ActivePlayer.CenterX = selection.CenterX + cameraX;
+                            ActivePlayer.Bottom = selection.Bottom + cameraY;
+                            StartX = (int)ActivePlayer.X;
+                            StartY = (int)ActivePlayer.Y;
+                            StartRoomX = CurrentRoom.X;
+                            StartRoomY = CurrentRoom.Y;
+                        }
+                        else if (rightMouse)
+                        {
+                            if (!(CurrentRoom.X == StartRoomX && CurrentRoom.Y == StartRoomY))
+                            {
+                                LoadRoom(StartRoomX, StartRoomY);
+                            }
+                            if (!sprites.Contains(ActivePlayer))
+                            {
+                                sprites.Add(ActivePlayer);
+                            }
+                            ActivePlayer.X = StartX;
+                            ActivePlayer.Y = StartY;
+                        }
+                        else
+                        {
+                            if (sprites.Contains(ActivePlayer))
+                            {
+                                sprites.Remove(ActivePlayer);
                             }
                         }
                     }
@@ -1671,6 +1859,10 @@ namespace OpGL
             int startRoomY = (int)loadFrom["StartRoomY"];
             int startX = (int)loadFrom["StartX"];
             int startY = (int)loadFrom["StartY"];
+            StartX = startX;
+            StartY = startY;
+            StartRoomX = startRoomX;
+            StartRoomY = startRoomY;
             //Initialize scripts
             JArray scripts = (JArray)loadFrom["Scripts"];
             SortedList<string, string> scriptContents = new SortedList<string, string>();

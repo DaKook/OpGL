@@ -167,12 +167,12 @@ namespace OpGL
 
             return colliders;
         }
-        public List<Sprite> GetPotentialColliders(float x, float y)
+        public List<Sprite> GetPotentialColliders(float x, float y, float w = 8, float h = 8)
         {
             if (perTile == null) SortForCollisions();
             List<Sprite> colliders = new List<Sprite>();
 
-            TileEnumerator te = new TileEnumerator(new RectangleF(x, y, 8, 8));
+            TileEnumerator te = new TileEnumerator(new RectangleF(x, y, w, h));
             do
             {
                 if (perTile.ContainsKey(te.Current))

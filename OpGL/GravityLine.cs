@@ -52,7 +52,7 @@ namespace OpGL
             {
                 bufferData[index++] = Horizontal ? curL * Texture.TileSizeX : 0;
                 bufferData[index++] = Horizontal ? 0 : curL * Texture.TileSizeY;
-                bufferData[index++] = curL == 0 ? 0 : (curL == length - 1 ? 2 : 1);
+                bufferData[index++] = length == 1 ? 1 : (curL == 0 ? 0 : (curL == length - 1 ? 2 : 1));
                 bufferData[index++] = 0;
                 curL += 1;
             }
