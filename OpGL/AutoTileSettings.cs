@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,12 +8,120 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    class AutoTileSettings
+    public class AutoTileSettings
     {
+        public class RoomPreset
+        {
+            public Initializer Ground;
+            public Initializer Background;
+            public Initializer Spikes;
+            public Color Color;
+            public Texture Texture;
+            public string Name;
+
+            public RoomPreset(Initializer ground, Initializer background, Initializer spikes, Color color, Texture texture)
+            {
+                Ground = ground;
+                Background = background;
+                Spikes = spikes;
+                Color = color;
+                Texture = texture;
+            }
+        }
+        public class PresetGroup : SortedList<string, RoomPreset>
+        {
+            public string Name;
+            public string Background;
+
+            public PresetGroup(string name, string background)
+            {
+                Name = name;
+                Background = background;
+            }
+
+            public void Add(RoomPreset preset)
+            {
+                if (ContainsKey(preset.Name))
+                    Remove(preset.Name);
+                Add(preset.Name, preset);
+            }
+        }
+        public class Initializer
+        {
+            public string Name;
+            public Point Origin;
+            public int Size;
+            public Point Size2;
+            public Initializer(string name, Point origin, int size, Point size2)
+            {
+                Name = name;
+                Origin = origin;
+                Size = size;
+                Size2 = size2;
+            }
+            public AutoTileSettings Initialize()
+            {
+                AutoTileSettings ret = null;
+                switch (Size)
+                {
+                    case 3:
+                        ret = Default3(Origin.X, Origin.Y);
+                        ret.Name = Name;
+                        break;
+                    case 4:
+                        ret = Default4(Origin.X, Origin.Y);
+                        ret.Name = Name;
+                        break;
+                    case 13:
+                        ret = Default13(Origin.X, Origin.Y);
+                        ret.Name = Name;
+                        break;
+                    case 47:
+                        ret = Default47(Origin.X, Origin.Y);
+                        ret.Name = Name;
+                        break;
+                }
+                ret.Size2 = Size2;
+                return ret;
+            }
+        }
+
         public string Name;
         private SortedList<int, Point> tiles = new SortedList<int, Point>();
         public Point Origin { get; private set; }
         public int Size { get; private set; }
+        public Point Size2 { get; private set; } = new Point(1, 1);
+        public JObject Save()
+        {
+            JObject ret = new JObject();
+            ret.Add("Name", Name);
+            ret.Add("OriginX", Origin.X);
+            ret.Add("OriginY", Origin.Y);
+            ret.Add("Size", Size);
+            if (Size2.X != 1 || Size2.Y != 1)
+            {
+                JArray s2 = new JArray() { Size2.X, Size2.Y };
+                ret.Add("Size2", s2);
+            }
+            return ret;
+        }
+        public static AutoTileSettings Load(JToken loadFrom)
+        {
+            if (loadFrom is null) return null;
+            string name = (string)loadFrom["Name"];
+            int x = (int)(loadFrom["OriginX"] ?? 0);
+            int y = (int)(loadFrom["OriginY"] ?? 0);
+            int size = (int)(loadFrom["Size"] ?? 13);
+            Point size2 = new Point(1, 1);
+            JArray s2 = (JArray)loadFrom["Size2"];
+            if (s2 is object && s2.Count == 2)
+            {
+                int sizex = (int)s2[0];
+                int sizey = (int)s2[1];
+                
+            }
+            return new Initializer(name, new Point(x, y), size, size2).Initialize();
+        }
         private static bool checkBit(int index, int data)
         {
             return (data & (1 << index)) != 0;
@@ -86,6 +195,7 @@ namespace OpGL
                 }
             }
             ret.Size = 13;
+            ret.Name = originX.ToString() + "," + originY.ToString();
             return ret;
         }
 
@@ -289,6 +399,7 @@ namespace OpGL
                 }
             }
             ret.Size = 47;
+            ret.Name = originX.ToString() + "," + originY.ToString();
             return ret;
         }
 
@@ -313,6 +424,7 @@ namespace OpGL
                 }
             }
             ret.Size = 3;
+            ret.Name = originX.ToString() + "," + originY.ToString();
             return ret;
         }
 
@@ -331,6 +443,7 @@ namespace OpGL
                     ret.setTile(i, new Point(originX + 3, originY));
             }
             ret.Size = 4;
+            ret.Name = originX.ToString() + "," + originY.ToString();
             return ret;
         }
 

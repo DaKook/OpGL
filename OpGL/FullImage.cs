@@ -10,16 +10,26 @@ namespace OpGL
 {
     public class FullImage : Sprite
     {
-        public float Size = 1;
 
-        public override float Width => base.Width * Size;
-        public override float Height => base.Height * Size;
+        public override float Width => Texture.Width * Size;
+        public override float Height => Texture.Height * Size;
 
         public FullImage(float x, float y, Texture texture) :
             base(x, y, texture, new Animation(new Point[] { new Point(0, 0) }, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height), texture))
         {
             Solid = SolidState.NonSolid;
             Static = true;
+            TexMatrix = Matrix4x4f.Identity;
+        }
+
+        public override void Process()
+        {
+            //Do nothing
+        }
+
+        public override void ChangeTexture(Texture texture)
+        {
+            base.ChangeTexture(texture);
             TexMatrix = Matrix4x4f.Identity;
         }
 

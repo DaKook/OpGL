@@ -9,52 +9,88 @@ using OpenGL;
 
 namespace OpGL
 {
-    public class Sprite
+    public class Sprite : IDisposable
     {
+        public virtual void Dispose()
+        {
+
+        }
+
+        protected virtual bool AlwaysCollide => false;
+        private static Texture lastLoaded = null;
         protected bool flipX;
         protected bool flipY;
-        protected Platform onPlatform;
+        protected IPlatform onPlatform;
         public virtual Pushability Pushability => Pushability.Pushable;
         public PushData FramePush;
+        public string TemplateName;
 
         public string Name { get; set; } = "";
 
         public Color Color { get; set; } = Color.White;
+        public AnimatedColor ColorModifier = null;
+        public string Tag;
 
         public Animation Animation { get; set; } = Animation.EmptyAnimation;
         private int _animFrame;
-        private Point _old = new Point(0, 0);
+        //private Point _old = new Point(0, 0);
         protected Point animationOffset = new Point(0, 0);
 
         public int Layer = 0;
-        private int animFrame
+        protected int animFrame
         {
             get => _animFrame;
             set
             {
-                Point n = Animation.GetFrame(_animFrame = value);
-                n.X += animationOffset.X;
-                n.Y += animationOffset.Y;
-                if (n != _old)
-                {
-                    TexMatrix.Translate((n.X - _old.X), (n.Y - _old.Y), 0f);
-                    _old = n;
-                }
+                _animFrame = value;
+                TexMatrix = Texture.BaseTexMatrix;
+                Point p;
+                if (Animation is object)
+                    p = Animation.GetFrame(value);
+                else
+                    p = new Point(0, 0);
+                TexMatrix.Translate(p.X + animationOffset.X, p.Y + animationOffset.Y, 0);
+                TexMatrix.Scale(extent.X, extent.Y, 1);
             }
         }
-        public float X { get; set; }
-        public float Y { get; set; }
+        public double DX;
+        public float X { get => (float)DX; set => DX = value; }
+        public double DY;
+        public float Y { get => (float)DY; set => DY = value; }
+        private float _initX, _initY;
+        public float InitialX
+        {
+            get => _initX;
+            set
+            {
+                _initX = value;
+                X = value;
+            }
+        }
+        public float InitialY
+        {
+            get => _initY;
+            set
+            {
+                _initY = value;
+                Y = value;
+            }
+        }
         public List<PointF> Offsets = new List<PointF>();
         public bool MultiplePositions;
         public float Right { get => X + Width; set => X = value - Width; }
         public float Bottom { get => Y + Height; set => Y = value - Height; }
         public float CenterX { get => X + Width / 2; set => X = value - Width / 2; }
         public float CenterY { get => Y + Height / 2; set => Y = value - Height / 2; }
-        public float PreviousX { get; set; }
-        public float PreviousY { get; set; }
-        public virtual float Width { get => Animation.Hitbox.Width; }
-        public virtual float Height { get => Animation.Hitbox.Height; }
+        public double PreviousX { get; set; }
+        public double PreviousY { get; set; }
+        public float PreviousWidth { get; set; }
+        public float PreviousHeight { get; set; }
+        public virtual float Width { get => (Animation is object ? Animation.Hitbox.Width : 0) * extent.X * Size; }
+        public virtual float Height { get => (Animation is object ? Animation.Hitbox.Height : 0) * extent.Y * Size; }
         public bool Pushable = false;
+        public bool IsOnPlatform => onPlatform is object;
+        public Sprite Platform => onPlatform as Sprite;
 
         public virtual bool IsCrewman { get => false; }
 
@@ -73,8 +109,10 @@ namespace OpGL
             }
         }
         public virtual uint TextureID { get => Texture.ID; }
+        public SortedList<string, float> Tags = new SortedList<string, float>();
 
         public bool Visible { get; set; } = true;
+        public ActivityZone ActivityZone;
         public enum SolidState {
             /// <summary>
             /// Solid for anything except NonSolid.
@@ -108,7 +146,9 @@ namespace OpGL
         //public bool AlwaysProcess { get; set; } = false;
         public bool KillCrewmen { get; set; } = false;
         public Texture Texture { get; protected set; }
+        public virtual ProgramData Program => Texture?.Program;
         public virtual uint VAO { get => Texture.baseVAO; set { } }
+        public bool DidCollision = false;
 
         public bool IsWarpingV;
         public bool IsWarpingH;
@@ -116,20 +156,55 @@ namespace OpGL
         public Matrix4x4f LocMatrix;
         public Matrix4x4f TexMatrix;
 
+        private PointF extent = new PointF(1, 1);
+        public float Size = 1;
+
         public Sprite(float x, float y, Texture texture, int texX, int texY, Color? color = null)
         {
             X = x;
             Y = y;
             PreviousX = x;
             PreviousY = y;
+            InitialX = x;
+            InitialY = y;
 
             Texture = texture;
             TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
             TexMatrix.Translate(texX, texY, 0f);
 
             Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSizeX, texture.TileSizeY), texture);
-            _old = Animation.GetFrame(0);
+            if (Animation == null)
+            {
+                Animation = Animation.Static(0, 0, texture);
+            }
             Color = color ?? Color.White;
+        }
+        protected Sprite()
+        {
+
+        }
+
+        public virtual void ChangeTexture(Texture texture)
+        {
+            if (texture != null)
+            {
+                Texture = texture;
+                TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
+            }
+        }
+
+        public void InitializePosition()
+        {
+            _initX = X;
+            _initY = Y;
+        }
+
+        public void AttachToPlatform(IPlatform attachTo)
+        {
+            if (onPlatform is object)
+                onPlatform.OnTop.Remove(this);
+            onPlatform = attachTo;
+            attachTo.OnTop.Add(this);
         }
 
         public Sprite(float x, float y, Texture texture, Animation animation)
@@ -138,6 +213,8 @@ namespace OpGL
             Y = y;
             PreviousX = x;
             PreviousY = y;
+            InitialX = x;
+            InitialY = y;
 
             Texture = texture;
             if (texture != null)
@@ -146,13 +223,12 @@ namespace OpGL
             Animation = animation;
             if (animation != null)
             {
-                _old = Animation.GetFrame(0);
                 Point p = Animation.GetFrame(animFrame);
                 TexMatrix.Translate(p.X, p.Y, 0f);
             }
         }
 
-        public bool Within(float x, float y, float width, float height, float offsetX = 0, float offsetY = 0)
+        public bool Within(double x, double y, float width, float height, double offsetX = 0, double offsetY = 0)
         {
             return Right + offsetX > x && X + offsetX < x + width
                 && Bottom + offsetY > y && Y + offsetY < y + height;
@@ -208,17 +284,25 @@ namespace OpGL
         // update model matrix
         public virtual void RenderPrep()
         {
-            LocMatrix = Matrix4x4f.Translated((int)X - Animation.Hitbox.X, (int)Y - Animation.Hitbox.Y, 0);
+            int x = 0;
+            int y = 0;
+            if (Animation != null)
+            {
+                x = (int)Math.Round(X - (Animation.Hitbox.X * Size));
+                y = (int)Math.Round(Y - (Animation.Hitbox.Y * Size));
+            }
+            LocMatrix = Matrix4x4f.Translated(x, y, 0);
             if (flipX)
             {
                 LocMatrix.Scale(-1, 1, 1);
-                LocMatrix.Translate(-Animation.Hitbox.X * 2 - Width, 0, 0);
+                LocMatrix.Translate(-Animation.Hitbox.X * 2 * Size - Width, 0, 0);
             }
             if (flipY)
             {
                 LocMatrix.Scale(1, -1, 1);
-                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 - Height, 0);
+                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 * Size - Height, 0);
             }
+            LocMatrix.Scale(extent.X * Size, extent.Y * Size, 1);
         }
         // Just the render call; everything should be set up before calling this.
         public virtual void UnsafeDraw()
@@ -239,7 +323,22 @@ namespace OpGL
 
         public void ResetAnimation()
         {
+            if (Animation is object && Texture is object)
             animFrame = 0;
+        }
+
+        public void SetPreviousLoaction()
+        {
+            if (Animation is null)
+            {
+                Animation = Animation.Static(0, 0, Texture);
+            }
+            X = (float)Math.Round(X, 4);
+            Y = (float)Math.Round(Y, 4);
+            PreviousX = X;
+            PreviousY = Y;
+            PreviousWidth = Width;
+            PreviousHeight = Height;
         }
 
         public virtual bool FlipX { get => flipX; set => flipX = value; }
@@ -247,24 +346,37 @@ namespace OpGL
 
         public virtual void Process()
         {
+            DidCollision = false;
             FramePush = new PushData(Pushability);
-            //Advance animation frame and change TextureX and TextureY accordingly
-            if (animFrame + 1 >= Animation.FrameCount)
-                animFrame = Animation.LoopStart;
-            else
-                animFrame += 1;
-
-            PreviousX = X;
-            PreviousY = Y;
+            AdvanceFrame();
         }
 
-        public virtual void CollideY(float distance, Sprite collision)
+        public void AdvanceFrame()
         {
-            Y -= distance;
+            if (Animation is object && Texture is object)
+            {
+                if (animFrame + 1 >= Animation.FrameCount * Animation.BaseSpeed)
+                    animFrame = Animation.LoopStart;
+                else
+                    animFrame += 1;
+            }
         }
-        public virtual void CollideX(float distance, Sprite collision)
+
+        public virtual void CollideY(double distance, Sprite collision)
         {
-            X -= distance;
+            DY -= distance;
+            //if (distance > 0)
+            //    Bottom = collision.Y;
+            //else if (distance < 0)
+            //    Y = collision.Bottom;
+        }
+        public virtual void CollideX(double distance, Sprite collision)
+        {
+            DX -= distance;
+            //if (distance > 0)
+            //    Right = collision.X;
+            //else if (distance < 0)
+            //    X = collision.Right;
         }
 
         public virtual CollisionData TestCollision(Sprite testFor)
@@ -279,7 +391,7 @@ namespace OpGL
             }
             return ret;
         }
-        protected CollisionData GetCollisionData(Sprite testFor)
+        protected virtual CollisionData GetCollisionData(Sprite testFor)
         {
             for (int i = -1; i < Offsets.Count; i++)
             {
@@ -289,23 +401,24 @@ namespace OpGL
                 {
                     float ofXO = j > -1 ? testFor.Offsets[j].X : 0;
                     float ofYO = j > -1 ? testFor.Offsets[j].Y : 0;
-                    if (!testFor.Within(X + ofX, Y + ofY, Width, Height, ofXO, ofYO)) continue;
+                    if (!testFor.Within(DX + ofX, DY + ofY, Width, Height, ofXO, ofYO)) continue;
                     // check for vertical collision first
                     // top
-                    if (PreviousY + Height + ofY <= testFor.PreviousY + ofYO)
-                        return new CollisionData(true, Bottom + ofY - (testFor.Y + ofYO), testFor);
+                    if (Math.Round(PreviousY + PreviousHeight + ofY, 4) <= Math.Round(testFor.PreviousY, 4) + ofYO)
+                        return new CollisionData(true, DY + Height + ofY - (testFor.DY + ofYO), testFor);
                     // bottom
-                    else if (PreviousY + ofY >= testFor.PreviousY + testFor.Height + ofYO)
-                        return new CollisionData(true, Y + ofY - (testFor.Bottom + ofYO), testFor);
+                    else if (Math.Round(PreviousY + ofY, 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4))
+                        return new CollisionData(true, DY + ofY - (testFor.DY + testFor.Height + ofYO), testFor);
                     // right
-                    else if (PreviousX + Width + ofX <= testFor.PreviousX + ofXO)
-                        return new CollisionData(false, Right + ofX - (testFor.X + ofXO), testFor);
+                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4))
+                        return new CollisionData(false, DX + Width + ofX - (testFor.DX + ofXO), testFor);
                     // left
-                    else if (PreviousX + ofX >= testFor.PreviousX + testFor.Width + ofXO)
-                        return new CollisionData(false, X + ofX - (testFor.Right + ofXO), testFor);
-                    else if (this is Crewman && testFor is ScriptBox)
+                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4))
+                        return new CollisionData(false, DX + ofX - (testFor.DX + testFor.Width + ofXO), testFor);
+                    else if (testFor.AlwaysCollide)
                         return new CollisionData(true, 0, testFor);
-                    if (!testFor.MultiplePositions) break;
+                    if (!testFor.MultiplePositions)
+                        break;
                 }
                 if (!MultiplePositions) break;
             }
@@ -323,18 +436,31 @@ namespace OpGL
                 return null;
 
             CollisionData ret = collisions[0];
+            double d = ret.Distance;
+            Pushability pushability = Pushability;
+            if (ret.CollidedWith.Solid != SolidState.Ground) d = 0;
             for (int i = 1; i < collisions.Count; i++)
             {
                 CollisionData dt = collisions[i];
                 if (!dt.Vertical)
                 {
-                    if (ret.Vertical || Math.Abs(dt.Distance) > Math.Abs(ret.Distance))
-                        ret = dt;
+                    if (ret.Vertical || Math.Abs(dt.Distance) > Math.Abs(d) && dt.CollidedWith.Solid == SolidState.Ground)
+                    {
+                        if (pushability <= dt.CollidedWith.FramePush.GetOppositePushability(dt))
+                        {
+                            pushability = dt.CollidedWith.FramePush.GetOppositePushability(dt);
+                            ret = dt;
+                            d = ret.Distance;
+                        }
+                    }
                 }
                 else if (ret.Vertical)
                 {
-                    if (Math.Abs(dt.Distance) > Math.Abs(ret.Distance))
+                    if (Math.Abs(dt.Distance) > Math.Abs(d) && dt.CollidedWith.Solid == SolidState.Ground)
+                    {
                         ret = dt;
+                        d = ret.Distance;
+                    }
                 }
             }
             return ret;
@@ -355,7 +481,8 @@ namespace OpGL
         public virtual bool CollideWith(CollisionData data)
         {
             if (Static || Immovable) return false;
-            if (data.CollidedWith is WarpLine) data.CollidedWith.Collide(new CollisionData(data.Vertical, -data.Distance, this));
+            if (data.CollidedWith is WarpLine)
+                data.CollidedWith.Collide(new CollisionData(data.Vertical, -data.Distance, this));
             if (data.CollidedWith.Solid == SolidState.Entity && (data.CollidedWith.Static || data.CollidedWith.Immovable)) return true;
             if (data.Vertical)
             {
@@ -368,178 +495,358 @@ namespace OpGL
             return true;
         }
 
+        public virtual void Move(double x, double y)
+        {
+            this.DX += x;
+            this.DY += y;
+        }
+
         public virtual void HandleCrewmanCollision(Crewman crewman)
         {
             //Do nothing
         }
 
-        public virtual JObject Save()
+        public void ExtendTexture(float width, float height)
+        {
+            extent = new PointF(width, height);
+            animFrame = animFrame;
+        }
+
+        public virtual SortedList<string, SpriteProperty> Properties
+        {
+            get
+            {
+                SortedList<string, SpriteProperty> ret = new SortedList<string, SpriteProperty>();
+                ret.Add("Type", new SpriteProperty("Type", () => "Sprite", (t, g) => { }, "", SpriteProperty.Types.String, "The type of the sprite.", false));
+                ret.Add("X", new SpriteProperty("X", () => X, (t, g) => InitialX = (float)t, 0f, SpriteProperty.Types.Float, "The X position of the sprite."));
+                ret.Add("Y", new SpriteProperty("Y", () => Y, (t, g) => InitialY = (float)t, 0f, SpriteProperty.Types.Float, "The Y position of the sprite."));
+                ret.Add("Texture", new SpriteProperty("Texture", () => Texture.Name, (t, g) => ChangeTexture(g.TextureFromName((string)t)), "", SpriteProperty.Types.Texture, "The Texture used by the sprite.", false));
+                ret.Add("Animation", new SpriteProperty("Animation", () => Animation?.Name, (t, g) => Animation = Texture.AnimationFromName((string)t), "", SpriteProperty.Types.Animation, "The Animation desplayed as the sprite."));
+                ret.Add("Layer", new SpriteProperty("Layer", () => Layer, (t, g) => Layer = (int)t, 0, SpriteProperty.Types.Int, "The layer this sprite is drawn on. Lower layers are behind higher ones.", false));
+                ret.Add("Gravity", new SpriteProperty("Gravity", () => Gravity, (t, g) => Gravity = (float)t, 0f, SpriteProperty.Types.Float, "The gravity of the sprite.", false));
+                ret.Add("Color", new SpriteProperty("Color", () => Color.ToArgb(), (t, g) => Color = Color.FromArgb((int)t), Color.White.ToArgb(), SpriteProperty.Types.Color, "The color of this sprite."));
+                ret.Add("FlipX", new SpriteProperty("FlipX", () => FlipX, (t, g) => FlipX = (bool)t, false, SpriteProperty.Types.Bool, "Whether this sprite is flipped on the X axis."));
+                ret.Add("FlipY", new SpriteProperty("FlipY", () => FlipY, (t, g) => FlipY = (bool)t, false, SpriteProperty.Types.Bool, "Whether this sprite is flipped on the Y axis."));
+                ret.Add("Static", new SpriteProperty("Static", () => Static, (t, g) => Static = (bool)t, false, SpriteProperty.Types.Bool, "Static sprites cannot be animated or moved.", false));
+                ret.Add("Solid", new SpriteProperty("Solid", () => (int)Solid, (t, g) => Solid = (SolidState)(int)t, (int)SolidState.Entity, SpriteProperty.Types.Int, "The solidity of the sprite. 0 = Solid, 1 = Entity, 2 = NonSolid", false));
+                ret.Add("Name", new SpriteProperty("Name", () => Name, (t, g) => Name = (string)t, "", SpriteProperty.Types.String, "The name of the sprite.", false));
+                ret.Add("Size", new SpriteProperty("Size", () => Size, (t, g) => Size = (float)t, 1, SpriteProperty.Types.Float, "The size of the sprite.", false));
+                return ret;
+            }
+        }
+
+        public virtual void SetProperty(string name, JToken value, Game game)
+        {
+            SortedList<string, SpriteProperty> properties = Properties;
+            if (properties.ContainsKey(name))
+            {
+                properties[name].SetValue(value, game);
+            }
+        }
+        public void SetProperty(JProperty property, Game game)
+        {
+            SetProperty(property.Name, property.Value, game);
+        }
+        public JToken GetProperty(string name)
+        {
+            SortedList<string, SpriteProperty> properties = Properties;
+            if (properties.ContainsKey(name))
+                return properties[name].GetValue();
+            else
+                return null;
+        }
+        public void SyncAnimation(int frame)
+        {
+            animFrame = frame % Animation.FrameCount;
+        }
+
+        public virtual JObject Save(Game game, bool isUniversal = false)
         {
             JObject ret = new JObject();
-            ret.Add("Type", "Sprite");
-            ret.Add("X", X);
-            ret.Add("Y", Y);
-            ret.Add("Texture", Texture.Name);
-            ret.Add("Animation", Animation.Name);
-            ret.Add("Color", Color.ToArgb());
+            if (game.UserAccessSprites.ContainsValue(this) && !isUniversal)
+            {
+                ret.Add("Sprite", Name);
+                ret.Add("X", X);
+                ret.Add("Y", Y);
+                return ret;
+            }
+            bool isTemplate = TemplateName != null;
+            Sprite tmp = null;
+            if (isTemplate)
+            {
+                tmp = LoadSprite(game.TemplateFromName(TemplateName), game);
+                ret.Add("Base", TemplateName);
+                if (tmp.Texture != Texture)
+                    ret.Add("Texture", Texture.Name);
+            }
+            else
+                ret.Add("Texture", Texture.Name);
+            SortedList<string, SpriteProperty> properties = Properties;
+            foreach (SpriteProperty property in properties.Values)
+            {
+                if (property.Name == "Texture") continue;
+                if (isTemplate)
+                {
+                    if (property.GetValue().Equals(tmp.GetProperty(property.Name)))
+                        continue;
+                }
+                else if (property.IsDefault) continue;
+                ret.Add(property.Name, property.GetValue());
+            }
             return ret;
         }
 
         public static Sprite LoadSprite(JToken loadFrom, Game game)
         {
+            if (!loadFrom.HasValues) return null;
+            string spriteName = (string)loadFrom["Sprite"];
+            string templateName = (string)loadFrom["Base"];
             string type = (string)loadFrom["Type"];
             //Type t = typeof(Sprite);
             Sprite s;
-            float x = (float)loadFrom["X"];
-            float y = (float)loadFrom["Y"];
-            string textureName = (string)loadFrom["Texture"];
-            Texture texture = game.TextureFromName(textureName ?? "");
-            int? layer = loadFrom["Layer"] != null ? (int)loadFrom["Layer"] : (int?)null;
-            Color color = Color.FromArgb((int)(loadFrom["Color"] ?? -1));
-            if (type == "Tile")
+            if (spriteName is object)
             {
-                int tileX = (int)loadFrom["TileX"];
-                int tileY = (int)loadFrom["TileY"];
-                string tag = (string)loadFrom["Tag"];
-                s = new Tile((int)x, (int)y, texture, tileX, tileY) { Tag = tag };
+                float x = (float)(loadFrom["X"] ?? 0f);
+                float y = (float)(loadFrom["Y"] ?? 0f);
+                s = game.SpriteFromName(spriteName);
+                if (s != game.ActivePlayer || game.CurrentState != Game.GameStates.Playing)
+                {
+                    s.ResetAnimation();
+                    s.InitialX = x;
+                    s.InitialY = y;
+                }
             }
-            else if (type == "Enemy")
+            else if (templateName is object)
             {
-                string animationName = (string)loadFrom["Animation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
+                s = LoadSprite(game.TemplateFromName(templateName), game);
+                foreach (JProperty property in loadFrom)
+                {
+                    s.SetProperty(property, game);
+                    s.TemplateName = templateName;
+                }
+            }
+            else
+            {
+                float x = (float)(loadFrom["X"] ?? 0f);
+                float y = (float)(loadFrom["Y"] ?? 0f);
+                string textureName = (string)loadFrom["Texture"] ?? "";
                 string name = (string)loadFrom["Name"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
-                s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, color);
-                s.Name = name;
-                (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "Crewman")
-            {
-                string standName = (string)loadFrom["Standing"] ?? "Standing";
-                string walkName = (string)loadFrom["Walking"] ?? "Walking";
-                string fallName = (string)loadFrom["Falling"] ?? "Falling";
-                string jumpName = (string)loadFrom["Jumping"] ?? "Jumping";
-                string dieName = (string)loadFrom["Dying"] ?? "Dying";
-                string name = (string)loadFrom["Name"];
-                int textBoxColor = (int)loadFrom["TextBox"];
-                bool sad = (bool)(loadFrom["Sad"] ?? false);
-                float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
-                bool flipX = (bool)loadFrom["FlipX"];
-                string squeakName = (string)loadFrom["Squeak"];
-                bool canFlip = (bool)(loadFrom["Flip"] ?? true);
-                float jump = (float)(loadFrom["Jump"] ?? 1.6875f);
-                float speed = (float)(loadFrom["Speed"] ?? 3f);
-                float acceleration = (float)(loadFrom["Acceleration"] ?? 0.375f);
-                s = new Crewman(x, y, texture, name, texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
-                (s as Crewman).Sad = sad;
-                (s as Crewman).Squeak = game.GetSound(squeakName);
-                (s as Crewman).CanFlip = canFlip;
-                (s as Crewman).Jump = jump;
-                (s as Crewman).MaxSpeed = speed;
-                (s as Crewman).Acceleration = acceleration;
-                s.Gravity = gravity;
-                s.FlipX = flipX;
-            }
-            else if (type == "Checkpoint")
-            {
-                string deactivatedName = (string)loadFrom["Deactivated"];
-                string activatedName = (string)loadFrom["Activated"];
-                bool flipX = (bool)loadFrom["FlipX"];
-                bool flipY = (bool)loadFrom["FlipY"];
-                s = new Checkpoint(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), flipX, flipY);
-            }
-            else if (type == "Platform")
-            {
-                string animationName = (string)loadFrom["Animation"];
-                string disappearName = (string)loadFrom["DisappearAnimation"];
-                float xSpeed = (float)loadFrom["XSpeed"];
-                float ySpeed = (float)loadFrom["YSpeed"];
-                float conveyor = (float)loadFrom["Conveyor"];
-                string name = (string)loadFrom["Name"];
-                bool disappear = (bool)loadFrom["Disappear"];
-                int boundX = (int)loadFrom["BoundsX"];
-                int boundY = (int)loadFrom["BoundsY"];
-                int boundW = (int)loadFrom["BoundsWidth"];
-                int boundH = (int)loadFrom["BoundsHeight"];
-                s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
-                s.Name = name;
-                (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "Terminal")
-            {
-                string deactivatedName = (string)loadFrom["Deactivated"];
-                string activatedName = (string)loadFrom["Activated"];
-                string script = (string)loadFrom["Script"];
-                bool repeat = (bool)loadFrom["Repeat"];
-                bool flipX = (bool)loadFrom["FlipX"];
-                bool flipY = (bool)loadFrom["FlipY"];
-                s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), game.ScriptFromName(script), repeat);
-                s.FlipX = flipX;
-                s.FlipY = flipY;
-            }
-            else if (type == "GravityLine")
-            {
-                int length = (int)loadFrom["Length"];
-                bool horizontal = (bool)loadFrom["Horizontal"];
-                string animationName = (string)loadFrom["Animation"];
-                float xSpeed = (float)(loadFrom["XSpeed"] ?? 0f);
-                float ySpeed = (float)(loadFrom["YSpeed"] ?? 0f);
-                int boundX = (int)(loadFrom["BoundsX"] ?? 0);
-                int boundY = (int)(loadFrom["BoundsY"] ?? 0);
-                int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
-                int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
-                s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
-                (s as GravityLine).XSpeed = xSpeed;
-                (s as GravityLine).YSpeed = ySpeed;
-                (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
-            }
-            else if (type == "WarpLine")
-            {
-                int length = (int)loadFrom["Length"];
-                bool horizontal = (bool)loadFrom["Horizontal"];
-                float offX = (float)loadFrom["OffsetX"];
-                float offY = (float)loadFrom["OffsetY"];
-                s = new WarpLine(x, y, length, horizontal, offX, offY);
-            }
-            else if (type == "WarpToken")
-            {
-                Animation animation = texture.AnimationFromName((string)loadFrom["Animation"]);
-                float outX = (float)loadFrom["OutX"];
-                float outY = (float)loadFrom["OutY"];
-                int settings = (int)loadFrom["Flip"];
-                s = new WarpToken(x, y, texture, animation, outX, outY, game, (WarpToken.FlipSettings)settings);
-            }
-            else if (type == "ScriptBox")
-            {
-                int width = (int)loadFrom["Width"];
-                int height = (int)loadFrom["Height"];
-                string script = (string)loadFrom["Script"];
-                s = new ScriptBox(x, y, texture, width, height, game.ScriptFromName(script), game);
-            }
-            else if (type == "Sprite")
-            {
-                string animationName = (string)loadFrom["Animation"] ?? "";
-                s = new Sprite(x, y, texture, texture.AnimationFromName(animationName));
-            }
-            else if (type == "Push")
-            {
-                string animationName = (string)loadFrom["Animation"] ?? "";
-                float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
-                s = new PushSprite(x, y, texture, texture.AnimationFromName(animationName));
-                s.Gravity = gravity;
-            }
 
-            else s = null;
-            if (s != null && layer != null)
-                s.Layer = layer.Value;
-            if (s != null)
-                s.Color = color;
+                Texture texture;
+                if (textureName == lastLoaded?.Name)
+                    texture = lastLoaded;
+                else
+                    texture = game.TextureFromName(textureName ?? "");
+                lastLoaded = texture;
+                int? layer = loadFrom["Layer"] != null ? (int)loadFrom["Layer"] : (int?)null;
+                Color color = Color.FromArgb((int)(loadFrom["Color"] ?? -1));
+                if (type == "Tile")
+                {
+                    int tileX = (int)(loadFrom["TileX"] ?? 0);
+                    int tileY = (int)(loadFrom["TileY"] ?? 0);
+                    string tag = (string)loadFrom["Tag"] ?? "";
+                    s = new Tile((int)x, (int)y, texture, tileX, tileY) { Tag = tag };
+                }
+                else if (type == "Enemy")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    float xSpeed = (float)(loadFrom["XSpeed"] ?? 0);
+                    float ySpeed = (float)(loadFrom["YSpeed"] ?? 0);
+                    int boundX = (int)(loadFrom["BoundsX"] ?? 0);
+                    int boundY = (int)(loadFrom["BoundsY"] ?? 0);
+                    int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
+                    int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
+                    bool flipX = (bool)(loadFrom["FlipX"] ?? false);
+                    bool flipY = (bool)(loadFrom["FlipY"] ?? false);
+                    s = new Enemy(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, color);
+                    s.FlipX = flipX;
+                    s.FlipY = flipY;
+                    (s as Enemy).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+                }
+                else if (type == "Crewman")
+                {
+                    string standName = (string)loadFrom["Standing"] ?? "Standing";
+                    string walkName = (string)loadFrom["Walking"] ?? "Walking";
+                    string fallName = (string)loadFrom["Falling"] ?? "Falling";
+                    string jumpName = (string)loadFrom["Jumping"] ?? "Jumping";
+                    string dieName = (string)loadFrom["Dying"] ?? "Dying";
+                    int textBoxColor = (int)(loadFrom["TextBox"] ?? 0);
+                    bool sad = (bool)(loadFrom["Sad"] ?? false);
+                    float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
+                    bool flipX = (bool)(loadFrom["FlipX"] ?? false);
+                    string squeakName = (string)loadFrom["Squeak"] ?? "crew1";
+                    bool canFlip = (bool)(loadFrom["Flip"] ?? true);
+                    float jump = (float)(loadFrom["Jump"] ?? 1.6875f);
+                    float speed = (float)(loadFrom["Speed"] ?? 3f);
+                    float acceleration = (float)(loadFrom["Acceleration"] ?? 0.475f);
+                    s = new Crewman(x, y, texture, game, name ?? "", texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(textBoxColor));
+                    (s as Crewman).Sad = sad;
+                    (s as Crewman).Squeak = game.GetSound(squeakName);
+                    (s as Crewman).CanFlip = canFlip;
+                    (s as Crewman).Jump = jump;
+                    (s as Crewman).MaxSpeed = speed;
+                    (s as Crewman).Acceleration = acceleration;
+                    s.Gravity = gravity;
+                    s.FlipX = flipX;
+                }
+                else if (type == "Checkpoint")
+                {
+                    string deactivatedName = (string)loadFrom["Animation"] ?? "Deactivated";
+                    string activatedName = (string)loadFrom["ActivatedAnimation"] ?? "Activated";
+                    bool flipX = (bool)(loadFrom["FlipX"] ?? false);
+                    bool flipY = (bool)(loadFrom["FlipY"] ?? false);
+                    s = new Checkpoint(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), flipX, flipY);
+                }
+                else if (type == "Platform")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    string disappearName = (string)loadFrom["DisappearAnimation"] ?? "";
+                    float xSpeed = (float)(loadFrom["XSpeed"] ?? 0f);
+                    float ySpeed = (float)(loadFrom["YSpeed"] ?? 0f);
+                    float conveyor = (float)(loadFrom["Conveyor"] ?? 0f);
+                    bool disappear = (bool)(loadFrom["Disappear"] ?? false);
+                    int boundX = (int)(loadFrom["BoundsX"] ?? 0);
+                    int boundY = (int)(loadFrom["BoundsY"] ?? 0);
+                    int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
+                    int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
+                    int length = (int)(loadFrom["Length"] ?? 4);
+                    s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName));
+                    (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+                    (s as Platform).Length = length;
+                }
+                else if (type == "Terminal")
+                {
+                    string deactivatedName = (string)loadFrom["Animation"] ?? "";
+                    string activatedName = (string)loadFrom["ActivatedAnimation"] ?? "";
+                    string script = (string)loadFrom["Script"] ?? "";
+                    bool repeat = (bool)(loadFrom["Repeat"] ?? false);
+                    bool flipX = (bool)(loadFrom["FlipX"] ?? false);
+                    bool flipY = (bool)(loadFrom["FlipY"] ?? false);
+                    s = new Terminal(x, y, texture, texture.AnimationFromName(deactivatedName), texture.AnimationFromName(activatedName), game.ScriptFromName(script), repeat, game);
+                    s.FlipX = flipX;
+                    s.FlipY = flipY;
+                }
+                else if (type == "GravityLine")
+                {
+                    int length = (int)(loadFrom["Length"] ?? 1);
+                    bool horizontal = (bool)(loadFrom["Horizontal"] ?? true);
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    float xSpeed = (float)(loadFrom["XSpeed"] ?? 0f);
+                    float ySpeed = (float)(loadFrom["YSpeed"] ?? 0f);
+                    int boundX = (int)(loadFrom["BoundsX"] ?? 0);
+                    int boundY = (int)(loadFrom["BoundsY"] ?? 0);
+                    int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
+                    int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
+                    s = new GravityLine(x, y, texture, texture.AnimationFromName(animationName), horizontal, length);
+                    (s as GravityLine).XVel = xSpeed;
+                    (s as GravityLine).YVel = ySpeed;
+                    (s as GravityLine).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
+                }
+                else if (type == "WarpLine")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    int length = (int)(loadFrom["Length"] ?? 1);
+                    bool horizontal = (bool)(loadFrom["Horizontal"] ?? true);
+                    float offX = (float)(loadFrom["OffsetX"] ?? 0f);
+                    float offY = (float)(loadFrom["OffsetY"] ?? 0f);
+                    int direction = (int)(loadFrom["Direction"] ?? 0);
+                    s = new WarpLine(x, y, texture, texture.AnimationFromName(animationName), length, horizontal, offX, offY, direction);
+                }
+                else if (type == "WarpToken")
+                {
+                    Animation animation = texture.AnimationFromName((string)loadFrom["Animation"] ?? "");
+                    float outX = (float)(loadFrom["OutX"] ?? 0f);
+                    float outY = (float)(loadFrom["OutY"] ?? 0f);
+                    int outRoomX = (int)(loadFrom["OutRoomX"] ?? 0);
+                    int outRoomY = (int)(loadFrom["OutRoomY"] ?? 0);
+                    int settings = (int)(loadFrom["Flip"] ?? 3);
+                    s = new WarpToken(x, y, texture, animation, outX, outY, outRoomX, outRoomY, game, (WarpToken.FlipSettings)settings);
+                }
+                else if (type == "ScriptBox")
+                {
+                    int width = (int)(loadFrom["Width"] ?? 1);
+                    int height = (int)(loadFrom["Height"] ?? 1);
+                    string script = (string)loadFrom["Script"] ?? "";
+                    s = new ScriptBox(x, y, texture, width, height, game.ScriptFromName(script), game);
+                }
+                else if (type == "Sprite")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    bool flipX = (bool)(loadFrom["FlipX"] ?? false);
+                    bool flipY = (bool)(loadFrom["FlipY"] ?? false);
+                    s = new Sprite(x, y, texture, texture.AnimationFromName(animationName));
+                    s.FlipX = flipX;
+                    s.FlipY = flipY;
+                }
+                else if (type == "Push")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    float gravity = (float)(loadFrom["Gravity"] ?? 0.6875f);
+                    s = new PushSprite(x, y, texture, texture.AnimationFromName(animationName));
+                    s.Gravity = gravity;
+                }
+                else if (type == "Text")
+                {
+                    string text = (string)loadFrom["Text"] ?? "";
+                    s = new StringDrawable(x, y, texture, text);
+                }
+                else if (type == "Trinket")
+                {
+                    string animationName = (string)loadFrom["Animation"] ?? "";
+                    string scriptName = (string)loadFrom["Script"] ?? "";
+                    int id = (int)(loadFrom["ID"] ?? 0);
+                    s = new Trinket(x, y, texture, texture.AnimationFromName(animationName), game.ScriptFromName(scriptName), game, id);
+                }
+
+                else s = null;
+                if (s != null && layer != null)
+                    s.Layer = layer.Value;
+                if (s != null)
+                    s.Color = color;
+                if (name is object)
+                    s.Name = name;
+                s.Size = (float)(loadFrom["Size"] ?? 1);
+                if (s is IPlatform)
+                {
+                    IPlatform ip = s as IPlatform;
+                    JArray ot = (JArray)loadFrom["Attached"];
+                    if (ot is object)
+                    {
+                        foreach (JToken ots in ot)
+                        {
+                            Sprite sp = LoadSprite(ots, game);
+                            ip.OnTop.Add(sp);
+                            sp.onPlatform = ip;
+                        }
+                    }
+                }
+            }
 
             return s;
+        }
+        public void Load(JToken loadFrom, Game game)
+        {
+            SortedList<string, SpriteProperty> props = Properties;
+            foreach (JProperty property in loadFrom)
+            {
+                if (props.TryGetValue(property.Name, out SpriteProperty p))
+                {
+                    p.SetValue(property.Value, game);
+                    props.Remove(p.Name);
+                }
+            }
+            foreach (SpriteProperty property in props.Values)
+            {
+                property.SetValue(property.DefaultValue, game);
+            }
+            ResetSprite();
+        }
+        protected virtual void ResetSprite()
+        {
+            ResetAnimation();
+            IsWarpingH = IsWarpingV = false;
+            MultiplePositions = false;
+            Offsets.Clear();
         }
     }
 

@@ -5,18 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NAudio.Wave;
+//using CSCore.Codecs.WAV;
+//using CSCore.SoundOut;
 
 namespace OpGL
 {
-    public class SoundEffect
+    public class SoundEffect : IDisposable
     {
         Stream source;
-        WaveStream reader;
+        WaveFileReader reader;
         WaveOut wav;
         public string Name;
+        public bool Loaded { get; private set; }
 
         public SoundEffect(string path)
         {
+            Loaded = false;
             string fName = path.Split('/').Last();
             fName = fName.Substring(0, fName.Length - 4);
             Name = fName;
@@ -28,13 +32,35 @@ namespace OpGL
             }
             else
                 throw new InvalidOperationException("Sound effects can only be .wav files!");
+        }
+
+        public void Initialize()
+        {
+            if (Loaded) return;
             wav.Init(reader);
+            Loaded = true;
         }
 
         public void Play()
         {
-            reader.Seek(0, SeekOrigin.Begin);
-            wav.Play();
+            if (!Loaded) return;
+            if (wav.PlaybackState == PlaybackState.Playing)
+            {
+                wav.PlaybackStopped += Replay;
+                wav.Stop();
+            }
+            else
+            {
+                reader.Position = 0;
+                wav.Play();
+            }
+        }
+
+        private void Replay(object sender, EventArgs e)
+        {
+            if (!Loaded) return;
+            wav.PlaybackStopped -= Replay;
+            Play();
         }
 
         public void Dispose()

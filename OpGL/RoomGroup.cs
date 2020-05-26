@@ -11,17 +11,49 @@ namespace OpGL
     {
         public SortedList<int, JObject> RoomDatas = new SortedList<int, JObject>();
         public bool ContainsRoom(int x, int y, Game game) => RoomDatas.ContainsKey(x * 100 + y);
-        public void Load(Game game)
+
+        private bool isLoaded = false;
+
+        public override int WidthRooms => w;
+        public override int HeightRooms => h;
+        private int w;
+        private int h;
+        public override bool IsGroup => true;
+
+        public override float Width => w * ROOM_WIDTH;
+        public override float Height => h * ROOM_HEIGHT;
+
+        public RoomGroup Load(Game game)
         {
-            Objects.Clear();
-            for (int i = 0; i < RoomDatas.Count; i++)
+            if (!isLoaded)
             {
-                JArray objs = (JArray)RoomDatas.Values[i]["Objects"];
-                for (int j = 0; j < objs.Count; j++)
+                isLoaded = true;
+                Objects.Clear();
+                int minX = -1, minY = -1, maxX = -1, maxY = -1;
+                for (int i = 0; i < RoomDatas.Count; i++)
                 {
-                    Objects.Add(Sprite.LoadSprite(objs[j], game));
+                    JObject rd = RoomDatas.Values[i];
+                    int x = (int)rd["X"];
+                    int y = (int)rd["Y"];
+                    if (x < minX || minX == -1) minX = x;
+                    if (x > maxX || maxX == -1) maxX = x;
+                    if (y < minY || minY == -1) minY = y;
+                    if (y > maxY || maxY == -1) maxY = y;
+                    Room r = LoadRoom(rd, game);
+                    Objects.AddRange(r.Objects);
                 }
+                X = minX;
+                Y = minY;
+                w = maxX + 1 - minX;
+                h = maxY + 1 - minY;
             }
+            return this;
+        }
+
+        public void Unload()
+        {
+            isLoaded = false;
+            Objects.Clear();
         }
 
         public RoomGroup(Script enter, Script leave) : base(new SpriteCollection(), enter, leave)

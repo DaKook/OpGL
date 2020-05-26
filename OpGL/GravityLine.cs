@@ -9,15 +9,17 @@ using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
-    public class GravityLine : Sprite
+    public class GravityLine : Sprite, IBoundSprite
     {
+        protected override bool AlwaysCollide => true;
         private List<Crewman> touching = new List<Crewman>();
 
         protected int length = 0;
 
-        public float XSpeed;
-        public float YSpeed;
-        public Rectangle Bounds;
+        public float XVel { get; set; }
+        public float YVel { get; set; }
+        private Rectangle _bounds;
+        public Rectangle Bounds { get => _bounds; set => _bounds = value; }
         public static SoundEffect Sound;
 
         public override float Width => Horizontal ? length * Texture.TileSizeX : base.Width;
@@ -56,8 +58,6 @@ namespace OpGL
                 bufferData[index++] = 0;
                 curL += 1;
             }
-            length = index / 4;
-            Array.Resize(ref bufferData, index);
 
             updateBuffer = true;
         }
@@ -150,55 +150,77 @@ namespace OpGL
                         Color = Color.White;
                 }
             }
-            X += XSpeed;
-            Y += YSpeed;
+            X += XVel;
+            Y += YVel;
             CheckBounds();
         }
 
         public void CheckBounds()
         {
-            if (Bounds.Width > 0 && Bounds.Height > 0)
+            if (_bounds.Width > 0 && _bounds.Height > 0)
             {
-                if (Right > Bounds.X + Bounds.Width)
+                if (Right % Room.ROOM_WIDTH > _bounds.X + _bounds.Width)
                 {
-                    Right = Bounds.X + Bounds.Width;
-                    XSpeed *= -1;
+                    float x = Right % Room.ROOM_WIDTH - (_bounds.X + _bounds.Width);
+                    X -= x;
+                    XVel *= -1;
                 }
-                else if (X < Bounds.X)
+                else if (X % Room.ROOM_WIDTH < _bounds.X)
                 {
-                    X = Bounds.X;
-                    XSpeed *= -1;
+                    float x = X % Room.ROOM_WIDTH - _bounds.X;
+                    X -= x;
+                    XVel *= -1;
                 }
-                else if (Bottom > Bounds.Y + Bounds.Height)
+                else if (Bottom % Room.ROOM_HEIGHT > _bounds.Y + _bounds.Height)
                 {
-                    Bottom = Bounds.Y + Bounds.Height;
-                    YSpeed *= -1;
+                    float y = Bottom % Room.ROOM_HEIGHT - (_bounds.Y + _bounds.Height);
+                    Y -= y;
+                    YVel *= -1;
                 }
-                else if (Y < Bounds.Y)
+                else if (Y % Room.ROOM_HEIGHT < _bounds.Y)
                 {
-                    Y = Bounds.Y;
-                    YSpeed *= -1;
+                    float y = Y % Room.ROOM_HEIGHT - _bounds.Y;
+                    Y -= y;
+                    YVel *= -1;
                 }
             }
         }
 
-        public override JObject Save()
+        //public override JObject Save()
+        //{
+        //    JObject ret = new JObject();
+        //    ret.Add("Type", "GravityLine");
+        //    ret.Add("X", X);
+        //    ret.Add("Y", Y);
+        //    ret.Add("Texture", Texture.Name);
+        //    ret.Add("Horizontal", Horizontal);
+        //    ret.Add("Length", LengthTiles);
+        //    ret.Add("Animation", Animation.Name);
+        //    ret.Add("XSpeed", XSpeed);
+        //    ret.Add("YSpeed", YSpeed);
+        //    ret.Add("BoundsX", Bounds.X);
+        //    ret.Add("BoundsY", Bounds.Y);
+        //    ret.Add("BoundsWidth", Bounds.Width);
+        //    ret.Add("BoundsHeight", Bounds.Height);
+        //    return ret;
+        //}
+
+        public override SortedList<string, SpriteProperty> Properties
         {
-            JObject ret = new JObject();
-            ret.Add("Type", "GravityLine");
-            ret.Add("X", X);
-            ret.Add("Y", Y);
-            ret.Add("Texture", Texture.Name);
-            ret.Add("Horizontal", Horizontal);
-            ret.Add("Length", LengthTiles);
-            ret.Add("Animation", Animation.Name);
-            ret.Add("XSpeed", XSpeed);
-            ret.Add("YSpeed", YSpeed);
-            ret.Add("BoundsX", Bounds.X);
-            ret.Add("BoundsY", Bounds.Y);
-            ret.Add("BoundsWidth", Bounds.Width);
-            ret.Add("BoundsHeight", Bounds.Height);
-            return ret;
+            get
+            {
+                SortedList<string, SpriteProperty> ret = base.Properties;
+                ret.Add("Horizontal", new SpriteProperty("Horizontal", () => Horizontal, (t, g) => Horizontal = (bool)t, true, SpriteProperty.Types.Bool, "Whether the gravity line is horizontal or not."));
+                ret.Add("Length", new SpriteProperty("Length", () => LengthTiles, (t, g) => LengthTiles = (int)t, 1, SpriteProperty.Types.Int, "The length in tiles of the gravity line."));
+                ret.Add("XSpeed", new SpriteProperty("XSpeed", () => XVel, (t, g) => XVel = (float)t, 0f, SpriteProperty.Types.Float, "The X speed in pixels/frame of the gravity line."));
+                ret.Add("YSpeed", new SpriteProperty("YSpeed", () => YVel, (t, g) => YVel = (float)t, 0f, SpriteProperty.Types.Float, "The Y speed in pixels/frame of the gravity line."));
+                ret.Add("BoundsX", new SpriteProperty("BoundsX", () => _bounds.X, (t, g) => _bounds.X = (int)t, 0, SpriteProperty.Types.Int, "The left edge of the gravity line's bounds."));
+                ret.Add("BoundsY", new SpriteProperty("BoundsY", () => _bounds.Y, (t, g) => _bounds.Y = (int)t, 0, SpriteProperty.Types.Int, "The top edge of the gravity line's bounds."));
+                ret.Add("BoundsWidth", new SpriteProperty("BoundsWidth", () => _bounds.Width, (t, g) => _bounds.Width = (int)t, 0, SpriteProperty.Types.Int, "The width of the gravity line's bounds."));
+                ret.Add("BoundsHeight", new SpriteProperty("BoundsHeight", () => _bounds.Height, (t, g) => _bounds.Height = (int)t, 0, SpriteProperty.Types.Int, "The height of the gravity line's bounds."));
+                ret["Type"].GetValue = () => "GravityLine";
+                return ret;
+            }
         }
     }
 }

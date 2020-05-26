@@ -1,5 +1,7 @@
-﻿using System;
+﻿using OpenGL;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +19,13 @@ namespace OpGL
         public float Height { get; private set; }
         public int TileSizeX { get; set; }
         public int TileSizeY { get; set; }
-        public ProgramData Program { get; private set; }
+        public TextureProgram Program { get; private set; }
         public uint baseVAO { get; private set; }
         public uint baseVBO { get; private set; }
+        public Matrix4x4f BaseTexMatrix { get; private set; }
+        public Color TextBoxColor { get; set; }
+        public int Updated = 0;
+        public string Squeak = "";
 
         public int GetCharacterWidth(int character)
         {
@@ -31,11 +37,24 @@ namespace OpGL
 
         public Animation AnimationFromName(string name)
         {
+            if (Animations is null) return null;
             Animations.TryGetValue(name, out Animation anim);
             return anim;
         }
 
-        public Texture(uint id, float width, float height, int tileSize, int tileSize2, string name, ProgramData program, uint vao, uint vbo)
+        public void Update(float width, float height, int tileSize, int tileSize2, uint vao, uint vbo)
+        {
+            Width = width;
+            Height = height;
+            TileSizeX = tileSize;
+            TileSizeY = tileSize2;
+            baseVAO = vao;
+            baseVBO = vbo;
+            BaseTexMatrix = Matrix4x4f.Scaled(tileSize / width, tileSize2 / height, 1f);
+            Updated += 1;
+        }
+
+        public Texture(uint id, float width, float height, int tileSize, int tileSize2, string name, TextureProgram program, uint vao, uint vbo)
         {
             ID = id;
             Width = width;
@@ -46,6 +65,7 @@ namespace OpGL
             Program = program;
             baseVAO = vao;
             baseVBO = vbo;
+            BaseTexMatrix = Matrix4x4f.Scaled(tileSize / width, tileSize2 / height, 1f);
         }
     }
 }

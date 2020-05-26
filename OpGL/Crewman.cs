@@ -20,7 +20,7 @@ namespace OpGL
         public float XVelocity;
         public static float TerminalVelocity = 5f;
         public float MaxSpeed = 3f;
-        public float Acceleration = 0.375f;
+        public float Acceleration = 0.475f;
         public bool OnGround = false;
         public int InputDirection;
         public bool CanFlip = true;
@@ -35,13 +35,21 @@ namespace OpGL
         private int spikeMercy = 4;
         private bool _sad = false;
         public AIStates AIState = AIStates.Stand;
+        public List<int> HeldTrinkets = new List<int>();
+        public List<Trinket> PendingTrinkets = new List<Trinket>();
+        public Game Owner;
+        public Script Script;
+        public int IFrames = 0;
+        public bool Invincible = false;
+        public bool IsPlayer => this == Owner.ActivePlayer;
+        public int Jumps;
+        public int MaxJumps = 0;
 
         public delegate void RespawnedDelegate();
         public event RespawnedDelegate Respawned;
 
         public enum AIStates { Follow, Face, Stand };
         public Crewman Target;
-        public string Tag;
         public bool Sad
         {
             get => _sad;
@@ -58,8 +66,6 @@ namespace OpGL
             }
         }
         public Color TextBoxColor;
-        //Squeak sound
-        public Terminal CurrentTerminal = null;
         public override bool IsCrewman { get => true; }
         public Animation WalkingAnimation { get => walkingAnimation ?? defaultAnimation; set => walkingAnimation = value; }
         public Animation StandingAnimation { get => standingAnimation ?? defaultAnimation; set => standingAnimation = value; }
@@ -73,21 +79,26 @@ namespace OpGL
         public static SoundEffect Cry;
         public SoundEffect Squeak;
 
-        public Crewman(float x, float y, Texture texture, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null, Color? textBoxColor = null) : base(x, y, texture, stand)
+        private bool jumped = false;
+
+        public Crewman(float x, float y, Texture texture, Game owner, string name = "", Animation stand = null, Animation walk = null, Animation fall = null, Animation jump = null, Animation die = null, Color? textBoxColor = null) : base(x, y, texture, stand)
         {
             Name = name;
-            StandingAnimation = stand;
-            WalkingAnimation = walk;
-            FallingAnimation = fall;
-            JumpingAnimation = jump;
-            DyingAnimation = die;
-            defaultAnimation = StandingAnimation ?? new Animation(new System.Drawing.Point[] { new System.Drawing.Point(0, 0) }, System.Drawing.Rectangle.Empty, texture);
+            StandingAnimation = stand ?? texture.AnimationFromName("Standing");
+            WalkingAnimation = walk ?? texture.AnimationFromName("Walking");
+            FallingAnimation = fall ?? texture.AnimationFromName("Falling");
+            JumpingAnimation = jump ?? texture.AnimationFromName("Jumping");
+            DyingAnimation = die ?? texture.AnimationFromName("Dying");
+            defaultAnimation = StandingAnimation ?? new Animation(new Point[] { new Point(0, 0) }, Rectangle.Empty, texture);
             Gravity = 0.6875f;
             CheckpointX = x;
             CheckpointY = y;
             CheckpointFlipX = flipX;
             CheckpointFlipY = flipY;
-            TextBoxColor = textBoxColor ?? Color.White;
+            TextBoxColor = textBoxColor ?? texture.TextBoxColor;
+            Squeak = owner.GetSound(texture.Squeak ?? "");
+            Animation = StandingAnimation;
+            Owner = owner;
         }
 
         public override void Process()
@@ -95,6 +106,8 @@ namespace OpGL
             base.Process();
             if (DyingFrames == 0)
             {
+                if (IFrames > 0)
+                    IFrames -= 1;
                 if (Target != null)
                 {
                     if (AIState == AIStates.Follow)
@@ -116,6 +129,16 @@ namespace OpGL
                     spikeMercy += 1;
 
                 YVelocity += Gravity;
+                if (jumped)
+                {
+                    if (Math.Sign(YVelocity) != Math.Sign(Gravity))
+                    {
+                        if (!Owner.IsInputActive(Game.Inputs.Jump))
+                            YVelocity += Gravity;
+                    }
+                    else
+                        jumped = false;
+                }
                 if (JumpBuffer > 0) JumpBuffer -= 1;
                 if (YVelocity > TerminalVelocity && Gravity > 0) YVelocity = TerminalVelocity;
                 else if (YVelocity < -TerminalVelocity && Gravity < 0) YVelocity = -TerminalVelocity;
@@ -127,6 +150,10 @@ namespace OpGL
                 else
                 {
                     if (LedgeMercy > 0)
+                        changeAnimationOnGround();
+                    else
+                        changeAnimationInAir();
+                    if (LedgeMercy > 0)
                         LedgeMercy -= 1;
                     if (onPlatform != null)
                     {
@@ -135,9 +162,17 @@ namespace OpGL
                         onPlatform.OnTop.Remove(this);
                         onPlatform = null;
                     }
-
-                    changeAnimationInAir();
                 }
+                //if (onPlatform != null)
+                //{
+                //    if (Right <= (onPlatform as Sprite).X || X >= (onPlatform as Sprite).Right)
+                //    {
+                //        XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                //        YVelocity += onPlatform.YVel;
+                //        onPlatform.OnTop.Remove(this);
+                //        onPlatform = null;
+                //    }
+                //}
                 OnGround = false;
                 if (Math.Sign(InputDirection) == -1)
                 {
@@ -183,38 +218,63 @@ namespace OpGL
                 if (Gravity >= 0 == flipY) flipY = !flipY;
                 X += XVelocity;
                 Y += YVelocity;
-                if (onPlatform != null)
-                {
-                    X += onPlatform.XVel;
-                    X += onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
-                    Y += onPlatform.YVel;
-                }
+                if (IFrames > 0 && (XVelocity != 0 || Math.Abs(YVelocity) > 1))
+                    IFrames = 0;
             }
             else
             {
                 DyingFrames -= 1;
-                if (DyingFrames == 0)
+                if (DyingFrames <= 0)
                 {
-                    ResetAnimation();
-                    Animation = StandingAnimation;
-                    flipX = CheckpointFlipX;
-                    if (Math.Sign(Gravity) == 1 == (flipY = CheckpointFlipY))
-                    {
-                        Gravity *= -1;
-                    }
-                    CenterX = CheckpointX;
-                    if (flipY) Y = CheckpointY;
-                    else Bottom = CheckpointY;
-
-                    XVelocity = 0;
-                    YVelocity = 0;
-                    PreviousX = X;
-                    PreviousY = Y;
-                    MultiplePositions = false;
-                    Offsets.Clear();
-                    Respawned?.Invoke();
-                    Solid = SolidState.Entity;
+                    Respawn();
                 }
+            }
+        }
+
+        public void Respawn()
+        {
+            DyingFrames = 0;
+            ResetAnimation();
+            Animation = StandingAnimation;
+            flipX = CheckpointFlipX;
+            if (Math.Sign(Gravity) == 1 == (flipY = CheckpointFlipY))
+            {
+                Gravity *= -1;
+            }
+            if (CurrentCheckpoint is object)
+            {
+                CenterX = CurrentCheckpoint.CenterX;
+                if (flipY) Y = CurrentCheckpoint.Y;
+                else Bottom = CurrentCheckpoint.Bottom;
+            }
+            else
+            {
+                CenterX = CheckpointX;
+                if (flipY) Y = CheckpointY;
+                else Bottom = CheckpointY;
+            }
+
+            XVelocity = 0;
+            YVelocity = 0;
+            PreviousX = DX;
+            PreviousY = DY;
+            IFrames = 60;
+            foreach (Trinket tr in PendingTrinkets)
+            {
+                tr.Visible = true;
+                Owner.CollectedTrinkets.Remove(tr.ID);
+            }
+            PendingTrinkets.Clear();
+            Respawned?.Invoke();
+            MultiplePositions = false;
+            IsWarpingH = false;
+            IsWarpingV = false;
+            Offsets.Clear();
+            Solid = SolidState.Entity;
+            SetPreviousLoaction();
+            if (IsPlayer && Owner.OnPlayerRespawn is object)
+            {
+                Owner.ExecuteScript(Owner.OnPlayerRespawn, this, this);
             }
         }
 
@@ -247,19 +307,27 @@ namespace OpGL
 
         public virtual void Die()
         {
+            if (DyingFrames > 0 || IFrames > 0 || Invincible) return;
             if (onPlatform != null)
             {
                 onPlatform.OnTop.Remove(this);
                 onPlatform = null;
             }
+            XVelocity = 0;
+            YVelocity = 0;
+            JumpBuffer = 0;
             Cry?.Play();
             Animation = DyingAnimation;
             ResetAnimation();
             DyingFrames = 60;
             Solid = SolidState.NonSolid;
+            if (IsPlayer && Owner.OnPlayerDeath is object)
+            {
+                Owner.ExecuteScript(Owner.OnPlayerDeath, this, this);
+            }
         }
 
-        public override void CollideY(float distance, Sprite collision)
+        public override void CollideY(double distance, Sprite collision)
         {
             base.CollideY(distance, collision);
             //Check if landing on ground
@@ -267,9 +335,10 @@ namespace OpGL
             {
                 YVelocity = 0;
                 OnGround = true;
+                Jumps = 0;
                 changeAnimationOnGround();
                 //Check if landing on a platform
-                if (collision as Platform != null && onPlatform != collision)
+                if (collision is IPlatform && onPlatform != collision)
                 {
                     if (onPlatform != null)
                     {
@@ -277,11 +346,20 @@ namespace OpGL
                         YVelocity += onPlatform.YVel;
                         onPlatform.OnTop.Remove(this);
                     }
-                    onPlatform = collision as Platform;
+                    onPlatform = collision as IPlatform;
+                    bool xg = XVelocity > 0;
+                    //if (XVelocity != 0)
+                    {
+                        XVelocity -= onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
+                        //if (XVelocity < 0 && xg)
+                        //    XVelocity = 0;
+                        //else if (XVelocity > 0 && !xg)
+                        //    XVelocity = 0;
+                    }
                     onPlatform.OnTop.Add(this);
                     onPlatform.Disappear();
                 }
-                else if (onPlatform != null && collision as Platform == null)
+                else if (onPlatform != null && collision as IPlatform == null)
                 {
                     XVelocity += onPlatform.XVel + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
                     YVelocity += onPlatform.YVel;
@@ -297,7 +375,7 @@ namespace OpGL
             }
         }
 
-        public override void CollideX(float distance, Sprite collision)
+        public override void CollideX(double distance, Sprite collision)
         {
             base.CollideX(distance, collision);
             if (distance > 0 == XVelocity > 0)
@@ -306,9 +384,11 @@ namespace OpGL
 
         public void FlipOrJump()
         {
-            if (DyingFrames > 0) return;
-            if (OnGround || LedgeMercy > 0)
+            if (DyingFrames > 0 || Jump == 0) return;
+            if (OnGround || LedgeMercy > 0 || Jumps < MaxJumps)
             {
+                if (!OnGround && LedgeMercy <= 0)
+                    Jumps += 1;
                 LedgeMercy = 0;
                 JumpBuffer = 0;
                 OnGround = false;
@@ -319,6 +399,7 @@ namespace OpGL
                     onPlatform.OnTop.Remove(this);
                     onPlatform = null;
                 }
+                YVelocity = -Jump * Math.Sign(Gravity);
                 if (CanFlip)
                 {
                     Gravity *= -1;
@@ -331,8 +412,8 @@ namespace OpGL
                 {
                     if (Jump > 0)
                         Flip1?.Play();
+                    jumped = true;
                 }
-                YVelocity = -Jump * Math.Sign(Gravity);
                 changeAnimationInAir();
             }
             else
@@ -355,6 +436,41 @@ namespace OpGL
             }
             else
                 return base.TestCollision(testFor);
+        }
+
+        protected override CollisionData GetCollisionData(Sprite testFor)
+        {
+            for (int i = -1; i < Offsets.Count; i++)
+            {
+                float ofX = i > -1 ? Offsets[i].X : 0;
+                float ofY = i > -1 ? Offsets[i].Y : 0;
+                for (int j = -1; j < testFor.Offsets.Count; j++)
+                {
+                    float ofXO = j > -1 ? testFor.Offsets[j].X : 0;
+                    float ofYO = j > -1 ? testFor.Offsets[j].Y : 0;
+                    if (!testFor.Within(X + ofX, Y + ofY, Width, Height, ofXO, ofYO)) continue;
+                    // check for vertical collision first
+                    // top
+                    if (Math.Round(PreviousY + PreviousHeight + ofY - (LedgeMercy > 0 ? 2 : 0), 4) <= Math.Round(testFor.PreviousY, 4) + ofYO)
+                        return new CollisionData(true, Bottom + ofY - (testFor.Y + ofYO), testFor);
+                    // bottom
+                    else if (Math.Round(PreviousY + ofY + (LedgeMercy > 0 ? 2 : 0), 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4))
+                        return new CollisionData(true, Y + ofY - (testFor.Bottom + ofYO), testFor);
+                    // right
+                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4))
+                        return new CollisionData(false, Right + ofX - (testFor.X + ofXO), testFor);
+                    // left
+                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4))
+                        return new CollisionData(false, X + ofX - (testFor.Right + ofXO), testFor);
+                    else if (testFor is ScriptBox || testFor is WarpLine)
+                        return new CollisionData(true, 0, testFor);
+                    if (!testFor.MultiplePositions)
+                        break;
+                }
+                if (!MultiplePositions) break;
+            }
+
+            return null;
         }
 
         public override bool CollideWith(CollisionData data)
@@ -391,32 +507,106 @@ namespace OpGL
             }
         }
 
-        public override JObject Save()
+        //public override void SetProperty(string name, JToken value, Game game)
+        //{
+        //    switch (name)
+        //    {
+        //        case "Speed":
+        //            MaxSpeed = (float)value;
+        //            break;
+        //        case "Acceleration":
+        //            Acceleration = (float)value;
+        //            break;
+        //        case "Standing":
+        //            StandingAnimation = Texture.AnimationFromName((string)value);
+        //            break;
+        //        case "Walking":
+        //            WalkingAnimation = Texture.AnimationFromName((string)value);
+        //            break;
+        //        case "Jumping":
+        //            JumpingAnimation = Texture.AnimationFromName((string)value);
+        //            break;
+        //        case "Falling":
+        //            FallingAnimation = Texture.AnimationFromName((string)value);
+        //            break;
+        //        case "Dying":
+        //            DyingAnimation = Texture.AnimationFromName((string)value);
+        //            break;
+        //        case "Sad":
+        //            Sad = (bool)value;
+        //            break;
+        //        case "TextBox":
+        //            TextBoxColor = Color.FromArgb((int)value);
+        //            break;
+        //        case "Squeak":
+        //            Squeak = game.GetSound((string)value);
+        //            break;
+        //        default:
+        //            base.SetProperty(name, value, game);
+        //            break;
+        //    }
+        //}
+
+        //public override JObject Save()
+        //{
+        //    JObject ret = new JObject();
+        //    ret.Add("Type", "Crewman");
+        //    ret.Add("X", X);
+        //    ret.Add("Y", Y);
+        //    ret.Add("Texture", Texture.Name);
+        //    if (StandingAnimation.Name != "Standing")
+        //        ret.Add("Standing", StandingAnimation?.Name ?? "");
+        //    if (WalkingAnimation.Name != "Walking")
+        //        ret.Add("Walking", WalkingAnimation?.Name ?? "");
+        //    if (FallingAnimation.Name != "Falling")
+        //        ret.Add("Falling", FallingAnimation?.Name ?? "");
+        //    if (JumpingAnimation.Name != "Jumping")
+        //        ret.Add("Jumping", JumpingAnimation?.Name ?? "");
+        //    if (DyingAnimation.Name != "Dying")
+        //        ret.Add("Dying", DyingAnimation?.Name ?? "");
+        //    ret.Add("Name", Name);
+        //    ret.Add("TextBox", TextBoxColor.ToArgb());
+        //    ret.Add("FlipX", flipX);
+        //    if (Sad)
+        //        ret.Add("Sad", Sad);
+        //    if (Gravity != 0.6875f)
+        //        ret.Add("Gravity", Gravity);
+        //    if (Acceleration != 0.475f)
+        //        ret.Add("Acceleration", Acceleration);
+        //    ret.Add("Squeak", Squeak?.Name ?? "");
+        //    return ret;
+        //}
+        public override SortedList<string, SpriteProperty> Properties
         {
-            JObject ret = new JObject();
-            ret.Add("Type", "Crewman");
-            ret.Add("X", X);
-            ret.Add("Y", Y);
-            ret.Add("Texture", Texture.Name);
-            if (StandingAnimation.Name != "Standing")
-                ret.Add("Standing", StandingAnimation?.Name ?? "");
-            if (WalkingAnimation.Name != "Walking")
-                ret.Add("Walking", WalkingAnimation?.Name ?? "");
-            if (FallingAnimation.Name != "Falling")
-                ret.Add("Falling", FallingAnimation?.Name ?? "");
-            if (JumpingAnimation.Name != "Jumping")
-                ret.Add("Jumping", JumpingAnimation?.Name ?? "");
-            if (DyingAnimation.Name != "Dying")
-                ret.Add("Dying", DyingAnimation?.Name ?? "");
-            ret.Add("Name", Name);
-            ret.Add("TextBox", TextBoxColor.ToArgb());
-            ret.Add("FlipX", flipX);
-            if (Sad)
-                ret.Add("Sad", Sad);
-            if (Gravity != 0.6875f)
-                ret.Add("Gravity", Gravity);
-            ret.Add("Squeak", Squeak?.Name ?? "");
-            return ret;
+            get
+            {
+                SortedList<string, SpriteProperty> ret = base.Properties;
+                ret.Remove("Animation");
+                ret["Gravity"].CanSet = true;
+                ret["Gravity"].DefaultValue = 0.6875f;
+                ret.Add("Standing", new SpriteProperty("Standing", () => StandingAnimation.Name, (t, g) => StandingAnimation = Texture.AnimationFromName((string)t), "Standing", SpriteProperty.Types.Animation, "The standing animation of the crewman."));
+                ret.Add("Walking", new SpriteProperty("Walking", () => WalkingAnimation.Name, (t, g) => WalkingAnimation = Texture.AnimationFromName((string)t), "Walking", SpriteProperty.Types.Animation, "The walking animation of the crewman."));
+                ret.Add("Jumping", new SpriteProperty("Jumping", () => JumpingAnimation.Name, (t, g) => JumpingAnimation = Texture.AnimationFromName((string)t), "Jumping", SpriteProperty.Types.Animation, "The jumping animation of the crewman."));
+                ret.Add("Falling", new SpriteProperty("Falling", () => FallingAnimation.Name, (t, g) => FallingAnimation = Texture.AnimationFromName((string)t), "Falling", SpriteProperty.Types.Animation, "The falling animation of the crewman."));
+                ret.Add("Dying", new SpriteProperty("Dying", () => DyingAnimation.Name, (t, g) => DyingAnimation = Texture.AnimationFromName((string)t), "Dying", SpriteProperty.Types.Animation, "The dying animation of the crewman."));
+                ret.Add("TextBox", new SpriteProperty("TextBox", () => TextBoxColor.ToArgb(), (t, g) => TextBoxColor = Color.FromArgb((int)t), 0, SpriteProperty.Types.Color, "The color of the textboxes for the crewman."));
+                ret.Add("Sad", new SpriteProperty("Sad", () => Sad, (t, g) => Sad = (bool)t, false, SpriteProperty.Types.Bool, "Whether or not the crewman is sad."));
+                ret.Add("Speed", new SpriteProperty("Speed", () => MaxSpeed, (t, g) => MaxSpeed = (float)t, 3f, SpriteProperty.Types.Float, "The max speed in pixels/frame of the crewman."));
+                ret.Add("Acceleration", new SpriteProperty("Acceleration", () => Acceleration, (t, g) => Acceleration = (float)t, 0.475f, SpriteProperty.Types.Float, "The acceleration in pixels/frame/frame of the crewman."));
+                ret.Add("Jump", new SpriteProperty("Jump", () => Jump, (t, g) => Jump = (float)t, 1.6875f, SpriteProperty.Types.Float, "The jump height of the crewman."));
+                ret.Add("CanFlip", new SpriteProperty("CanFlip", () => CanFlip, (t, g) => CanFlip = (bool)t, true, SpriteProperty.Types.Bool, "Whether the crewman can flip, otherwise can jump."));
+                ret.Add("Squeak", new SpriteProperty("Squeak", () => Squeak?.Name, (t, g) => Squeak = g.GetSound((string)t), "crew1", SpriteProperty.Types.Sound, "The sound played when this crewman talks."));
+                ret.Add("DoubleJump", new SpriteProperty("DoubleJump", () => MaxJumps, (t, g) => MaxJumps = (int)t, 0, SpriteProperty.Types.Int, "The amount of double jumps the crewman can perform."));
+                ret.Add("Invincible", new SpriteProperty("Invincible", () => Invincible, (t, g) => Invincible = (bool)t, false, SpriteProperty.Types.Bool, "Whether the crewman can die or not."));
+                ret["Type"].GetValue = () => "Crewman";
+                return ret;
+            }
+        }
+        protected override void ResetSprite()
+        {
+            base.ResetSprite();
+            XVelocity = YVelocity = 0;
+            InputDirection = 0;
         }
     }
 }

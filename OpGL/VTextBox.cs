@@ -12,6 +12,8 @@ namespace OpGL
     {
         private float appearSpeed;
 
+        public int frames = -1;
+
         public delegate void DisappearedDelegate(VTextBox textBox);
         public event DisappearedDelegate Disappeared;
 
@@ -26,6 +28,7 @@ namespace OpGL
                 w += 2 * Texture.TileSizeX;
                 h += 2 * Texture.TileSizeY;
                 int tilesW = w / Texture.TileSizeX;
+                if (tilesW == 2) tilesW = 3;
                 int tilesH = h / Texture.TileSizeY;
                 // textbox must be rendered first
                 int stringLength = bufferData.Length;
@@ -33,7 +36,7 @@ namespace OpGL
                 Array.Resize(ref bufferData, bufferData.Length + boxLength);
                 Array.Copy(bufferData, 0, bufferData, boxLength, stringLength);
                 // this is used to determine how many instances to draw
-                visibleCharacters = bufferData.Length / 4;
+                instances = bufferData.Length / 4;
 
                 int index = 0;
                 for (int i = -1; i < tilesH - 1; i++)
@@ -42,9 +45,9 @@ namespace OpGL
                     {
                         bufferData[index++] = j * Texture.TileSizeX;
                         bufferData[index++] = i * Texture.TileSizeY;
-                        //       (j + tilesW - 2) / (tilesW - 2) = 0 on first loop, 2 on last, 1 on others
-                        int tx = (j + tilesW - 2) / (tilesW - 2) + (i + tilesH - 2) / (tilesH - 2) * 3;
-                        bufferData[index++] = tx;
+                        //       ((j + tilesW - 2) / (tilesW - 2)) = 0 on first loop, 2 on last, 1 on others
+                        int tx = ((j + tilesW - 2) / (tilesW - 2)) + ((i + tilesH - 2) / (tilesH - 2) * 3);
+                        bufferData[index++] = tx + BaseStyle * 16;
                         bufferData[index++] = 0;
                     }
                 }
@@ -81,6 +84,12 @@ namespace OpGL
 
         public override void Process()
         {
+            if (frames > -1)
+            {
+                frames -= 1;
+                if (frames <= -1)
+                    Disappear();
+            }
             if (appearSpeed > 0 && Color.A < 255)
             {
                 Visible = true;
@@ -89,8 +98,11 @@ namespace OpGL
             else if (appearSpeed < 0 && Color.A > 0)
             {
                 Color = Color.FromArgb((int)Math.Max(Color.A + appearSpeed, 0), Color.R, Color.G, Color.B);
-                if (Color.A == 0) Visible = false;
-                Disappeared?.Invoke(this);
+                if (Color.A == 0)
+                {
+                    Visible = false;
+                    Disappeared?.Invoke(this);
+                }
             }
         }
     }

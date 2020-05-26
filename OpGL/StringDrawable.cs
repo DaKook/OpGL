@@ -9,70 +9,159 @@ using OpenGL;
 
 namespace OpGL
 {
-    public class StringDrawable : Sprite
+    public class StringDrawable : InstancedSprite
     {
-        protected int visibleCharacters = 0;
-
         protected int w;
         protected int h;
+
+        public int SelectionStart = -1;
+        public int SelectionLength;
+        public bool SelectingFromLeft = true;
+
+        public float SelectionY { get; private set; }
+        public float SelectionX { get; private set; }
+
+        public int MaxWidth = -1;
+
+        public int BaseStyle;
+        public SortedList<int, int> Markers = new SortedList<int, int>();
 
         public override float Width => w;
         public override float Height => h;
 
+        public bool OnlyHighlight
+        {
+            get => _onlyHighlight;
+            set
+            {
+                _onlyHighlight = value;
+                Text = Text;
+            }
+        }
+
         protected string _Text;
+        private bool _onlyHighlight;
+
         public virtual string Text
         {
             get => _Text;
             set
             {
-                _Text = value.Replace(Environment.NewLine, "\n");
-                bufferData = new float[_Text.Length * 4];
+                if (value is object)
+                    _Text = value.Replace(Environment.NewLine, "\n");
+                else
+                    _Text = "";
+                int l = _Text.Length;
+                if (SelectionStart > -1)
+                {
+                    l += 1;
+                    if (SelectionLength > 0)
+                        l += SelectionLength;
+                }
+                bufferData = new float[l * 4];
                 w = 0;
                 float curX = 0, curY = 0;
                 int index = 0;
+                int currentStyle = BaseStyle;
                 for (int i = 0; i < _Text.Length; i++)
                 {
-                    int c = _Text[i];
-                    if (c == '\n')
+                    if (Markers.ContainsKey(i))
                     {
-                        if (curX > w) w = (int)curX;
-                        curX = 0;
-                        curY += Texture.TileSizeY;
+                        currentStyle = Markers[i];
                     }
-                    else
+                    if (i >= SelectionStart && i < SelectionStart + SelectionLength)
                     {
-                        int x = c % 16;
-                        int y = (c - x) / 16;
                         bufferData[index++] = curX;
                         bufferData[index++] = curY;
-                        bufferData[index++] = x;
-                        bufferData[index++] = y;
-                        curX += Texture.GetCharacterWidth(c);
+                        bufferData[index++] = 10;
+                        bufferData[index++] = 0;
+                    }
+                    if (!OnlyHighlight)
+                    {
+                        int c = _Text[i];
+                        if (MaxWidth > -1 && (c == ' '))
+                        {
+                            int ln = _Text.IndexOf(' ', i + 1);
+                            string s;
+                            if (ln > -1)
+                            {
+                                ln -= i;
+                                s = _Text.Substring(i, ln);
+                            }
+                            else
+                                s = _Text.Substring(i);
+                            int cx = (int)curX;
+                            int cc = 0;
+                            while (cx <= MaxWidth && cc < s.Length)
+                            {
+                                cx += Texture.GetCharacterWidth(s[cc++]);
+                            }
+                            if (cx > MaxWidth)
+                                c = '\n';
+                        }
+                        if (c == '\n')
+                        {
+                            if (curX > w) w = (int)curX;
+                            curX = 0;
+                            curY += Texture.TileSizeY;
+                        }
+                        else
+                        {
+                            int x = c % 16;
+                            int y = (c - x) / 16;
+                            bufferData[index++] = curX;
+                            bufferData[index++] = curY;
+                            bufferData[index++] = x + currentStyle * 16;
+                            bufferData[index++] = y;
+                            curX += Texture.GetCharacterWidth(c);
+                            if (curX > w) w = (int)curX;
+                        }
+                    }
+                    if (i == SelectionStart + SelectionLength - 1)
+                    {
+                        bufferData[index++] = curX - Texture.TileSizeX;
+                        bufferData[index++] = curY;
+                        bufferData[index++] = 9;
+                        bufferData[index++] = 0;
+                        SelectionX = curX - Texture.TileSizeX;
+                        SelectionY = curY;
+                    }
+                    else if (i == 0 && SelectionStart + SelectionLength == 0)
+                    {
+                        bufferData[index++] = curX - (2 * Texture.TileSizeX);
+                        bufferData[index++] = curY;
+                        bufferData[index++] = 9;
+                        bufferData[index++] = 0;
+                        SelectionX = curX - (2 * Texture.TileSizeX);
+                        SelectionY = curY;
                     }
                 }
-                visibleCharacters = index / 4;
+                if (_Text.Length == 0 && SelectionStart > -1)
+                {
+                    bufferData[index++] = curX - Texture.TileSizeX;
+                    bufferData[index++] = curY;
+                    bufferData[index++] = 9;
+                    bufferData[index++] = 0;
+                    SelectionX = curX - Texture.TileSizeX;
+                    SelectionY = curY;
+                }
+                instances = index / 4;
                 Array.Resize(ref bufferData, index);
 
                 h = (int)curY + Texture.TileSizeY;
-                if (curX > w) w = (int)curX;
 
                 updateBuffer = true;
             }
         }
 
-        protected float[] bufferData;
-        protected uint ibo;
-        protected bool updateBuffer = true;
-        protected bool firstRender = true;
-
-        public override uint VAO { get; set; }
-
-        public StringDrawable(float x, float y, Texture texture, string text, Color? color = null) : base(x, y, texture, 0, 0)
+        public StringDrawable(float x, float y, Texture texture, string text, Color? color = null) : base(x, y, texture)
         {
-            if (texture.Width / texture.TileSizeX != 16 || texture.Height / texture.TileSizeY != 16)
-                throw new InvalidOperationException("A StringDrawable's texture must be 16x16 tiles.");
+            if ((texture.Width / texture.TileSizeX) % 16 != 0)
+                throw new InvalidOperationException("A font texture must have a width divisible by 16.");
+            Solid = SolidState.NonSolid;
 
             Color = color ?? Color.White;
+            ColorModifier = AnimatedColor.Default;
 
             Text = text;
         }
@@ -95,43 +184,61 @@ namespace OpGL
 
             UnsafeDraw();
         }
-        // Just the render call and any set-up StringDrawable requires but a regular Drawable doesn't.
-        public override void UnsafeDraw()
-        {
-            if (updateBuffer)
-                UpdateBuffer();
 
-            Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, visibleCharacters);
+        public override SortedList<string, SpriteProperty> Properties
+        {
+            get
+            {
+                SortedList<string, SpriteProperty> ret = base.Properties;
+                ret.Remove("Animation");
+                ret.Add("Text", new SpriteProperty("Text", () => _Text, (t, g) => Text = (string)t, "", SpriteProperty.Types.String, "The text displayed by the sprite."));
+                ret["Type"].GetValue = () => "Text";
+                return ret;
+            }
         }
 
-        protected void UpdateBuffer()
+        public void SetBuffer(float[] buffer, int w, int h)
         {
-            if (firstRender)
+            bufferData = buffer;
+            this.w = w;
+            this.h = h;
+            updateBuffer = true;
+        }
+
+        public Point AddText(int xPos, int yPos, string text)
+        {
+            float curX = xPos, curY = yPos;
+            int index = bufferData.Length;
+            int currentStyle = BaseStyle;
+            Array.Resize(ref bufferData, bufferData.Length + (text.Length * 4));
+            for (int i = 0; i < text.Length; i++)
             {
-                firstRender = false;
-
-                VAO = Gl.CreateVertexArray();
-                Gl.BindVertexArray(VAO);
-
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, Texture.baseVBO);
-                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(0);
-                Gl.EnableVertexAttribArray(1);
-
-                ibo = Gl.CreateBuffer();
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(2);
-                Gl.EnableVertexAttribArray(3);
-                Gl.VertexAttribDivisor(2, 1);
-                Gl.VertexAttribDivisor(3, 1);
+                int c = text[i];
+                if (c == '\n')
+                {
+                    if (curX > w) w = (int)curX;
+                    curX = 0;
+                    curY += Texture.TileSizeY;
+                }
+                else
+                {
+                    int x = c % 16;
+                    int y = (c - x) / 16;
+                    bufferData[index++] = curX;
+                    bufferData[index++] = curY;
+                    bufferData[index++] = x + currentStyle * 16;
+                    bufferData[index++] = y;
+                    curX += Texture.GetCharacterWidth(c);
+                    if (curX > w) w = (int)curX;
+                }
             }
+            instances = index / 4;
+            Array.Resize(ref bufferData, index);
 
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
-            updateBuffer = false;
+            h = (int)curY + Texture.TileSizeY;
+
+            updateBuffer = true;
+            return new Point((int)curX, (int)curY);
         }
 
         public override void Process()

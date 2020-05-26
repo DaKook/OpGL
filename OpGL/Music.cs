@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,22 +9,26 @@ using System.Threading.Tasks;
 
 namespace OpGL
 {
-    public class Music
+    public class Music : IDisposable
     {
+        public bool IsNull { get; private set; } = false;
         AccurateVorbisWaveReader vr;
         WaveOut wo;
         VorbisLoop vl;
+        VolumeSampleProvider vp;
         public string Name;
-        public int Volume = 80;
-        private float vol = 80;
+        public int Volume = 100;
+        private float vol = 100;
         private float previousVolume = -1;
         private float fadeSpeed;
         public bool isFaded => (vol == 0) || (vol == Volume);
         public int LoopStart { get => vl.LoopStart; set => vl.LoopStart = value; }
         public bool EnableLooping { get => vl.EnableLooping; set => vl.EnableLooping = value; }
         public bool IsPlaying { get; private set; }
+        public bool Loaded { get; private set; }
         public Music(string path)
         {
+            Loaded = false;
             string fName = path.Split('/').Last();
             fName = fName.Substring(0, fName.Length - 4);
             Name = fName;
@@ -32,6 +37,7 @@ namespace OpGL
             vr = new AccurateVorbisWaveReader(path);
             wo = new WaveOut();
             vl = new VorbisLoop(vr);
+            vp = new VolumeSampleProvider(vl);
             string[] s = vr.Comments.Where((st) => st.StartsWith("LOOP")).ToArray();
             for (int i = 0; i < s.Length; i++)
             {
@@ -42,7 +48,33 @@ namespace OpGL
                     vl.EnableLooping = true;
                 }
             }
-            wo.Init(vl);
+        }
+
+        public void Initialize()
+        {
+            if (Loaded) return;
+            wo.Init(vp);
+            Loaded = true;
+        }
+
+        public void Dispose()
+        {
+            vr?.Dispose();
+            wo?.Dispose();
+            vl?.Dispose();
+            IsNull = true;
+        }
+
+        private Music() { }
+        public static Music Empty
+        {
+            get
+            {
+                Music ret = new Music();
+                ret.IsNull = true;
+                ret.Name = "Silence";
+                return ret;
+            }
         }
 
         public void FadeOut(float speed = 1)
@@ -51,21 +83,28 @@ namespace OpGL
         }
         public void FadeIn(float speed = 1)
         {
-            if (!IsPlaying) Resume();
             fadeSpeed = speed;
+            if (!IsPlaying && !IsNull) Resume();
         }
 
         public void Process()
         {
+            if (!Loaded) return;
             if (fadeSpeed < 0)
             {
+                if (IsNull)
+                {
+                    vol = 0;
+                    fadeSpeed = 0;
+                }
                 if (vol > 0)
                 {
                     vol += fadeSpeed * (Volume / 100f);
                     if (vol <= 0)
                     {
                         vol = 0;
-                        Pause();
+                        if (!IsNull)
+                            Pause();
                         fadeSpeed = 0;
                     }
                 }
@@ -84,38 +123,64 @@ namespace OpGL
             }
             if (vol != previousVolume)
             {
-                wo.Volume = (vol / 100);
+                if (!IsNull)
+                    vp.Volume = (vol / 100);
                 previousVolume = vol;
             }
         }
 
         public void Play()
         {
-            vl.Position = 0;
-            wo.Play();
             IsPlaying = true;
+            if (!Loaded) return;
+            if (!IsNull)
+            vl.Position = 0;
+            vol = Volume;
+            fadeSpeed = 0;
+            if (!IsNull)
+                wo.Play();
         }
 
         public void Stop()
         {
-            wo.Stop();
             IsPlaying = false;
+            if (!Loaded) return;
+            if (!IsNull)
+                wo.Stop();
         }
 
         public void Resume()
         {
-            wo.Resume();
             IsPlaying = true;
+            if (!Loaded) return;
+            if (!IsNull)
+                wo.Play();
         }
 
         public void Pause()
         {
-            wo.Pause();
             IsPlaying = false;
+            if (!Loaded) return;
+            if (!IsNull)
+                wo.Stop();
+        }
+
+        public void Silence()
+        {
+            vol = 0;
+            if (!IsNull)
+                vp.Volume = (vol / 100);
+        }
+
+        public void UnSilence()
+        {
+            vol = Volume;
+            if (!IsNull)
+                vp.Volume = (vol / 100);
         }
     }
 
-    class VorbisLoop : WaveStream
+    class VorbisLoop : WaveStream, ISampleProvider
     {
         AccurateVorbisWaveReader source;
         public int LoopStart;
@@ -154,12 +219,35 @@ namespace OpGL
             }
             return totalBytesRead;
         }
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int totalSamplesRead = 0;
+
+            while (totalSamplesRead < count)
+            {
+                int read = count - totalSamplesRead;
+                int bytesRead = source.Read(buffer, offset + totalSamplesRead, read);
+                if (bytesRead == 0)
+                {
+                    if (source.Position == 0 || !EnableLooping)
+                    {
+                        // something wrong with the source stream
+                        break;
+                    }
+                    // loop
+                    source.Position = LoopStart * 8;
+                }
+                totalSamplesRead += bytesRead;
+            }
+            return totalSamplesRead;
+        }
     }
 
     public class AccurateVorbisWaveReader : WaveStream, IDisposable, ISampleProvider, IWaveProvider
     {
         NVorbis.VorbisReader _reader;
-        WaveFormat _waveFormat;
+        NAudio.Wave.WaveFormat _waveFormat;
 
         public AccurateVorbisWaveReader(string fileName)
         {

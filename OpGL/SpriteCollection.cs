@@ -11,14 +11,37 @@ using System.Drawing;
 
 namespace OpGL
 {
-    public class SpriteCollection : List<Sprite>
+    public class SpriteCollection : List<Sprite>, IDisposable
     {
-        // A smaller group size results in more tiles to check; a larger group size results in more drawables per tile.
+        public void Dispose()
+        {
+            if (!firstRender)
+            {
+                //if (Gl.IsBuffer(ibo))
+                //{
+                //    Gl.DeleteBuffers(ibo);
+                //    Gl.DeleteVertexArrays(vao);
+                //}
+            }
+        }
+
+        // A smaller group size results in more tiles to check; a larger group size results in more sprites per tile.
         // I expect that group size equal to the smallest tile size is ideal, but I have not done any tests.
         const int GROUP_SIZE = 8;
         public Color Color = Color.White;
         SortedList<Point, List<Sprite>> perTile;
-        static Comparer<Point> pointComparer = Comparer<Point>.Create(TileCompare);
+        public static Comparer<Point> pointComparer = Comparer<Point>.Create(TileCompare);
+        private uint ibo;
+        private float[] tilesBuffer;
+        private bool firstRender = true;
+        private bool updateBuffer = false;
+        private bool setBuffer = true;
+        private uint vao;
+        private List<Tile> tiles = new List<Tile>();
+        private Texture tileTexture;
+        public bool Visible = true;
+        public List<Sprite> ToProcess = new List<Sprite>();
+        public Color TileColor = Color.White;
 
         public SpriteCollection() : base() { }
         public SpriteCollection(int capacity) : base(capacity) { }
@@ -27,47 +50,114 @@ namespace OpGL
             AddRange(drawables);
         }
 
-        public virtual void Render()
+        public void CheckBuffer()
         {
-            int modelLoc = -1;
-            int texLoc = -1;
-            int colorLoc = -1;
-            Texture lastTex = null;
+            if (setBuffer) SetBuffer();
+        }
+
+        public virtual void Render(int frame, bool showInvisible = false)
+        {
+            if (!Visible) return;
             ProgramData lastProgram = null;
-            long lastColor = long.MinValue;
+
+            if (updateBuffer)
+                UpdateBuffer(tileTexture);
+            if (tiles.Count > 0 && tileTexture is object)
+            {
+                Tile n = new Tile(0, 0, tileTexture, 0, 0);
+                n.Color = TileColor;
+                n.RenderPrep();
+                n.ResetAnimation();
+                tileTexture.Program.Reset();
+                tileTexture.Program.Prepare(n, frame);
+                Gl.BindVertexArray(vao);
+                Gl.Uniform4f(tileTexture.Program.MasterColorLocation, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
+                Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, tiles.Count);
+            }
             for (int i = 0; i < Count; i++)
             {
                 Sprite d = this[i];
-                if (!d.Visible)
+                if (!showInvisible && !d.Visible)
+                    continue;
+                if (d is Tile && d.Layer < 0)
                     continue;
 
                 d.RenderPrep();
-                Gl.BindVertexArray(d.VAO);
-                if (lastTex != d.Texture)
+                if (d.Program != lastProgram)
                 {
-                    lastTex = d.Texture;
-                    Gl.BindTexture(TextureTarget.Texture2d, lastTex.ID);
-                    if (lastProgram != lastTex.Program)
-                    {
-                        lastProgram = lastTex.Program;
-                        modelLoc = lastProgram.ModelLocation;
-                        texLoc = lastProgram.TexLocation;
-                        colorLoc = lastProgram.ColorLocation;
-                        int masterColorLoc = lastProgram.MasterColorLocation;
-                        Gl.UseProgram(lastProgram.ID);
-                        Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
-                    }
+                    lastProgram = d.Program;
+                    lastProgram.Reset();
+                    int masterColorLoc = lastProgram.MasterColorLocation;
+                    Gl.UseProgram(lastProgram.ID);
+                    Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
                 }
-                if (lastColor != d.Color.ToArgb())
-                {
-                    Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)d.Color.R / 255, (float)d.Color.G / 255, (float)d.Color.B / 255, (float)d.Color.A / 255));
-                    lastColor = d.Color.ToArgb();
-                }
+                lastProgram.Prepare(d, frame);
 
-                Gl.UniformMatrix4f(modelLoc, 1, false, d.LocMatrix);
-                Gl.UniformMatrix4f(texLoc, 1, false, d.TexMatrix);
                 d.UnsafeDraw();
             }
+        }
+
+
+
+        private void SetBuffer()
+        {
+            tiles.Clear();
+            tileTexture = null;
+            List<Sprite> tls = this.FindAll((tl) => tl is Tile && tl.Layer < 0);
+            foreach (Tile t in tls)
+            {
+                if (tileTexture is null || t.Texture == tileTexture)
+                {
+                    tiles.Add(t);
+                    tileTexture = t.Texture;
+                    continue;
+                }
+            }
+            if (tiles.Count > 0)
+            {
+                tilesBuffer = new float[tiles.Count * 4];
+                int i = 0;
+                foreach (Tile tile in tiles)
+                {
+                    tilesBuffer[i++] = tile.X / tile.Size;
+                    tilesBuffer[i++] = tile.Y / tile.Size;
+                    tilesBuffer[i++] = tile.TextureX;
+                    tilesBuffer[i++] = tile.TextureY;
+                }
+                updateBuffer = true;
+            }
+            setBuffer = false;
+        }
+
+        private void UpdateBuffer(Texture texture)
+        {
+            if (texture is null) return;
+            if (firstRender)
+            {
+                firstRender = false;
+
+                vao = Gl.CreateVertexArray();
+                Gl.BindVertexArray(vao);
+
+                Gl.BindBuffer(BufferTarget.ArrayBuffer, texture.baseVBO);
+                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                Gl.EnableVertexAttribArray(0);
+                Gl.EnableVertexAttribArray(1);
+
+                ibo = Gl.CreateBuffer();
+                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                Gl.EnableVertexAttribArray(2);
+                Gl.EnableVertexAttribArray(3);
+                Gl.VertexAttribDivisor(2, 1);
+                Gl.VertexAttribDivisor(3, 1);
+            }
+
+            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)tilesBuffer.Length * sizeof(float), tilesBuffer, BufferUsage.DynamicDraw);
+            updateBuffer = false;
         }
 
         private class TileEnumerator : IEnumerator<Point>
@@ -76,13 +166,13 @@ namespace OpGL
             int cX, cY;
             public TileEnumerator(RectangleF d)
             {
-                minX = (int)d.X / GROUP_SIZE;
-                minY = (int)d.Y / GROUP_SIZE;
+                minX = (int)Math.Floor(d.X / GROUP_SIZE);
+                minY = (int)Math.Floor(d.Y / GROUP_SIZE);
                 // don't include a tile if the Drawable only extends exactly to the tile boundary
                 float xw = d.X + d.Width;
-                maxX = (int)(xw) / GROUP_SIZE - (xw % GROUP_SIZE == 0 ? 1 : 0);
+                maxX = (int)Math.Floor(xw / GROUP_SIZE) - (xw % GROUP_SIZE == 0 ? 1 : 0);
                 float yh = d.Y + d.Height;
-                maxY = (int)(yh) / GROUP_SIZE - (yh % GROUP_SIZE == 0 ? 1 : 0);
+                maxY = (int)Math.Floor(yh / GROUP_SIZE) - (yh % GROUP_SIZE == 0 ? 1 : 0);
 
                 cX = minX;
                 cY = minY;
@@ -113,19 +203,34 @@ namespace OpGL
                 cY = minY;
             }
         }
+        public bool IsSorting { get; private set; } = false;
+        SortedList<Point, List<Sprite>> allStatic;
         public void SortForCollisions()
         {
-            perTile = new SortedList<Point, List<Sprite>>(pointComparer);
-            SpriteCollection list = this;
-            for (int i1 = 0; i1 < list.Count; i1++)
+            if (IsSorting) return;
+            IsSorting = true;
+            if (allStatic is null)
             {
-                Sprite d = list[i1];
+                allStatic = new SortedList<Point, List<Sprite>>(pointComparer);
+                List<Sprite> st = FindAll((s) => s.Static);
+                SortInto(allStatic, st);
+            }
+            perTile = new SortedList<Point, List<Sprite>>(pointComparer);
+            List<Sprite> list = FindAll((s) => !s.Static);
+            SortInto(perTile, list);
+            IsSorting = false;
+        }
+        private void SortInto(SortedList<Point, List<Sprite>> into, List<Sprite> toSort)
+        {
+            for (int i1 = 0; i1 < toSort.Count; i1++)
+            {
+                Sprite d = toSort[i1];
                 TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
                 do
                 {
-                    if (!perTile.ContainsKey(te.Current))
-                        perTile.Add(te.Current, new List<Sprite>());
-                    perTile[te.Current].Add(d);
+                    if (!into.ContainsKey(te.Current))
+                        into.Add(te.Current, new List<Sprite>());
+                    into[te.Current].Add(d);
                 } while (te.MoveNext());
                 if (d.MultiplePositions)
                 {
@@ -134,9 +239,9 @@ namespace OpGL
                         te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                         do
                         {
-                            if (!perTile.ContainsKey(te.Current))
-                                perTile.Add(te.Current, new List<Sprite>());
-                            perTile[te.Current].Add(d);
+                            if (!into.ContainsKey(te.Current))
+                                into.Add(te.Current, new List<Sprite>());
+                            into[te.Current].Add(d);
                         } while (te.MoveNext());
                     }
                 }
@@ -145,52 +250,65 @@ namespace OpGL
         public List<Sprite> GetPotentialColliders(Sprite d)
         {
             List<Sprite> colliders = new List<Sprite>();
+            if (perTile is null) SortForCollisions();
 
+            SortedList<Point, List<Sprite>> lookIn = perTile;
             TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
-            do
+            for (int i2 = 0; i2 < 2; i2++)
             {
-                if (perTile.ContainsKey(te.Current))
-                    colliders.AddRange(perTile[te.Current].Where((item) => item != d && !colliders.Contains(item)));
-            } while (te.MoveNext());
-            if (d.MultiplePositions)
-            {
-                for (int i = 0; i < d.Offsets.Count; i++)
+                do
                 {
-                    te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
-                    do
+                    if (lookIn.ContainsKey(te.Current))
+                        colliders.AddRange(lookIn[te.Current].Where((item) => item != d && !colliders.Contains(item)));
+                } while (te.MoveNext());
+                if (d.MultiplePositions)
+                {
+                    for (int i = 0; i < d.Offsets.Count; i++)
                     {
-                        if (perTile.ContainsKey(te.Current))
-                            colliders.AddRange(perTile[te.Current].Where((item) => item != d && !colliders.Contains(item)));
-                    } while (te.MoveNext());
+                        te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
+                        do
+                        {
+                            if (lookIn.ContainsKey(te.Current))
+                                colliders.AddRange(lookIn[te.Current].Where((item) => item != d && !colliders.Contains(item)));
+                        } while (te.MoveNext());
+                    }
                 }
+                te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
+                lookIn = allStatic;
             }
+            
 
             return colliders;
         }
         public List<Sprite> GetPotentialColliders(float x, float y, float w = 8, float h = 8)
         {
             if (perTile == null) SortForCollisions();
+
             List<Sprite> colliders = new List<Sprite>();
 
+            SortedList<Point, List<Sprite>> lookIn = perTile;
             TileEnumerator te = new TileEnumerator(new RectangleF(x, y, w, h));
-            do
+            for (int i = 0; i < 2; i++)
             {
-                if (perTile.ContainsKey(te.Current))
-                    colliders.AddRange(perTile[te.Current].Where((item) => !colliders.Contains(item)));
-            } while (te.MoveNext());
+                do
+                {
+                    if (lookIn.ContainsKey(te.Current))
+                        colliders.AddRange(lookIn[te.Current].Where((item) => !colliders.Contains(item)));
+                } while (te.MoveNext());
+                te.Reset();
+                lookIn = allStatic;
+            }
             return colliders;
         }
 
         private int RenderCompare(Sprite d1, Sprite d2)
         {
+            if (d1 is null || d2 is null) return 0;
             int c = d1.Layer.CompareTo(d2.Layer);
             if (c == 0)
             {
                 int t = d1.TextureID.CompareTo(d2.TextureID);
-                if (t == 0)
-                    return d1.Color.ToArgb().CompareTo(d2.Color.ToArgb());
-                else
-                    return t;
+                return t;
             }
             else
                 return c;
@@ -234,6 +352,7 @@ namespace OpGL
         /// </summary>
         public new int IndexOf(Sprite d)
         {
+            if (d is null) return -1;
             // index in the range at which d would be, by render sort
             int index = AddIndex(d);
             // check from this index to the end of that range
@@ -259,7 +378,14 @@ namespace OpGL
         public void AddForCollisions(Sprite d)
         {
             Add(d);
-            if (perTile == null)
+            if (!d.Static)
+                AddToCollisions(d);
+        }
+
+        private void AddToCollisions(Sprite d)
+        {
+            SortedList<Point, List<Sprite>> list = d.Static ? allStatic : perTile;
+            if (list == null)
             {
                 SortForCollisions();
                 return;
@@ -267,9 +393,9 @@ namespace OpGL
             TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
             do
             {
-                if (!perTile.ContainsKey(te.Current))
-                    perTile.Add(te.Current, new List<Sprite>());
-                perTile[te.Current].Add(d);
+                if (!list.ContainsKey(te.Current))
+                    list.Add(te.Current, new List<Sprite>());
+                list[te.Current].Add(d);
             } while (te.MoveNext());
             if (d.MultiplePositions)
             {
@@ -278,9 +404,9 @@ namespace OpGL
                     te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                     do
                     {
-                        if (!perTile.ContainsKey(te.Current))
-                            perTile.Add(te.Current, new List<Sprite>());
-                        perTile[te.Current].Add(d);
+                        if (!list.ContainsKey(te.Current))
+                            list.Add(te.Current, new List<Sprite>());
+                        list[te.Current].Add(d);
                     } while (te.MoveNext());
                 }
             }
@@ -289,7 +415,8 @@ namespace OpGL
         public void RemoveFromCollisions(Sprite d)
         {
             Remove(d);
-            if (perTile == null)
+            SortedList<Point, List<Sprite>> list = d.Static ? allStatic : perTile;
+            if (list == null)
             {
                 SortForCollisions();
                 return;
@@ -297,8 +424,8 @@ namespace OpGL
             TileEnumerator te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
             do
             {
-                if (perTile.ContainsKey(te.Current))
-                    perTile[te.Current].Remove(d);
+                if (list.ContainsKey(te.Current))
+                    list[te.Current].Remove(d);
             } while (te.MoveNext());
             if (d.MultiplePositions)
             {
@@ -307,8 +434,8 @@ namespace OpGL
                     te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                     do
                     {
-                        if (perTile.ContainsKey(te.Current))
-                            perTile[te.Current].Remove(d);
+                        if (list.ContainsKey(te.Current))
+                            list[te.Current].Remove(d);
                     } while (te.MoveNext());
                 }
             }
@@ -316,7 +443,8 @@ namespace OpGL
 
         public void MoveForCollisions(Sprite d, RectangleF position)
         {
-            if (perTile == null)
+            SortedList<Point, List<Sprite>> list = d.Static ? allStatic : perTile;
+            if (list == null)
             {
                 SortForCollisions();
                 return;
@@ -324,8 +452,8 @@ namespace OpGL
             TileEnumerator te = new TileEnumerator(position);
             do
             {
-                if (perTile.ContainsKey(te.Current))
-                    perTile[te.Current].Remove(d);
+                if (list.ContainsKey(te.Current))
+                    list[te.Current].Remove(d);
             } while (te.MoveNext());
             if (d.MultiplePositions)
             {
@@ -334,17 +462,17 @@ namespace OpGL
                     te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                     do
                     {
-                        if (perTile.ContainsKey(te.Current))
-                            perTile[te.Current].Remove(d);
+                        if (list.ContainsKey(te.Current))
+                            list[te.Current].Remove(d);
                     } while (te.MoveNext());
                 }
             }
             te = new TileEnumerator(new RectangleF(d.X, d.Y, d.Width, d.Height));
             do
             {
-                if (!perTile.ContainsKey(te.Current))
-                    perTile.Add(te.Current, new List<Sprite>());
-                perTile[te.Current].Add(d);
+                if (!list.ContainsKey(te.Current))
+                    list.Add(te.Current, new List<Sprite>());
+                list[te.Current].Add(d);
             } while (te.MoveNext());
             if (d.MultiplePositions)
             {
@@ -353,9 +481,9 @@ namespace OpGL
                     te = new TileEnumerator(new RectangleF(d.X + d.Offsets[i].X, d.Y + d.Offsets[i].Y, d.Width, d.Height));
                     do
                     {
-                        if (!perTile.ContainsKey(te.Current))
-                            perTile.Add(te.Current, new List<Sprite>());
-                        perTile[te.Current].Add(d);
+                        if (!list.ContainsKey(te.Current))
+                            list.Add(te.Current, new List<Sprite>());
+                        list[te.Current].Add(d);
                     } while (te.MoveNext());
                 }
             }
@@ -364,6 +492,9 @@ namespace OpGL
         public new void Add(Sprite d)
         {
             base.Insert(AddIndex(d), d);
+            if (!d.Static) ToProcess.Add(d);
+            else AddToCollisions(d);
+            if (d is Tile) setBuffer = true;
         }
         public new void AddRange(IEnumerable<Sprite> drawables)
         {
@@ -383,7 +514,12 @@ namespace OpGL
         {
             int index = IndexOf(d);
             if (index != -1)
-                base.RemoveAt(index);
+            {
+                RemoveAt(index);
+                if (!d.Static) ToProcess.Remove(d);
+                if (d is Tile)
+                    setBuffer = true;
+            }
         }
 
         /// <summary>

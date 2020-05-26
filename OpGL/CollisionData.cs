@@ -9,13 +9,13 @@ namespace OpGL
     public class CollisionData
     {
         public bool Vertical;
-        public float Distance;
+        public double Distance;
         public Sprite CollidedWith;
 
-        public CollisionData(bool vertical, float distance, Sprite collidedWith)
+        public CollisionData(bool vertical, double distance, Sprite collidedWith)
         {
             Vertical = vertical;
-            Distance = distance;
+            Distance = Math.Round(distance, 4);
             CollidedWith = collidedWith;
         }
     }

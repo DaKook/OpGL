@@ -8,12 +8,13 @@ using Newtonsoft.Json.Linq;
 
 namespace OpGL
 {
-    public class Enemy : Sprite
+    public class Enemy : Sprite, IBoundSprite
     {
-        public float XVel;
-        public float YVel;
-        public bool Pushable = true;
-        public Rectangle Bounds;
+        public float XVel { get; set; }
+        public float YVel { get; set; }
+        public bool IsPushable = true;
+        private Rectangle _bounds;
+        public Rectangle Bounds { get => _bounds; set => _bounds = value; }
         public Enemy(float x, float y, Texture texture, Animation animation, float xSpeed, float ySpeed, Color? color = null) : base(x, y, texture, animation)
         {
             XVel = xSpeed;
@@ -21,6 +22,7 @@ namespace OpGL
             KillCrewmen = true;
             Solid = SolidState.Entity;
             Color = color ?? Color.White;
+            ColorModifier = AnimatedColor.Default;
         }
 
         public override void Process()
@@ -35,32 +37,32 @@ namespace OpGL
         {
             if (Bounds.Width > 0 && Bounds.Height > 0)
             {
-                if (Right > Bounds.X + Bounds.Width)
+                if (Right > Bounds.X + Bounds.Width + InitialX)
                 {
-                    Right = Bounds.X + Bounds.Width;
+                    Right = Bounds.X + Bounds.Width + InitialX;
                     XVel *= -1;
                 }
-                else if (X < Bounds.X)
+                else if (X < Bounds.X + InitialX)
                 {
-                    X = Bounds.X;
+                    X = Bounds.X + InitialX;
                     XVel *= -1;
                 }
-                else if (Bottom > Bounds.Y + Bounds.Height)
+                else if (Bottom > Bounds.Y + Bounds.Height + InitialY)
                 {
-                    Bottom = Bounds.Y + Bounds.Height;
+                    Bottom = Bounds.Y + Bounds.Height + InitialY;
                     YVel *= -1;
                 }
-                else if (Y < Bounds.Y)
+                else if (Y < Bounds.Y + InitialY)
                 {
-                    Y = Bounds.Y;
+                    Y = Bounds.Y + InitialY;
                     YVel *= -1;
                 }
             }
         }
 
-        public override void CollideX(float distance, Sprite collision)
+        public override void CollideX(double distance, Sprite collision)
         {
-            if (XVel != 0 || Pushable)
+            if (XVel != 0 || IsPushable)
             {
                 base.CollideX(distance, collision);
                 XVel *= -1;
@@ -68,12 +70,13 @@ namespace OpGL
             //CheckBounds();
         }
 
-        public override void CollideY(float distance, Sprite collision)
+        public override void CollideY(double distance, Sprite collision)
         {
-            if (YVel != 0 || Pushable)
+            if (YVel != 0 || IsPushable)
             {
                 base.CollideY(distance, collision);
-                YVel *= -1;
+                if (Math.Sign(distance) == Math.Sign(YVel))
+                    YVel *= -1;
             }
             //CheckBounds();
         }
@@ -81,27 +84,43 @@ namespace OpGL
         public override void Collide(CollisionData cd)
         {
             base.Collide(cd);
-            if (!Pushable)
+            if (!IsPushable)
                 cd.CollidedWith.Collide(new CollisionData(cd.Vertical, -cd.Distance, this));
         }
 
-        public override JObject Save()
+        //public override JObject Save()
+        //{
+        //    JObject ret = new JObject();
+        //    ret.Add("Type", "Enemy");
+        //    ret.Add("X", X);
+        //    ret.Add("Y", Y);
+        //    ret.Add("Texture", Texture.Name);
+        //    ret.Add("Animation", Animation.Name);
+        //    ret.Add("XSpeed", XVel);
+        //    ret.Add("YSpeed", YVel);
+        //    ret.Add("Name", Name);
+        //    ret.Add("Color", Color.ToArgb());
+        //    ret.Add("BoundsX", Bounds.X);
+        //    ret.Add("BoundsY", Bounds.Y);
+        //    ret.Add("BoundsWidth", Bounds.Width);
+        //    ret.Add("BoundsHeight", Bounds.Height);
+        //    return ret;
+        //}
+
+        public override SortedList<string, SpriteProperty> Properties
         {
-            JObject ret = new JObject();
-            ret.Add("Type", "Enemy");
-            ret.Add("X", X);
-            ret.Add("Y", Y);
-            ret.Add("Texture", Texture.Name);
-            ret.Add("Animation", Animation.Name);
-            ret.Add("XSpeed", XVel);
-            ret.Add("YSpeed", YVel);
-            ret.Add("Name", Name);
-            ret.Add("Color", Color.ToArgb());
-            ret.Add("BoundsX", Bounds.X);
-            ret.Add("BoundsY", Bounds.Y);
-            ret.Add("BoundsWidth", Bounds.Width);
-            ret.Add("BoundsHeight", Bounds.Height);
-            return ret;
+            get
+            {
+                SortedList<string, SpriteProperty> ret = base.Properties;
+                ret.Add("XSpeed", new SpriteProperty("XSpeed", () => XVel, (t, g) => XVel = (float)t, 0f, SpriteProperty.Types.Float, "The X speed in pixels/frame of the enemy."));
+                ret.Add("YSpeed", new SpriteProperty("YSpeed", () => YVel, (t, g) => YVel = (float)t, 0f, SpriteProperty.Types.Float, "The Y speed in pixels/frame of the enemy."));
+                ret.Add("BoundsX", new SpriteProperty("BoundsX", () => Bounds.X, (t, g) => _bounds.X = (int)t, 0, SpriteProperty.Types.Int, "The left edge of the enemy's bounds."));
+                ret.Add("BoundsY", new SpriteProperty("BoundsY", () => Bounds.Y, (t, g) => _bounds.Y = (int)t, 0, SpriteProperty.Types.Int, "The top edge of the enemy's bounds."));
+                ret.Add("BoundsWidth", new SpriteProperty("BoundsWidth", () => Bounds.Width, (t, g) => _bounds.Width = (int)t, 0, SpriteProperty.Types.Int, "The width of the enemy's bounds."));
+                ret.Add("BoundsHeight", new SpriteProperty("BoundsHeight", () => Bounds.Height, (t, g) => _bounds.Height = (int)t, 0, SpriteProperty.Types.Int, "The height of the enemy's bounds."));
+                ret["Type"].GetValue = () => "Enemy";
+                return ret;
+            }
         }
     }
 }

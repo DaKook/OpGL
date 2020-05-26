@@ -10,68 +10,39 @@ namespace OpGL
     public class Number
     {
         private float _value;
-        private Sprite _source;
-        private SourceTypes _srcType;
-        public enum SourceTypes { X, Y, CheckX, CheckY }
-        private float Value
+        public float AssignedValue => _value;
+        public Func<Script.Executor, float> GetValue;
+        public float Value(Script.Executor e)
         {
-            get
-            {
-                if (_source != null)
-                {
-                    switch (_srcType)
-                    {
-                        case SourceTypes.X:
-                            return _source.X;
-                        case SourceTypes.Y:
-                            return _source.Y;
-                        case SourceTypes.CheckX:
-                            return (_source as Crewman)?.CheckpointX ?? 0;
-                        case SourceTypes.CheckY:
-                            return (_source as Crewman)?.CheckpointY ?? 0;
-                        default:
-                            return _value;
-                    }
-                }
-                else
-                    return _value;
-            }
-            set
-            {
-                _value = value;
-            }
+            if (GetValue == null) return _value;
+            else return GetValue(e);
         }
         public string Name;
 
         public Number(string name, float value)
         {
             Name = name;
-            Value = value;
+            _value = value;
         }
-        public Number(string name, Sprite sourceSprite, SourceTypes source)
+        public Number(string name, Func<Script.Executor, float> getVal)
         {
             Name = name;
-            _source = sourceSprite;
-            _srcType = source;
-        }
-
-        public static implicit operator float(Number n)
-        {
-            return n.Value;
+            GetValue = getVal;
         }
         public static implicit operator Number(float f)
         {
             return new Number("", f);
         }
-        public static implicit operator JToken(Number n)
-        {
-            return n.Value;
-        }
         public static bool TryParse(string s, out Number result)
         {
-            bool ret = int.TryParse(s, out int i);
+            bool ret = float.TryParse(s, out float i);
             result = i;
             return ret;
+        }
+        public void SetValue(float value)
+        {
+            GetValue = null;
+            _value = value;
         }
     }
 }
