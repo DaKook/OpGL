@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace OpGL
+namespace V7
 {
     public class Crewman : Sprite
     {
@@ -18,7 +18,8 @@ namespace OpGL
         private Animation dyingAnimation;
         public float YVelocity;
         public float XVelocity;
-        public static float TerminalVelocity = 5f;
+        public static float UniversalTerminalVelocity = 5f;
+        public float OwnTerminalVelocity = 5f;
         public float MaxSpeed = 3f;
         public float Acceleration = 0.475f;
         public bool OnGround = false;
@@ -125,7 +126,7 @@ namespace OpGL
                     }
                 }
                 
-                if (spikeMercy < 4)
+                if (spikeMercy < 3)
                     spikeMercy += 1;
 
                 YVelocity += Gravity;
@@ -140,8 +141,8 @@ namespace OpGL
                         jumped = false;
                 }
                 if (JumpBuffer > 0) JumpBuffer -= 1;
-                if (YVelocity > TerminalVelocity && Gravity > 0) YVelocity = TerminalVelocity;
-                else if (YVelocity < -TerminalVelocity && Gravity < 0) YVelocity = -TerminalVelocity;
+                if (YVelocity > OwnTerminalVelocity && Gravity > 0) YVelocity = OwnTerminalVelocity;
+                else if (YVelocity < -OwnTerminalVelocity && Gravity < 0) YVelocity = -OwnTerminalVelocity;
                 if (OnGround)
                 {
                     changeAnimationOnGround();
@@ -426,11 +427,98 @@ namespace OpGL
         {
             if (testFor == this || DyingFrames > 0) return null;
 
-            // Crewmen can collide with entities; normal Drawables cannot
+            // Crewmen can collide with entities; normal Sprites cannot
             if ((testFor.Solid == SolidState.Entity || testFor.KillCrewmen || testFor is GravityLine || testFor is WarpLine) && IsOverlapping(testFor))
             {
                 if (testFor.KillCrewmen)
-                    return new CollisionData(true, 0, testFor);
+                {
+                    if (testFor is Tile && (testFor as Tile).State != Tile.TileStates.Normal)
+                    {
+                        switch ((testFor as Tile).State)
+                        {
+                            case Tile.TileStates.SpikeR:
+                                {
+                                    if (Bottom < testFor.Y + 4)
+                                    {
+                                        if (X - testFor.X > Bottom - testFor.Y)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else if (Y > testFor.Y + 4)
+                                    {
+                                        if (X - testFor.X > testFor.Bottom - Y)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else
+                                        return new CollisionData(true, 0, testFor);
+                                }
+                            case Tile.TileStates.SpikeL:
+                                {
+                                    if (Bottom > testFor.Y + 4)
+                                    {
+                                        if (Right - testFor.Right > Bottom - testFor.Y)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else if (Y < testFor.Y + 4)
+                                    {
+                                        if (Right - testFor.Right > testFor.Bottom - Y)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else
+                                        return new CollisionData(true, 0, testFor);
+                                }
+                            case Tile.TileStates.SpikeU:
+                                {
+                                    if (Right < testFor.X + 4)
+                                    {
+                                        if (testFor.Bottom - Bottom > Right - testFor.X)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else if (X > testFor.X + 4)
+                                    {
+                                        if (testFor.Bottom - Bottom > testFor.Right - X)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else
+                                        return new CollisionData(true, 0, testFor);
+                                }
+                            case Tile.TileStates.SpikeD:
+                                {
+                                    if (Right < testFor.X + 4)
+                                    {
+                                        if (Y - testFor.Y > Right - testFor.X)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else if (X > testFor.X + 4)
+                                    {
+                                        if (Y - testFor.Y > testFor.Right - X)
+                                            return null;
+                                        else
+                                            return new CollisionData(true, 0, testFor);
+                                    }
+                                    else
+                                        return new CollisionData(true, 0, testFor);
+                                }
+                            default:
+                                return new CollisionData(true, 0, testFor);
+                        }
+                    }
+                    else
+                        return new CollisionData(true, 0, testFor);
+                }
                 else
                     return GetCollisionData(testFor);
             }
@@ -440,6 +528,18 @@ namespace OpGL
 
         protected override CollisionData GetCollisionData(Sprite testFor)
         {
+            bool isTile = testFor is Tile;
+            int direction = -1;
+            if (isTile)
+            {
+                direction = (int)(testFor as Tile).State;
+                if (direction < 5)
+                {
+                    direction = -1;
+                }
+                else
+                    direction -= 5;
+            }
             for (int i = -1; i < Offsets.Count; i++)
             {
                 float ofX = i > -1 ? Offsets[i].X : 0;
@@ -451,16 +551,16 @@ namespace OpGL
                     if (!testFor.Within(X + ofX, Y + ofY, Width, Height, ofXO, ofYO)) continue;
                     // check for vertical collision first
                     // top
-                    if (Math.Round(PreviousY + PreviousHeight + ofY - (LedgeMercy > 0 ? 2 : 0), 4) <= Math.Round(testFor.PreviousY, 4) + ofYO)
+                    if (Math.Round(PreviousY + PreviousHeight + ofY - (LedgeMercy > 0 ? 2 : 0), 4) <= Math.Round(testFor.PreviousY, 4) + ofYO && direction < 1)
                         return new CollisionData(true, Bottom + ofY - (testFor.Y + ofYO), testFor);
                     // bottom
-                    else if (Math.Round(PreviousY + ofY + (LedgeMercy > 0 ? 2 : 0), 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4))
+                    else if (Math.Round(PreviousY + ofY + (LedgeMercy > 0 ? 2 : 0), 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4) && (direction == -1 || direction == 1))
                         return new CollisionData(true, Y + ofY - (testFor.Bottom + ofYO), testFor);
                     // right
-                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4))
+                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4) && (direction == -1 || direction == 2))
                         return new CollisionData(false, Right + ofX - (testFor.X + ofXO), testFor);
                     // left
-                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4))
+                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4) && (direction == -1 || direction == 3))
                         return new CollisionData(false, X + ofX - (testFor.Right + ofXO), testFor);
                     else if (testFor is ScriptBox || testFor is WarpLine)
                         return new CollisionData(true, 0, testFor);
@@ -483,7 +583,7 @@ namespace OpGL
                     spikeMercy -= 2;
                     if (spikeMercy <= 0)
                     {
-                        spikeMercy = 4;
+                        spikeMercy = 3;
                         Die();
                     }
                 }
@@ -598,6 +698,7 @@ namespace OpGL
                 ret.Add("Squeak", new SpriteProperty("Squeak", () => Squeak?.Name, (t, g) => Squeak = g.GetSound((string)t), "crew1", SpriteProperty.Types.Sound, "The sound played when this crewman talks."));
                 ret.Add("DoubleJump", new SpriteProperty("DoubleJump", () => MaxJumps, (t, g) => MaxJumps = (int)t, 0, SpriteProperty.Types.Int, "The amount of double jumps the crewman can perform."));
                 ret.Add("Invincible", new SpriteProperty("Invincible", () => Invincible, (t, g) => Invincible = (bool)t, false, SpriteProperty.Types.Bool, "Whether the crewman can die or not."));
+                ret.Add("TerminalVelocity", new SpriteProperty("TerminalVelocity", () => OwnTerminalVelocity, (t, g) => OwnTerminalVelocity = (float)t, 5f, SpriteProperty.Types.Float, "The max falling speed of the crewman."));
                 ret["Type"].GetValue = () => "Crewman";
                 return ret;
             }

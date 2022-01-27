@@ -5,12 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using OpenTK;
 
-namespace OpGL
+namespace V7
 {
     public class Tile : Sprite
     {
         public override Pushability Pushability => Pushability.Immovable;
+        public enum TileStates { Normal, SpikeR, SpikeL, SpikeU, SpikeD, OneWayU, OneWayD, OneWayR, OneWayL }
+        public TileStates State = TileStates.Normal;
         public override float Width => 8;
         public override float Height => 8;
         public Tile(int x, int y, Texture texture, int tileX, int tileY) : base(x, y, texture, tileX, tileY)
@@ -18,12 +21,53 @@ namespace OpGL
             if (Texture.TileSolidStates.Length > 0 && Texture.TileSolidStates.GetLength(0) > tileX && Texture.TileSolidStates.GetLength(1) > tileY)
             {
                 int ss = (int)Texture.TileSolidStates[tileX, tileY];
-                if (ss > (int)SolidState.NonSolid)
+                switch (ss)
                 {
-                    ss -= (int)SolidState.NonSolid + 1;
-                    KillCrewmen = true;
+                    case 0:
+                        Solid = SolidState.Ground;
+                        break;
+                    case 1:
+                        Solid = SolidState.NonSolid;
+                        break;
+                    case 2:
+                        Solid = SolidState.Entity;
+                        State = TileStates.SpikeU;
+                        KillCrewmen = true;
+                        break;
+                    case 3:
+                        Solid = SolidState.Entity;
+                        State = TileStates.SpikeD;
+                        KillCrewmen = true;
+                        break;
+                    case 4:
+                        Solid = SolidState.Entity;
+                        State = TileStates.SpikeR;
+                        KillCrewmen = true;
+                        break;
+                    case 5:
+                        Solid = SolidState.Entity;
+                        State = TileStates.SpikeL;
+                        KillCrewmen = true;
+                        break;
+                    case 6:
+                        Solid = SolidState.Ground;
+                        State = TileStates.OneWayU;
+                        break;
+                    case 7:
+                        Solid = SolidState.Ground;
+                        State = TileStates.OneWayD;
+                        break;
+                    case 8:
+                        Solid = SolidState.Ground;
+                        State = TileStates.OneWayR;
+                        break;
+                    case 9:
+                        Solid = SolidState.Ground;
+                        State = TileStates.OneWayL;
+                        break;
+                    default:
+                        break;
                 }
-                Solid = (SolidState)ss;
             }
             if (Texture.TileSizeX != 8 || Texture.TileSizeY != 8)
             {
@@ -34,13 +78,15 @@ namespace OpGL
             FramePush = new PushData(Pushability.Immovable);
         }
 
+        
+
         public override void ChangeTexture(Texture texture)
         {
             int tileX = TextureX;
             int tileY = TextureY;
             base.ChangeTexture(texture);
             Animation = Animation.Static(tileX, tileY, texture);
-            TexMatrix.Translate(tileX, tileY, 0);
+            TexMatrix *= Matrix4.CreateTranslation(tileX, tileY, 0);
             if (Texture.TileSolidStates.Length > 0 && Texture.TileSolidStates.GetLength(0) > tileX && Texture.TileSolidStates.GetLength(1) > tileY)
             {
                 int ss = (int)Texture.TileSolidStates[tileX, tileY];

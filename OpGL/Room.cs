@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace OpGL
+namespace V7
 {
     public class Room : IDisposable
     {

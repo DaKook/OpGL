@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Diagnostics;
 
-using OpenGL;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using Newtonsoft.Json.Linq;
-using System.Windows.Forms;
+using OpenTK.Input;
 
-namespace OpGL
+namespace V7
 {
     public enum Pushability { PushSprite, Pushable, Solid, Immovable }
     public class Game
@@ -36,21 +37,21 @@ namespace OpGL
         }
         private int[] inputs = new int[(int)Inputs.Count];
         private List<Inputs> bufferInputs = new List<Inputs>();
-        private List<KeyEventArgs> bufferKeys = new List<KeyEventArgs>();
+        private List<KeyboardKeyEventArgs> bufferKeys = new List<KeyboardKeyEventArgs>();
         private string keys = "";
         private int[] lastPressed = new int[(int)Inputs.Count];
-        public Dictionary<Keys, Inputs> inputMap = new Dictionary<Keys, Inputs>() {
-            { Keys.Left, Inputs.Left }, { Keys.A, Inputs.Left },
-            { Keys.Right, Inputs.Right }, { Keys.D, Inputs.Right },
-            //{ Keys.Up, Inputs.Up }, { Keys.W, Inputs.Up },
-            //{ Keys.Down, Inputs.Down }, { Keys.S, Inputs.Down },
-            { Keys.Up, Inputs.Jump }, { Keys.Down, Inputs.Jump }, { Keys.Space, Inputs.Jump }, { Keys.Z, Inputs.Jump }, { Keys.V, Inputs.Jump }, { Keys.W, Inputs.Jump }, { Keys.S, Inputs.Jump },
-            { Keys.Enter, Inputs.Pause },
-            { Keys.Escape, Inputs.Escape },
-            { Keys.R, Inputs.Kill },
-            { Keys.X, Inputs.Special }, { Keys.B, Inputs.Special }, { Keys.ShiftKey, Inputs.Special }
+        public Dictionary<Key, Inputs> inputMap = new Dictionary<Key, Inputs>() {
+            { Key.Left, Inputs.Left }, { Key.A, Inputs.Left },
+            { Key.Right, Inputs.Right }, { Key.D, Inputs.Right },
+            //{ Key.Up, Inputs.Up }, { Key.W, Inputs.Up },
+            //{ Key.Down, Inputs.Down }, { Key.S, Inputs.Down },
+            { Key.Up, Inputs.Jump }, { Key.Down, Inputs.Jump }, { Key.Space, Inputs.Jump }, { Key.Z, Inputs.Jump }, { Key.V, Inputs.Jump }, { Key.W, Inputs.Jump }, { Key.S, Inputs.Jump },
+            { Key.Enter, Inputs.Pause },
+            { Key.Escape, Inputs.Escape },
+            { Key.R, Inputs.Kill },
+            { Key.X, Inputs.Special }, { Key.B, Inputs.Special }, { Key.RShift, Inputs.Special }
         };
-        private SortedSet<Keys> heldKeys = new SortedSet<Keys>();
+        private SortedSet<Key> heldKeys = new SortedSet<Key>();
         private int mouseX = -1;
         private int mouseY = -1;
         private bool bufferMove;
@@ -80,7 +81,7 @@ namespace OpGL
         {
             return inputs[(int)input] != 0;
         }
-        public bool IsKeyHeld(Keys key) => heldKeys.Contains(key);
+        public bool IsKeyHeld(Key key) => heldKeys.Contains(key);
         private bool IsInputNew(Inputs input)
         {
             return lastPressed[(int)input] == FrameCount;
@@ -108,7 +109,7 @@ namespace OpGL
         public SortedList<string, Number> Vars = new SortedList<string, Number>();
 
         // OpenGL
-        private GlControl glControl;
+        private GameWindow gameWindow;
         private TextureProgram program;
         private uint fbo;
         private Color currentColor;
@@ -189,7 +190,7 @@ namespace OpGL
         private int tileToolDefH = 1;
         private Tools tool = Tools.Ground;
         private Tools prTool = Tools.Ground;
-        private enum FocusOptions { Level, Tileset, Dialog, Map, ScriptEditor, Previews }
+        private enum FocusOptions { Level, Tileset, Dialog, Map, ScriptEditor, Previews, TileEditor }
         private FocusOptions CurrentEditingFocus = FocusOptions.Level;
         private BoxSprite selection;
         private Point currentTile = new Point(0, 0);
@@ -239,7 +240,7 @@ namespace OpGL
         private string enemyAnimation = "Enemy1";
         private bool replaceTiles = false;
         private Color roomColor => CurrentRoom.Color;
-        private Action<Keys> GiveDirection = null;
+        private Action<Key> GiveDirection = null;
         private Texture customSpriteTexture;
         private string customSpriteAnimation;
         private Texture pushTexture;
@@ -255,7 +256,7 @@ namespace OpGL
         private Action<Rectangle> bindSprite = null;
         private StringDrawable roomLoc = null;
         private char prefix = 'g';
-        private bool isFill => heldKeys.Contains(Keys.F) || fillLock;
+        private bool isFill => heldKeys.Contains(Key.F) || fillLock;
         private bool fillLock = false;
         private ScriptBox currentlyResizing = null;
         private RectangleSprite mapSelect;
@@ -285,7 +286,7 @@ namespace OpGL
         private int selectedChoice;
         private int choiceScroll;
         private int MaxChoices = 15;
-        private Action<DialogResult> closeDialog = null;
+        private Action<bool> closeDialog = null;
         private RectangleSprite colorPreview;
         private bool updateColor = false;
         public static SortedDictionary<string, Color> colors = new SortedDictionary<string, Color>()
@@ -320,7 +321,6 @@ namespace OpGL
 
         // Threads
         private Thread gameThread;
-        private Thread userThread;
 
 #if TEST
         // Test
@@ -334,7 +334,7 @@ namespace OpGL
 #endif
 
         // Camera
-        private Matrix4x4f camera, hudView;
+        private Matrix4 camera, hudView;
         public float CameraX;
         public float CameraY;
         public float AutoScrollX;
@@ -462,17 +462,13 @@ namespace OpGL
         private int selectedContextItem;
         private bool showingContextMenu;
 
-        public Game(GlControl control)
+        public Game(GameWindow window)
         {
-            userThread = System.Threading.Thread.CurrentThread;
             if (System.IO.Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\V7"))
                 System.IO.Directory.SetCurrentDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\V7");
             else if (System.IO.Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VVVVVVV"))
                 System.IO.Directory.SetCurrentDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\VVVVVVV");
-            else
-                System.IO.Directory.SetCurrentDirectory(Application.StartupPath);
-            glControl = control;
-
+            gameWindow = window;
             InitGlProgram();
             InitOpenGLSettings();
             Textures = new SortedList<string, Texture>();
@@ -484,19 +480,192 @@ namespace OpGL
             loadingSprite = new StringDrawable(4, 4, FontTexture, "Loading...");
             hudSprites = new SpriteCollection();
             hudSprites.Add(loadingSprite);
-            glControl.Render += glControl_Render;
-            glControl.Resize += glControl_Resize;
-            glControl.KeyDown += GlControl_KeyDown;
-            glControl.KeyUp += GlControl_KeyUp;
-            glControl.MouseMove += GlControl_MouseMove;
-            glControl.MouseDown += GlControl_MouseDown;
-            glControl.MouseUp += GlControl_MouseUp;
-            glControl.MouseLeave += GlControl_MouseLeave;
-            glControl.KeyPress += GlControl_KeyPress;
-            glControl.MouseWheel += GlControl_MouseWheel;
+            gameWindow.UpdateFrame += GameWindow_UpdateFrame;
+            gameWindow.RenderFrame += glControl_Render;
+            gameWindow.Resize += glControl_Resize;
+            gameWindow.KeyDown += GlControl_KeyDown;
+            gameWindow.KeyUp += GlControl_KeyUp;
+            gameWindow.MouseMove += GlControl_MouseMove;
+            gameWindow.MouseDown += GlControl_MouseDown;
+            gameWindow.MouseUp += GlControl_MouseUp;
+            gameWindow.MouseLeave += GlControl_MouseLeave;
+            gameWindow.KeyPress += GlControl_KeyPress;
+            gameWindow.MouseWheel += GlControl_MouseWheel;
             StartGame();
             Thread loadThread = new Thread(StartLoading);
             loadThread.Start();
+        }
+
+        private void GameWindow_UpdateFrame(object sender, FrameEventArgs e)
+        {
+            while (bufferKeys.Count > 0)
+            {
+                HandleKey(bufferKeys[0]);
+                bufferKeys.RemoveAt(0);
+            }
+            if (keys.Length > 0)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    KeyPress(keys[i]);
+                }
+                keys = "";
+            }
+            for (int i = 0; i < bufferInputs.Count; i++)
+            {
+                inputs[(int)bufferInputs[i]]++;
+                lastPressed[(int)bufferInputs[i]] = FrameCount;
+            }
+            bufferInputs.Clear();
+            justMoved = false;
+            if (bufferMove) justMoved = true;
+            bufferMove = false;
+
+            // begin frame
+            if (!isLoading && isInitialized)
+            {
+                exitCollisions = false;
+                if (CurrentState == GameStates.Playing)
+                {
+                    if (Freeze != FreezeOptions.Paused)
+                    {
+                        HandleUserInputs();
+
+                        if (Freeze != FreezeOptions.OnlySprites && CurrentState == GameStates.Playing)
+                            ProcessWorld();
+
+                        BGSprites.Process();
+                        for (int i = 0; i < CurrentScripts.Count; i++)
+                        {
+                            Script.Executor script = CurrentScripts[i];
+                            script.Process();
+                        }
+                        if (CutsceneBars > 0)
+                        {
+                            CutsceneBarBottom.Visible = CutsceneBarTop.Visible = true;
+                            CutsceneBarTop.X += 8;
+                            CutsceneBarBottom.X -= 8;
+                            if (CutsceneBarTop.X >= 0)
+                            {
+                                CutsceneBarTop.X = 0;
+                                CutsceneBarBottom.X = 0;
+                                CutsceneBars = 0;
+                            }
+                        }
+                        else if (CutsceneBars < 0)
+                        {
+                            CutsceneBarTop.X -= 8;
+                            CutsceneBarBottom.X += 8;
+                            if (CutsceneBarTop.X <= -RESOLUTION_WIDTH)
+                            {
+                                CutsceneBarTop.X = -RESOLUTION_WIDTH;
+                                CutsceneBarBottom.X = RESOLUTION_WIDTH;
+                                CutsceneBars = 0;
+                                CutsceneBarBottom.Visible = CutsceneBarTop.Visible = false;
+                            }
+                        }
+                    }
+                }
+                else if (CurrentState == GameStates.Editing)
+                {
+                    HandleEditingInputs();
+                }
+                else if (CurrentState == GameStates.Menu)
+                {
+                    BGSprites.Process();
+                    ProcessMenu();
+                }
+                CurrentSong.Process();
+                if (CurrentSong.isFaded && MusicFaded is object)
+                {
+                    Action m = MusicFaded;
+                    MusicFaded = null;
+                    m();
+                }
+                for (int i = hudSprites.Count - 1; i >= 0; i--)
+                {
+                    Sprite d = hudSprites[i];
+                    d.Process();
+                }
+                if (previews is object)
+                {
+                    previews.SortForCollisions();
+                    if (previews is object)
+                    {
+                        List<Sprite> spr = previews.GetPotentialColliders(mouseX, mouseY + previewScroll, 1, 1);
+                        bool foundone = false;
+                        foreach (Sprite sprite in previews)
+                        {
+                            if (sprite.Name is object && sprite.Name != "")
+                            {
+                                if (spr.Contains(sprite) && !foundone)
+                                {
+                                    sprite.AdvanceFrame();
+                                    sprite.Color = Color.White;
+                                    foundone = true;
+                                }
+                                else
+                                {
+                                    sprite.ResetAnimation();
+                                    sprite.Color = Color.Gray;
+                                }
+                            }
+                        }
+                    }
+                }
+                HandleHUD();
+                if (FadeSpeed > 0)
+                {
+                    Color fade = sprites.Color;
+                    if (fade.R < 255)
+                    {
+                        fade = Color.FromArgb(Math.Min(fade.R + FadeSpeed, 255), Math.Min(fade.G + FadeSpeed, 255), Math.Min(fade.B + FadeSpeed, 255));
+                    }
+                    sprites.Color = fade;
+                    BGSprites.Color = fade;
+                    if (fadeHud) hudSprites.Color = fade;
+                    if (fade.R == 255)
+                    {
+                        FadeSpeed = 0;
+                        WhenFaded?.Invoke();
+                    }
+                }
+                else if (FadeSpeed < 0)
+                {
+                    Color fade = BGSprites.Color;
+                    if (fade.R > 0)
+                    {
+                        fade = Color.FromArgb(Math.Max(fade.R + FadeSpeed, 0), Math.Max(fade.G + FadeSpeed, 0), Math.Max(fade.B + FadeSpeed, 0));
+                    }
+                    if (sprites is object)
+                        sprites.Color = fade;
+                    BGSprites.Color = fade;
+                    if (fadeHud) hudSprites.Color = fade;
+                    if (fade.R == 0)
+                    {
+                        FadeSpeed = 0;
+                        WhenFaded?.Invoke();
+                    }
+                }
+                sprites?.CheckBuffer();
+            }
+
+            // end frame
+            FrameCount %= int.MaxValue;
+            FrameCount++;
+
+            if (isLoading)
+            {
+                loadingSprite.Text = "Loading... " + ((int)percent).ToString() + "%";
+            }
+
+
+#if TEST
+            float ms = (float)e.Time;
+            ftTotal += ms;
+            ftTotal -= frameTimes[FrameCount % 60];
+            frameTimes[FrameCount % 60] = ms;
+#endif
         }
 
         private void StartLoading()
@@ -610,7 +779,6 @@ namespace OpGL
         {
             if (typing)
                 keys += e.KeyChar;
-            e.Handled = true;
         }
         private void KeyPress(char c)
         {
@@ -625,7 +793,7 @@ namespace OpGL
                     if (typingTo.SelectionLength > 0 && typingTo.SelectionStart > -1)
                     {
                         string copy = typingTo.Text.Substring(typingTo.SelectionStart, typingTo.SelectionLength);
-                        Clipboard.SetText(copy);
+                        //Clipboard.SetText(copy);
                     }
                     break;
                 case 8:
@@ -652,6 +820,7 @@ namespace OpGL
                 case 9:
                     //Do nothing
                     break;
+                case 10:
                 case 13:
                     if (!singleLine)
                     {
@@ -666,17 +835,17 @@ namespace OpGL
                     }
                     break;
                 case 22:
-                    if (Clipboard.ContainsText())
-                    {
-                        TypeText(Clipboard.GetText());
-                        textChanged?.Invoke(typingTo.Text);
-                    }
+                    //if (Clipboard.ContainsText())
+                    //{
+                    //    TypeText(Clipboard.GetText());
+                    //    textChanged?.Invoke(typingTo.Text);
+                    //}
                     break;
                 case 24:
                     if (typingTo.SelectionLength > 0)
                     {
                         string copy = typingTo.Text.Substring(typingTo.SelectionStart, typingTo.SelectionLength);
-                        Clipboard.SetText(copy);
+                        //Clipboard.SetText(copy);
                         int selL = typingTo.SelectionLength;
                         typingTo.SelectionLength = 0;
                         typingTo.SelectingFromLeft = true;
@@ -770,28 +939,28 @@ namespace OpGL
             mouseIn = false;
         }
 
-        private void GlControl_MouseUp(object sender, MouseEventArgs e)
+        private void GlControl_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButton.Left)
                 leftMouse = false;
-            else if (e.Button == MouseButtons.Right)
+            else if (e.Button == MouseButton.Right)
                 rightMouse = false;
-            else if (e.Button == MouseButtons.Middle)
+            else if (e.Button == MouseButton.Middle)
                 middleMouse = false;
         }
 
-        private void GlControl_MouseDown(object sender, MouseEventArgs e)
+        private void GlControl_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButton.Left)
             {
                 leftMouse = true;
                 TriggerLeftClick();
             }
-            else if (e.Button == MouseButtons.Right)
+            else if (e.Button == MouseButton.Right)
             {
                 rightMouse = true;
             }
-            else if (e.Button == MouseButtons.Middle)
+            else if (e.Button == MouseButton.Middle)
                 middleMouse = true;
         }
 
@@ -1123,16 +1292,17 @@ namespace OpGL
             program = new TextureProgram(GLProgram.Load("shaders/v2dTexTransform.vsh", "shaders/f2dTex.fsh"));
             RectangleSprite.BaseProgram = program;
 
-            Gl.UseProgram(program.ID);
-            int modelMatrixLoc = Gl.GetUniformLocation(program.ID, "model");
-            Gl.UniformMatrix4f(modelMatrixLoc, 1, false, Matrix4x4f.Identity);
+            GL.UseProgram(program.ID);
+            int modelMatrixLoc = GL.GetUniformLocation(program.ID, "model");
+            Matrix4 identity = Matrix4.Identity;
+            GL.UniformMatrix4(modelMatrixLoc, false, ref identity);
 
             // origin at top-left
-            camera = Matrix4x4f.Translated(-1f, 1f, 0f);
-            camera.Scale(2f / RESOLUTION_WIDTH, -2f / RESOLUTION_HEIGHT, 1);
+            camera = Matrix4.CreateScale(2f / RESOLUTION_WIDTH, -2f / RESOLUTION_HEIGHT, 1);
+            camera *= Matrix4.CreateTranslation(-1, 1, 0f);
             hudView = camera;
-            int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
-            Gl.UniformMatrix4f(viewMatrixLoc, 1, false, camera);
+            int viewMatrixLoc = GL.GetUniformLocation(program.ID, "view");
+            GL.UniformMatrix4(viewMatrixLoc, false, ref camera);
         }
 
         private void LoadAllTextures()
@@ -1348,14 +1518,14 @@ namespace OpGL
             Bitmap bmp = new Bitmap(fullPath);
             var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Texture currentTex = TextureFromName(texture);
-            uint texa;
-            uint texb;
+            int texa;
+            int texb;
             if (currentTex is null || currentTex.TileSizeX != gridSize || currentTex.TileSizeY != gridSize2)
             {
-                texa = Gl.CreateVertexArray();
-                Gl.BindVertexArray(texa);
-                texb = Gl.CreateBuffer();
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, texb);
+                GL.CreateVertexArrays(1, out texa);
+                GL.BindVertexArray(texa);
+                GL.CreateBuffers(1, out texb);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, texb);
                 float[] fls = new float[]
                 {
                     0f,       0f,        0f, 0f,
@@ -1363,49 +1533,49 @@ namespace OpGL
                     gridSize, gridSize2, 1f, 1f,
                     gridSize, 0f,        1f, 0f
                 };
-                Gl.BufferData(BufferTarget.ArrayBuffer, (uint)fls.Length * sizeof(float), fls, BufferUsage.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, fls.Length * sizeof(float), fls, BufferUsageHint.StaticDraw);
 
-                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(0);
-                Gl.EnableVertexAttribArray(1);
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
             }
             else
             {
                 texa = currentTex.baseVAO;
                 texb = currentTex.baseVBO;
-                Gl.BindVertexArray(texa);
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, texb);
+                GL.BindVertexArray(texa);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, texb);
             }
 
 
-            uint tex;
+            int tex;
             if (currentTex is null)
-                tex = Gl.CreateTexture(TextureTarget.Texture2d);
+                GL.CreateTextures(TextureTarget.Texture2D, 1, out tex);
             else
                 tex = currentTex.ID;
-            Gl.BindTexture(TextureTarget.Texture2d, tex);
-            Gl.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            GL.BindTexture(TextureTarget.Texture2D, tex);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
 
-            Gl.GenerateMipmap(TextureTarget.Texture2d);
-            Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
-            Gl.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureBorderColor, new float[] { 0f, 0f, 0f, 0f });
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBorderColor, new float[] { 0f, 0f, 0f, 0f });
 
             // instancing
-            uint ibo = Gl.CreateBuffer();
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            GL.CreateBuffers(1, out int ibo);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
             float[] empty = new float[] { 0f, 0f, 0f, 0f };
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)empty.Length * sizeof(float), empty, BufferUsage.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, empty.Length * sizeof(float), empty, BufferUsageHint.DynamicDraw);
 
-            Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-            Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-            Gl.EnableVertexAttribArray(2);
-            Gl.EnableVertexAttribArray(3);
-            Gl.VertexAttribDivisor(2, 1);
-            Gl.VertexAttribDivisor(3, 1);
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+            GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+            GL.EnableVertexAttribArray(2);
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribDivisor(2, 1);
+            GL.VertexAttribDivisor(3, 1);
 
             if (currentTex is null)
                 return new Texture(tex, bmp.Width, bmp.Height, gridSize, gridSize2, texture, program, texa, texb);
@@ -1418,30 +1588,30 @@ namespace OpGL
 
         private void InitOpenGLSettings()
         {
-            Gl.Enable(EnableCap.Blend);
-            Gl.BlendFuncSeparate(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha, BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.One);
 
             glControl_Resize(null, null);
 
-            Gl.ClearColor(0f, 0f, 0f, 0f);
+            GL.ClearColor(0f, 0f, 0f, 0f);
             // screenshot
-            fbo = Gl.CreateFramebuffer();
-            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-            uint fTex = Gl.CreateTexture(TextureTarget.Texture2d);
-            Gl.BindTexture(TextureTarget.Texture2d, fTex);
-            Gl.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, 0, PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
-            Gl.GenerateMipmap(TextureTarget.Texture2d);
+            GL.CreateFramebuffers(1, out int fbo);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+            GL.CreateTextures(TextureTarget.Texture2D, 1, out int fTex);
+            GL.BindTexture(TextureTarget.Texture2D, fTex);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, 0, PixelFormat.Bgra, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
 
-            Gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d, fTex, 0);
-            if (Gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferStatus.FramebufferComplete)
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, fTex, 0);
+            if (GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferErrorCode.FramebufferComplete)
                 throw new Exception("hey");
-            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             //Rectangle Sprite
-            uint texa = Gl.CreateVertexArray();
-            Gl.BindVertexArray(texa);
-            uint texb = Gl.CreateBuffer();
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, texb);
+            GL.CreateVertexArrays(1, out int texa);
+            GL.BindVertexArray(texa);
+            GL.CreateBuffers(1, out int texb);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, texb);
             float[] fls = new float[]
             {
                 0f,       0f,        0f, 0f,
@@ -1449,12 +1619,12 @@ namespace OpGL
                 1, 1, 1f, 1f,
                 1, 0f,        1f, 0f
             };
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)fls.Length * sizeof(float), fls, BufferUsage.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, fls.Length * sizeof(float), fls, BufferUsageHint.StaticDraw);
 
-            Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-            Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-            Gl.EnableVertexAttribArray(0);
-            Gl.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+            GL.EnableVertexAttribArray(0);
+            GL.EnableVertexAttribArray(1);
             RectangleSprite.BaseVAO = texa;
             RectangleSprite.BaseVBO = texb;
         }
@@ -1496,12 +1666,15 @@ namespace OpGL
         #region "Screenshot"
         private void Screenshot()
         {
+#if Unsafe
             Debugger.NotifyOfCrossThreadDependency();
             if (glControl.InvokeRequired)
                 glControl.Invoke((Action)(() => RenderScreengrab()));
             else
                 RenderScreengrab();
+#endif
         }
+#if Unsafe
         private unsafe void RenderScreengrab()
         {
             RenderOffScreen();
@@ -1523,25 +1696,26 @@ namespace OpGL
             data[0x18] = 32; // bpp
 
             fixed (byte* fixedData = data)
-                Gl.ReadPixels(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)(fixedData + headerSize));
+                GL.ReadPixels(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT, PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)(fixedData + headerSize));
             RenderOnScreen();
 
             System.IO.File.WriteAllBytes("screenshot.bmp", data);
         }
+#endif
         private void RenderOffScreen()
         {
-            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-            Gl.Viewport(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+            GL.Viewport(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
         }
         private void RenderOnScreen()
         {
-            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             glControl_Resize(null, null);
         }
-        #endregion
+#endregion
         //Dialog
-        #region "Dialog"
-        private void CloseDialog(DialogResult result)
+#region "Dialog"
+        private void CloseDialog(bool result)
         {
             choices = new string[] { };
             availableChoices = null;
@@ -1555,7 +1729,7 @@ namespace OpGL
             CurrentEditingFocus = FocusOptions.Level;
             closeDialog?.Invoke(result);
         }
-        private void ShowDialog(string prompt, string defaultResponse, string[] choices, Action<DialogResult> action = null)
+        private void ShowDialog(string prompt, string defaultResponse, string[] choices, Action<bool> action = null)
         {
             if (dialog is null)
                 dialog = new BoxSprite(16, 16, TextureFromName("dialog"), 36, 26, Color.White);
@@ -1597,14 +1771,14 @@ namespace OpGL
             singleLine = true;
             FinishTyping = (b) =>
             {
-                CloseDialog(b ? DialogResult.OK : DialogResult.Cancel);
+                CloseDialog(b);
             };
             CurrentEditingFocus = FocusOptions.Dialog;
             availableChoices = null;
             if (choices.Length > 0) textChanged = (s) => RefreshChoices(s);
             RefreshChoices();
         }
-        private void ShowColorDialog(string prompt, string defaultResponse, Action<DialogResult> action)
+        private void ShowColorDialog(string prompt, string defaultResponse, Action<bool> action)
         {
             dialog = new BoxSprite(16, 16, TextureFromName("dialog"), 36, 26, Color.White);
             dialog.Layer = 1;
@@ -1653,7 +1827,7 @@ namespace OpGL
             updateColor = true;
             FinishTyping = (b) =>
             {
-                CloseDialog(b ? DialogResult.OK : DialogResult.Cancel);
+                CloseDialog(b);
             };
             CurrentEditingFocus = FocusOptions.Dialog;
         }
@@ -1695,10 +1869,10 @@ namespace OpGL
                 y += 8;
             }
         }
-        #endregion
+#endregion
 
         //MAIN MANU
-        #region "Main Menu"
+#region "Main Menu"
         private void MainMenu()
         {
             MenuItems.Clear();
@@ -1786,7 +1960,7 @@ namespace OpGL
                 CurrentState = GameStates.Editing;
                 ShowDialog("Level Size (Format: x, y)", WidthRooms.ToString() + ", " + HeightRooms.ToString(), null, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r)
                     {
                         int w = 0;
                         int h = 0;
@@ -1815,7 +1989,7 @@ namespace OpGL
                 }
                 ShowDialog("Change music", LevelMusic.Name, ch.ToArray(), (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r)
                     {
                         Music m = GetMusic(input.Text);
                         if (m is object)
@@ -1850,7 +2024,7 @@ namespace OpGL
                 CurrentState = GameStates.Editing;
                 ShowDialog("Lose trinkets? When this option is on, the player will lose any trinkets collected since the last checkpoint on death. This means the player will have to get safely to a checkpoint after collecting a trinket in order to keep it.", LoseTrinkets ? "On" : "Off", new string[] { "On", "Off" }, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r)
                     {
                         if (!bool.TryParse(input.Text, out bool lose))
                         {
@@ -1872,21 +2046,52 @@ namespace OpGL
             UpdateMenu();
             hudSprites.Remove(ItemSelector);
         }
-        #endregion
+#endregion
+
+        //TEXTURE EDITOR
+#region TextureEditor
+        private void SelectTexture()
+        {
+            ShowDialog("Choose a texture to modify.", "", Textures.Keys.ToArray(), (r) =>
+            {
+                if (r)
+                {
+                    Texture t = TextureFromName(input.Text);
+                    if (t is object)
+                    {
+                        OpenTextureEditor(t);
+                    }
+                }
+            });
+        }
+
+        private void OpenTextureEditor(Texture texture)
+        {
+            MenuItems.Clear();
+            MenuItems.Add(new VMenuItem("Set Tile Size", () =>
+            {
+
+            }));
+            MenuItems.Add(new VMenuItem("Set Tile Types", () =>
+            {
+
+            }));
+        }
+#endregion
 
         float scaleSize = 1;
         float xOffset = 0;
         float yOffset = 0;
         private void glControl_Resize(object sender, EventArgs e)
         {
-            float relX = (float)glControl.Width / RESOLUTION_WIDTH;
-            float relY = (float)glControl.Height / RESOLUTION_HEIGHT;
+            float relX = (float)gameWindow.Width / RESOLUTION_WIDTH;
+            float relY = (float)gameWindow.Height / RESOLUTION_HEIGHT;
             scaleSize = (int)Math.Min(relX, relY);
             int w = (int)(RESOLUTION_WIDTH * scaleSize);
             int h = (int)(RESOLUTION_HEIGHT * scaleSize);
-            xOffset = (glControl.Width - w) / 2;
-            yOffset = (glControl.Height - h) / 2;
-            Gl.Viewport((int)xOffset, (int)yOffset, w, h);
+            xOffset = (gameWindow.Width - w) / 2;
+            yOffset = (gameWindow.Height - h) / 2;
+            GL.Viewport((int)xOffset, (int)yOffset, w, h);
         }
         //   _  __________     __  _____   ______          ___   _   //
         //  | |/ /  ____\ \   / / |  __ \ / __ \ \        / / \ | |  //
@@ -1895,23 +2100,31 @@ namespace OpGL
         //  | . \| |____   | |    | |__| | |__| | \  /\  /  | |\  |  //
         //  |_|\_\______|  |_|    |_____/ \____/   \/  \/   |_| \_|  //
 
-        private void GlControl_KeyDown(object sender, KeyEventArgs e)
+        private void GlControl_KeyDown(object sender, KeyboardKeyEventArgs e)
         {
             bufferKeys.Add(e);
-            if (e.KeyCode == Keys.F9) Screenshot();
-            if (inputMap.ContainsKey(e.KeyCode) && !heldKeys.Contains(e.KeyCode))
+            if (e.Key == Key.Enter && typing)
             {
-                bufferInputs.Add(inputMap[e.KeyCode]);
+                keys += '\n';
             }
-            if (!heldKeys.Contains(e.KeyCode))
-                heldKeys.Add(e.KeyCode);
+            else if (e.Key == Key.Escape && typing)
+            {
+                keys += (char)27;
+            }
+            if (e.Key == Key.F9) Screenshot();
+            if (inputMap.ContainsKey(e.Key) && !heldKeys.Contains(e.Key))
+            {
+                bufferInputs.Add(inputMap[e.Key]);
+            }
+            if (!heldKeys.Contains(e.Key))
+                heldKeys.Add(e.Key);
         }
 
-        private void HandleKey(KeyEventArgs e)
+        private void HandleKey(KeyboardKeyEventArgs e)
         {
             if (!isInitialized && !isLoading)
             {
-                if (inputMap.ContainsKey(e.KeyCode) && inputMap[e.KeyCode] == Inputs.Jump)
+                if (inputMap.ContainsKey(e.Key) && inputMap[e.Key] == Inputs.Jump)
                 {
                     Shake(40, 2);
                     Flash(10);
@@ -1927,7 +2140,7 @@ namespace OpGL
             if (isLoading) return;
             if (typing)
             {
-                if (e.KeyCode == Keys.Right)
+                if (e.Key == Key.Right)
                 {
                     if (e.Shift)
                     {
@@ -1964,7 +2177,7 @@ namespace OpGL
                     }
                     typingTo.Text = typingTo.Text;
                 }
-                else if (e.KeyCode == Keys.Left)
+                else if (e.Key == Key.Left)
                 {
                     if (e.Shift)
                     {
@@ -2001,7 +2214,7 @@ namespace OpGL
                 }
                 if (!singleLine && !(CurrentEditingFocus == FocusOptions.ScriptEditor && scriptEditor.ChoicesVisible))
                 {
-                    if (e.KeyCode == Keys.Up)
+                    if (e.Key == Key.Up)
                     {
                         int curLine = 0;
                         int index = 0;
@@ -2028,7 +2241,7 @@ namespace OpGL
 
                         typingTo.Text = typingTo.Text;
                     }
-                    else if (e.KeyCode == Keys.Down)
+                    else if (e.Key == Key.Down)
                     {
                         int curLine = 0;
                         int index = 0;
@@ -2061,7 +2274,7 @@ namespace OpGL
                 }
                 else if (CurrentEditingFocus == FocusOptions.Dialog)
                 {
-                    if (e.KeyCode == Keys.Down && availableChoices is object && availableChoices.Count > 0)
+                    if (e.Key == Key.Down && availableChoices is object && availableChoices.Count > 0)
                     {
                         selectedChoice += 1;
                         if (selectedChoice >= availableChoices.Count)
@@ -2080,7 +2293,7 @@ namespace OpGL
                         input.Text = s;
                         RefreshChoices();
                     }
-                    else if (e.KeyCode == Keys.Up && availableChoices is object && availableChoices.Count > 0)
+                    else if (e.Key == Key.Up && availableChoices is object && availableChoices.Count > 0)
                     {
                         selectedChoice -= 1;
                         if (selectedChoice < 0)
@@ -2099,7 +2312,7 @@ namespace OpGL
                         input.Text = s;
                         RefreshChoices();
                     }
-                    else if (e.KeyCode == Keys.Tab && availableChoices is object && availableChoices.Count > 0)
+                    else if (e.Key == Key.Tab && availableChoices is object && availableChoices.Count > 0)
                     {
                         string s = availableChoices[selectedChoice];
                         input.SelectionStart = s.Length;
@@ -2111,10 +2324,9 @@ namespace OpGL
                 }
                 if (CurrentEditingFocus == FocusOptions.ScriptEditor)
                 {
-                    if (e.Control && e.KeyCode == Keys.R)
+                    if (e.Control && e.Key == Key.R)
                     {
                         typing = false;
-                        e.SuppressKeyPress = true;
                         ShowMap(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
                         CurrentEditingFocus = FocusOptions.Map;
                         clickMap = (p) =>
@@ -2125,9 +2337,8 @@ namespace OpGL
                             typing = true;
                         };
                     }
-                    else if (e.Control && e.KeyCode == Keys.P)
+                    else if (e.Control && e.Key == Key.P)
                     {
-                        e.SuppressKeyPress = true;
                         CurrentEditingFocus = FocusOptions.Level;
                         tool = Tools.Point;
                         editorTool.Text = "- Select Point -";
@@ -2135,37 +2346,36 @@ namespace OpGL
                         hudSprites.Remove(previewTile);
                         typing = false;
                     }
-                    if (e.KeyCode == Keys.Right || e.KeyCode == Keys.Left || e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+                    if (e.Key == Key.Right || e.Key == Key.Left || e.Key == Key.Up || e.Key == Key.Down)
                     {
                         checkScriptScroll();
                         if (!scriptEditor.ShowingChoices)
                             scriptEditor.ShowChoices(seScrollX, seScrollY);
                         scriptEditor.UpdateChoices(seScrollX, seScrollY);
                     }
-                    if (e.KeyCode == Keys.Tab)
+                    if (e.Key == Key.Tab)
                     {
                         scriptEditor.CompleteChoice();
                     }
                     if (scriptEditor.ChoicesVisible)
                     {
-                        if (e.KeyCode == Keys.Up)
+                        if (e.Key == Key.Up)
                         {
                             scriptEditor.SelectedChoice -= 1;
                             if (scriptEditor.SelectedChoice < 0)
                                 scriptEditor.SelectedChoice = scriptEditor.Choices.Count - 1;
                             scriptEditor.UpdateChoices(seScrollX, seScrollY);
                         }
-                        else if (e.KeyCode == Keys.Down)
+                        else if (e.Key == Key.Down)
                         {
                             scriptEditor.SelectedChoice += 1;
                             if (scriptEditor.SelectedChoice >= scriptEditor.Choices.Count)
                                 scriptEditor.SelectedChoice = 0;
                             scriptEditor.UpdateChoices(seScrollX, seScrollY);
                         }
-                        else if (e.KeyCode == Keys.Escape)
+                        else if (e.Key == Key.Escape)
                         {
                             scriptEditor.HideChoices();
-                            e.SuppressKeyPress = true;
                         }
                     }
                 }
@@ -2173,12 +2383,12 @@ namespace OpGL
             }
             else if (showingContextMenu)
             {
-                if (e.KeyCode == Keys.Return && selectedContextItem > -1 && selectedContextItem < contextMenuItems.Count)
+                if (e.Key == Key.Enter && selectedContextItem > -1 && selectedContextItem < contextMenuItems.Count)
                 {
                     contextMenuItems[selectedContextItem].Action();
                     CloseContextMenu();
                 }
-                else if (e.KeyCode == Keys.Escape)
+                else if (e.Key == Key.Escape)
                 {
                     CloseContextMenu();
                 }
@@ -2190,9 +2400,8 @@ namespace OpGL
                 {
                     if (tool == Tools.Point)
                     {
-                        if (e.KeyCode == Keys.Escape)
+                        if (e.Key == Key.Escape)
                         {
-                            e.SuppressKeyPress = true;
                             tool = prTool;
                             EditorTool t = EditorTools[(int)prTool];
                             editorTool.Text = t.Hotkey.ToString() + " - " + t.Name;
@@ -2203,20 +2412,20 @@ namespace OpGL
                     }
                     if (currentlyBinding)
                     {
-                        if (e.KeyCode == Keys.Enter)
+                        if (e.Key == Key.Enter)
                         {
                             bindSprite?.Invoke(Rectangle.Empty);
                             currentlyBinding = false;
                             toolPromptImportant = false;
                         }
-                        else if (e.KeyCode == Keys.Escape)
+                        else if (e.Key == Key.Escape)
                         {
                             currentlyBinding = false;
                             toolPromptImportant = false;
                         }
                         return;
                     }
-                    if (e.Control && e.KeyCode == Keys.S)
+                    if (e.Control && e.Key == Key.S)
                     {
                         string p = "levels/" + currentLevelPath + "/" + currentLevelPath + ".lv7";
                         if (!System.IO.File.Exists(p))
@@ -2230,10 +2439,9 @@ namespace OpGL
                                 return s;
                             });
                             files.Sort();
-                            e.SuppressKeyPress = true;
                             ShowDialog("Level name:", currentLevelPath, files.ToArray(), (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r)
                                 {
                                     currentLevelPath = input.Text;
                                     p = "levels/" + currentLevelPath + ".lv7";
@@ -2252,7 +2460,7 @@ namespace OpGL
                         }
                         return;
                     }
-                    else if (e.Control && e.KeyCode == Keys.O)
+                    else if (e.Control && e.Key == Key.O)
                     {
                         IEnumerable<string> dirs = System.IO.Directory.EnumerateDirectories("levels");
                         List<string> files = new List<string>();
@@ -2263,10 +2471,9 @@ namespace OpGL
                                 files.Add(s);
                         }
                         files.Sort();
-                        e.SuppressKeyPress = true;
                         ShowDialog("Load level...", currentLevelPath, files.ToArray(), (r) =>
                         {
-                            if (r == DialogResult.OK)
+                            if (r)
                             {
                                 if (System.IO.File.Exists("levels/" + input.Text + "/" + input.Text + ".lv7"))
                                 {
@@ -2279,21 +2486,19 @@ namespace OpGL
                         });
                         return;
                     }
-                    else if (e.Control && e.KeyCode == Keys.N)
+                    else if (e.Control && e.Key == Key.N)
                     {
                         NewLevel();
                         currentLevelPath = "";
                     }
-                    else if (e.Shift && e.KeyCode == Keys.S)
+                    else if (e.Shift && e.Key == Key.S)
                     {
-                        e.SuppressKeyPress = true;
                         OpenScripts();
                         return;
                     }
-                    else if (e.KeyCode == Keys.Q)
+                    else if (e.Key == Key.Q)
                     {
                         bool shift = e.Shift;
-                        e.SuppressKeyPress = true;
                         string[] scriptNames = new string[Scripts.Count];
                         for (int i = 0; i < scriptNames.Length; i++)
                         {
@@ -2303,7 +2508,7 @@ namespace OpGL
                         string name = shift ? CurrentRoom.ExitScript?.Name ?? "" : CurrentRoom.EnterScript?.Name ?? "";
                         ShowDialog(message, name, scriptNames, (r) =>
                         {
-                            if (r == DialogResult.OK)
+                            if (r)
                             {
                                 Script s = ScriptFromName(input.Text);
                                 if (s is null)
@@ -2318,7 +2523,7 @@ namespace OpGL
                             }
                         });
                     }
-                    else if (e.KeyCode == Keys.F1)
+                    else if (e.Key == Key.F1)
                     {
                         List<string> textureNames = new List<string>();
                         foreach (AutoTileSettings.PresetGroup grp in RoomPresets.Values)
@@ -2327,7 +2532,7 @@ namespace OpGL
                         }
                         ShowDialog("Change room tileset?", CurrentRoom.GroupName ?? "", textureNames.ToArray(), (r) =>
                         {
-                            if (r == DialogResult.OK)
+                            if (r)
                             {
                                 string answer = input.Text;
                                 AutoTileSettings.PresetGroup g = RoomPresets[answer];
@@ -2354,7 +2559,7 @@ namespace OpGL
                             }
                         });
                     }
-                    else if (e.KeyCode == Keys.F2)
+                    else if (e.Key == Key.F2)
                     {
                         List<string> textureNames = new List<string>();
                         if (!RoomPresets.ContainsKey(CurrentRoom.GroupName ?? "")) CurrentRoom.GroupName = "Space Station";
@@ -2402,7 +2607,7 @@ namespace OpGL
                         previewMaxScroll = Math.Max(y + (int)maxHeight + 20 - RESOLUTION_HEIGHT, 0);
                         
                     }
-                    else if (e.KeyCode == Keys.F3)
+                    else if (e.Key == Key.F3)
                     {
                         LoadAllTextures();
                         VTextBox tb = new VTextBox(0, 0, FontTexture, "Reloaded Textures", Color.Gray);
@@ -2414,7 +2619,7 @@ namespace OpGL
                         hudSprites.Add(tb);
                         tb.Appear();
                     }
-                    else if (e.KeyCode == Keys.F11)
+                    else if (e.Key == Key.F11)
                     {
                         hideToolbars = !hideToolbars;
                     }
@@ -2424,25 +2629,25 @@ namespace OpGL
                         {
                             if (e.Control)
                             {
-                                if (e.KeyCode == Keys.Right)
+                                if (e.Key == Key.Right)
                                 {
                                     ShowMap(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
                                     CurrentEditingFocus = FocusOptions.Map;
                                     clickMap = (p) => CurrentRoom.RoomRight = p;
                                 }
-                                else if (e.KeyCode == Keys.Left)
+                                else if (e.Key == Key.Left)
                                 {
                                     ShowMap(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
                                     CurrentEditingFocus = FocusOptions.Map;
                                     clickMap = (p) => CurrentRoom.RoomLeft = p;
                                 }
-                                else if (e.KeyCode == Keys.Up)
+                                else if (e.Key == Key.Up)
                                 {
                                     ShowMap(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
                                     CurrentEditingFocus = FocusOptions.Map;
                                     clickMap = (p) => CurrentRoom.RoomUp = p;
                                 }
-                                else if (e.KeyCode == Keys.Down)
+                                else if (e.Key == Key.Down)
                                 {
                                     ShowMap(0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
                                     CurrentEditingFocus = FocusOptions.Map;
@@ -2451,7 +2656,7 @@ namespace OpGL
                             }
                             else
                             {
-                                if (e.KeyCode == Keys.Right)
+                                if (e.Key == Key.Right)
                                 {
                                     RoomDatas[FocusedRoom] = CurrentRoom.Save(this);
                                     if (e.Shift && CurrentRoom.X == WidthRooms - 1 && WidthRooms < 100)
@@ -2460,14 +2665,14 @@ namespace OpGL
                                     }
                                     LoadRoom((CurrentRoom.X + 1) % WidthRooms, CurrentRoom.Y);
                                 }
-                                else if (e.KeyCode == Keys.Left)
+                                else if (e.Key == Key.Left)
                                 {
                                     RoomDatas[FocusedRoom] = CurrentRoom.Save(this);
                                     int x = CurrentRoom.X - 1;
                                     if (x < 0) x = WidthRooms - 1;
                                     LoadRoom(x, CurrentRoom.Y);
                                 }
-                                else if (e.KeyCode == Keys.Down)
+                                else if (e.Key == Key.Down)
                                 {
                                     RoomDatas[FocusedRoom] = CurrentRoom.Save(this);
                                     if (e.Shift && CurrentRoom.Y == HeightRooms - 1 && HeightRooms < 100)
@@ -2476,7 +2681,7 @@ namespace OpGL
                                     }
                                     LoadRoom(CurrentRoom.X, (CurrentRoom.Y + 1) % HeightRooms);
                                 }
-                                else if (e.KeyCode == Keys.Up)
+                                else if (e.Key == Key.Up)
                                 {
                                     RoomDatas[FocusedRoom] = CurrentRoom.Save(this);
                                     int y = CurrentRoom.Y - 1;
@@ -2487,9 +2692,9 @@ namespace OpGL
                         }
                         else
                         {
-                            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down || e.KeyCode == Keys.Left || e.KeyCode == Keys.Right || e.KeyCode == Keys.Return || e.KeyCode == Keys.Escape)
+                            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Enter || e.Key == Key.Escape)
                             {
-                                GiveDirection(e.KeyCode);
+                                GiveDirection(e.Key);
                                 GiveDirection = null;
                                 return;
                             }
@@ -2497,7 +2702,7 @@ namespace OpGL
                     }
                     else
                     {
-                        if (e.KeyCode == Keys.Right)
+                        if (e.Key == Key.Right)
                         {
                             int m = e.Alt ? 1 : 8;
                             for (int i = 0; i < selectedSprites.Count; i++)
@@ -2506,7 +2711,7 @@ namespace OpGL
                                 selectBoxes[i].X += m;
                             }
                         }
-                        else if (e.KeyCode == Keys.Left)
+                        else if (e.Key == Key.Left)
                         {
                             int m = e.Alt ? 1 : 8;
                             for (int i = 0; i < selectedSprites.Count; i++)
@@ -2515,7 +2720,7 @@ namespace OpGL
                                 selectBoxes[i].X -= m;
                             }
                         }
-                        else if (e.KeyCode == Keys.Down)
+                        else if (e.Key == Key.Down)
                         {
                             int m = e.Alt ? 1 : 8;
                             for (int i = 0; i < selectedSprites.Count; i++)
@@ -2524,7 +2729,7 @@ namespace OpGL
                                 selectBoxes[i].Y += m;
                             }
                         }
-                        else if (e.KeyCode == Keys.Up)
+                        else if (e.Key == Key.Up)
                         {
                             int m = e.Alt ? 1 : 8;
                             for (int i = 0; i < selectedSprites.Count; i++)
@@ -2533,7 +2738,7 @@ namespace OpGL
                                 selectBoxes[i].Y -= m;
                             }
                         }
-                        else if (e.KeyCode == Keys.Escape)
+                        else if (e.Key == Key.Escape)
                         {
                             if (tool == Tools.Attach)
                             {
@@ -2545,7 +2750,7 @@ namespace OpGL
                             ClearSelection();
                             return;
                         }
-                        else if (e.KeyCode == Keys.Delete)
+                        else if (e.Key == Key.Delete)
                             {
                                 for (int i = 0; i < selectedSprites.Count; i++)
                                 {
@@ -2558,125 +2763,125 @@ namespace OpGL
                     }
                     if (!e.Control)
                     {
-                        if (e.KeyCode == Keys.Escape)
+                        if (e.Key == Key.Escape)
                         {
                             CurrentState = GameStates.Menu;
                             sprites.Color = Color.FromArgb(70, 70, 70);
                             BGSprites.Visible = false;
                             LevelEditorMenu();
                         }
-                        if (e.KeyCode == Keys.D1)
+                        if (e.Key == Key.Number1)
                         {
                             tool = Tools.Ground;
                             editorTool.Text = "1 - Ground";
                             prefix = 'g';
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D2)
+                        else if (e.Key == Key.Number2)
                         {
                             tool = Tools.Background;
                             editorTool.Text = "2 - Background";
                             prefix = 'b';
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D3)
+                        else if (e.Key == Key.Number3)
                         {
                             tool = Tools.Spikes;
                             editorTool.Text = "3 - Spikes";
                             prefix = 's';
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D4)
+                        else if (e.Key == Key.Number4)
                         {
                             tool = Tools.Trinket;
                             editorTool.Text = "4 - Trinket";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D5)
+                        else if (e.Key == Key.Number5)
                         {
                             tool = Tools.Checkpoint;
                             editorTool.Text = "5 - Checkpoint";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D6)
+                        else if (e.Key == Key.Number6)
                         {
                             tool = Tools.Disappear;
                             editorTool.Text = "6 - Disappear";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D7)
+                        else if (e.Key == Key.Number7)
                         {
                             tool = Tools.Conveyor;
                             editorTool.Text = "7 - Conveyor";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D8)
+                        else if (e.Key == Key.Number8)
                         {
                             tool = Tools.Platform;
                             editorTool.Text = "8 - Platform";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D9)
+                        else if (e.Key == Key.Number9)
                         {
                             tool = Tools.Enemy;
                             editorTool.Text = "9 - Enemy";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.D0)
+                        else if (e.Key == Key.Number0)
                         {
                             tool = Tools.GravityLine;
                             editorTool.Text = "0 - Grav Line";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.P)
+                        else if (e.Key == Key.P)
                         {
                             tool = Tools.Start;
                             editorTool.Text = "P - Start";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.O)
+                        else if (e.Key == Key.O)
                         {
                             tool = Tools.Crewman;
                             editorTool.Text = "O - Crewmate";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.I)
+                        else if (e.Key == Key.I)
                         {
                             tool = Tools.WarpLine;
                             editorTool.Text = "I - Warp Line";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.U)
+                        else if (e.Key == Key.U)
                         {
                             tool = Tools.WarpToken;
                             editorTool.Text = "U - Warp Token";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.Y)
+                        else if (e.Key == Key.Y)
                         {
                             tool = Tools.ScriptBox;
                             editorTool.Text = "Y - Script Box";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.T)
+                        else if (e.Key == Key.T)
                         {
                             tool = Tools.Terminal;
                             editorTool.Text = "T - Terminal";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.R)
+                        else if (e.Key == Key.R)
                         {
                             tool = Tools.RoomText;
                             editorTool.Text = "R - Roomtext";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.OemSemicolon)
+                        else if (e.Key == Key.Semicolon)
                         {
                             tool = Tools.PushBlock;
                             editorTool.Text = "; - PushBlock";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.OemMinus)
+                        else if (e.Key == Key.Minus)
                         {
                             tool = Tools.Tiles;
                             tileSelection.X = currentTile.X * 8 - tileScroll.X;
@@ -2685,19 +2890,19 @@ namespace OpGL
                             editorTool.Text = "- - Tiles";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.Oemplus)
+                        else if (e.Key == Key.Plus)
                         {
                             tool = Tools.Select;
                             editorTool.Text = "= - Select";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.Oemtilde)
+                        else if (e.Key == Key.Tilde)
                         {
                             tool = Tools.CustomSprite;
                             editorTool.Text = "` - Custom Sprite";
                             ClearSelection();
                         }
-                        else if (e.KeyCode == Keys.OemPeriod)
+                        else if (e.Key == Key.Period)
                         {
                             int t = (int)tool;
                             t = (t + 1) % EditorTools.Length;
@@ -2709,7 +2914,7 @@ namespace OpGL
                             else if (tool == Tools.Background) prefix = 'b';
                             else if (tool == Tools.Spikes) prefix = 's';
                         }
-                        else if (e.KeyCode == Keys.Oemcomma)
+                        else if (e.Key == Key.Comma)
                         {
                             int t = (int)tool;
                             t = (t - 1 + EditorTools.Length) % EditorTools.Length;
@@ -2721,7 +2926,7 @@ namespace OpGL
                             else if (tool == Tools.Background) prefix = 'b';
                             else if (tool == Tools.Spikes) prefix = 's';
                         }
-                        else if (e.KeyCode == Keys.Space)
+                        else if (e.Key == Key.Space)
                         {
                             PreparePreviewScreen();
                             RectangleSprite rs = null;
@@ -2755,7 +2960,7 @@ namespace OpGL
                                 }
                             };
                         }
-                        else if (e.KeyCode == Keys.Tab && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes || tool == Tools.Tiles))
+                        else if (e.Key == Key.Tab && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes || tool == Tools.Tiles))
                         {
                             CurrentEditingFocus = FocusOptions.Tileset;
                             if (tileset.Texture != currentTexture)
@@ -2800,7 +3005,7 @@ namespace OpGL
                             hudSprites.Add(tileSelection);
                             hudSprites.Add(tileset);
                         }
-                        else if (e.KeyCode == Keys.Enter)
+                        else if (e.Key == Key.Enter)
                         {
                             ClearSelection();
                             CurrentSong = LevelMusic;
@@ -2812,9 +3017,8 @@ namespace OpGL
                             if (!sprites.Contains(ActivePlayer))
                                 sprites.Add(ActivePlayer);
                         }
-                        else if (e.KeyCode == Keys.E)
+                        else if (e.Key == Key.E)
                         {
-                            e.SuppressKeyPress = true;
                             if (!hudSprites.Contains(RoomName))
                             {
                                 hudSprites.Add(RoomName);
@@ -2836,23 +3040,22 @@ namespace OpGL
                                 }
                             };
                         }
-                        else if (e.KeyCode == Keys.M)
+                        else if (e.Key == Key.M)
                         {
                             LoadRoom(CurrentRoom.X, CurrentRoom.Y);
                             ShowMap(15, 15, RESOLUTION_WIDTH - 30, RESOLUTION_HEIGHT - 30);
                             CurrentEditingFocus = FocusOptions.Map;
                         }
-                        else if (e.KeyCode == Keys.B)
+                        else if (e.Key == Key.B)
                         {
                             string[] choices = new string[Backgrounds.Count];
                             for (int i = 0; i < Backgrounds.Count; i++)
                             {
                                 choices[i] = Backgrounds.Keys[i];
                             }
-                            e.SuppressKeyPress = true;
                             ShowDialog("Set background...", BGSprites.Name, choices, (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r)
                                 {
                                     JToken bg = GetBackground(input.Text);
                                     if (bg is object)
@@ -2863,7 +3066,7 @@ namespace OpGL
                                 }
                             });
                         }
-                        else if (e.KeyCode == Keys.OemQuestion)
+                        else if (e.Key == Key.Slash)
                         {
                             if (descBack is null || !hudSprites.Contains(descBack))
                             {
@@ -2891,12 +3094,11 @@ namespace OpGL
                                 hudSprites.Remove(descText);
                             }
                         }
-                        else if (e.Shift && e.Alt && e.KeyCode == Keys.F7)
+                        else if (e.Shift && e.Alt && e.Key == Key.F7)
                         {
-                            e.SuppressKeyPress = true;
                             ShowDialog("FPS?", _fps.ToString(), null, (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r)
                                 {
                                     if (int.TryParse(input.Text, out int f))
                                         fps = f;
@@ -2905,20 +3107,20 @@ namespace OpGL
                         }
                         else if (tool == Tools.Tiles)
                         {
-                            if (e.KeyCode == Keys.S)
+                            if (e.Key == Key.S)
                             {
                                 currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSizeY);
                             }
-                            else if (e.KeyCode == Keys.W)
+                            else if (e.Key == Key.W)
                             {
                                 currentTile.Y -= 1;
                                 if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSizeY;
                             }
-                            else if (e.KeyCode == Keys.D)
+                            else if (e.Key == Key.D)
                             {
                                 currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSizeX);
                             }
-                            else if (e.KeyCode == Keys.A)
+                            else if (e.Key == Key.A)
                             {
                                 currentTile.X -= 1;
                                 if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSizeX;
@@ -2927,7 +3129,7 @@ namespace OpGL
                     }
                     else
                     {
-                        if (e.KeyCode == Keys.T)
+                        if (e.Key == Key.T)
                         {
                             showIndicators = !showIndicators;
                             ShowTileIndicators();
@@ -2935,18 +3137,16 @@ namespace OpGL
                     }
                     if (tool == Tools.Enemy)
                     {
-                        if (e.KeyCode == Keys.A)
+                        if (e.Key == Key.A)
                         {
-                            e.SuppressKeyPress = true;
                             PrepareAnimationPreviews(enemyTexture);
                             clickPreview = (s) =>
                             {
                                 enemyAnimation = s.Animation.Name;
                             };
                         }
-                        else if (e.KeyCode == Keys.S)
+                        else if (e.Key == Key.S)
                         {
-                            e.SuppressKeyPress = true;
                             List<string> texList = new List<string>();
                             foreach (Texture tex in Textures.Values)
                             {
@@ -2965,9 +3165,9 @@ namespace OpGL
                     }
                     else if (tool == Tools.Tiles || tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes)
                     {
-                        if (e.Control && e.KeyCode == Keys.V)
+                        if (e.Control && e.Key == Key.V)
                         {
-                            string[] tiles = Clipboard.GetText().Split(',');
+                            string[] tiles = new string[] { };
                             if (tiles.Length > 1)
                             {
                                 float w = currentTexture.Width / currentTexture.TileSizeX;
@@ -3003,35 +3203,34 @@ namespace OpGL
                                 }
                             }
                         }
-                        if (e.KeyCode == Keys.L)
+                        if (e.Key == Key.L)
                         {
-                            e.SuppressKeyPress = true;
                             ShowDialog("Layer for tiles?", tileLayer.ToString(), new string[] { }, (r) =>
                             {
-                                if (r == DialogResult.OK && int.TryParse(input.Text, out int l))
+                                int l = -2;
+                                if (r && int.TryParse(input.Text, out l))
                                     tileLayer = l;
                             });
                         }
-                        else if (e.Shift && e.KeyCode == Keys.Z)
+                        else if (e.Shift && e.Key == Key.Z)
                         {
                             if (tileToolDefW == 3)
                                 tileToolDefW = tileToolDefH = 1;
                             else
                                 tileToolDefW = tileToolDefH = 3;
                         }
-                        else if (e.Shift && e.KeyCode == Keys.X)
+                        else if (e.Shift && e.Key == Key.X)
                         {
                             if (tileToolDefW == 5)
                                 tileToolDefW = tileToolDefH = 1;
                             else
                                 tileToolDefW = tileToolDefH = 5;
                         }
-                        else if (e.Shift && e.KeyCode == Keys.C)
+                        else if (e.Shift && e.Key == Key.C)
                         {
-                            e.SuppressKeyPress = true;
                             ShowDialog("Brush size? (Format = x, y)", tileToolDefW.ToString() + ", " + tileToolDefH.ToString(), null, (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r)
                                 {
                                     string[] s = input.Text.Split(',');
                                     int w = 1;
@@ -3043,16 +3242,15 @@ namespace OpGL
                                 }
                             });
                         }
-                        else if (e.Shift && e.KeyCode == Keys.F)
+                        else if (e.Shift && e.Key == Key.F)
                         {
                             fillLock = !fillLock;
                         }
                     }
                     else if (tool == Tools.CustomSprite)
                     {
-                        if (e.KeyCode == Keys.A)
+                        if (e.Key == Key.A)
                         {
-                            e.SuppressKeyPress = true;
                             List<string> choices = new List<string>();
                             foreach (Animation animation in customSpriteTexture.Animations.Values)
                             {
@@ -3060,7 +3258,7 @@ namespace OpGL
                             }
                             ShowDialog("Sprite animation?", customSpriteAnimation, choices.ToArray(), (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r)
                                 {
                                     if (customSpriteTexture.AnimationFromName(input.Text) is object)
                                     {
@@ -3069,9 +3267,8 @@ namespace OpGL
                                 }
                             });
                         }
-                        else if (e.KeyCode == Keys.S)
+                        else if (e.Key == Key.S)
                         {
-                            e.SuppressKeyPress = true;
                             List<string> texList = new List<string>();
                             foreach (Texture tex in Textures.Values)
                             {
@@ -3089,7 +3286,7 @@ namespace OpGL
                     }
                     else if (tool == Tools.Select)
                     {
-                        if (e.KeyCode == Keys.A && e.Control)
+                        if (e.Key == Key.A && e.Control)
                         {
                             ClearSelection();
                             List<Sprite> spr = new List<Sprite>(sprites);
@@ -3121,18 +3318,16 @@ namespace OpGL
                     }
                     else if (tool == Tools.PushBlock)
                     {
-                        if (e.KeyCode == Keys.A)
+                        if (e.Key == Key.A)
                         {
-                            e.SuppressKeyPress = true;
                             PrepareAnimationPreviews(pushTexture);
                             clickPreview = (s) =>
                             {
                                 pushAnimation = s.Animation.Name;
                             };
                         }
-                        else if (e.KeyCode == Keys.S)
+                        else if (e.Key == Key.S)
                         {
-                            e.SuppressKeyPress = true;
                             List<string> texList = new List<string>();
                             foreach (Texture tex in Textures.Values)
                             {
@@ -3153,30 +3348,30 @@ namespace OpGL
                 }
                 else if (CurrentEditingFocus == FocusOptions.Tileset)
                 {
-                    if (e.KeyCode == Keys.Tab || e.KeyCode == Keys.Escape)
+                    if (e.Key == Key.Tab || e.Key == Key.Escape)
                     {
                         CurrentEditingFocus = FocusOptions.Level;
                         hudSprites.Remove(tileset);
                         hudSprites.Remove(tileSelection);
                         selection.SetSize(1, 1);
                     }
-                    else if (e.KeyCode == Keys.D1 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
+                    else if (e.Key == Key.Number1 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         selection.SetSize(3, 5);
                     }
-                    else if (e.KeyCode == Keys.D2 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
+                    else if (e.Key == Key.Number2 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         selection.SetSize(3, 1);
                     }
-                    else if (e.KeyCode == Keys.D3 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
+                    else if (e.Key == Key.Number3 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         selection.SetSize(8, 6);
                     }
-                    else if (e.KeyCode == Keys.D4 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
+                    else if (e.Key == Key.Number4 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
                     {
                         selection.SetSize(4, 1);
                     }
-                    else if (e.KeyCode == Keys.Right)
+                    else if (e.Key == Key.Right)
                     {
                         float tx = tileset.X;
                         tileset.X -= 32;
@@ -3186,7 +3381,7 @@ namespace OpGL
                         tileScroll.X += (int)tx;
                         tileSelection.X -= tx;
                     }
-                    else if (e.KeyCode == Keys.Left)
+                    else if (e.Key == Key.Left)
                     {
                         float tx = tileset.X;
                         tileset.X += 32;
@@ -3196,7 +3391,7 @@ namespace OpGL
                         tileScroll.X += (int)tx;
                         tileSelection.X -= tx;
                     }
-                    else if (e.KeyCode == Keys.Down)
+                    else if (e.Key == Key.Down)
                     {
                         float ty = tileset.Y;
                         tileset.Y -= 32;
@@ -3206,7 +3401,7 @@ namespace OpGL
                         tileScroll.Y += (int)ty;
                         tileSelection.Y -= ty;
                     }
-                    else if (e.KeyCode == Keys.Up)
+                    else if (e.Key == Key.Up)
                     {
                         float ty = tileset.Y;
                         tileset.Y -= 32;
@@ -3219,35 +3414,34 @@ namespace OpGL
                 }
                 else if (CurrentEditingFocus == FocusOptions.Dialog)
                 {
-                    if (e.KeyCode == Keys.Enter)
+                    if (e.Key == Key.Enter)
                     {
-                        CloseDialog(DialogResult.OK);
-                        e.SuppressKeyPress = true;
+                        CloseDialog(true);
                     }
-                    else if (e.KeyCode == Keys.Escape)
+                    else if (e.Key == Key.Escape)
                     {
-                        CloseDialog(DialogResult.Cancel);
+                        CloseDialog(false);
                     }
                 }
                 else if (CurrentEditingFocus == FocusOptions.Map)
                 {
-                    if (e.KeyCode == Keys.Escape)
+                    if (e.Key == Key.Escape)
                     {
                         HideMap();
                         CurrentEditingFocus = FocusOptions.Level;
                     }
-                    else if (e.KeyCode == Keys.C && e.Control)
+                    else if (e.Key == Key.C && e.Control)
                     {
                         if (RoomDatas.ContainsKey(selectedMap.X + selectedMap.Y * 100))
                         {
-                            Clipboard.SetText(Newtonsoft.Json.JsonConvert.SerializeObject(RoomDatas[selectedMap.X + selectedMap.Y * 100]));
+                            //Clipboard.SetText(Newtonsoft.Json.JsonConvert.SerializeObject(RoomDatas[selectedMap.X + selectedMap.Y * 100]));
                         }
                     }
-                    else if (e.KeyCode == Keys.V && e.Control)
+                    else if (e.Key == Key.V && e.Control)
                     {
                         try
                         {
-                            JObject j = JObject.Parse(Clipboard.GetText());
+                            JObject j = JObject.Parse("");
                             Room r = Room.LoadRoom(j, this);
                             j["X"] = selectedMap.X;
                             j["Y"] = selectedMap.Y;
@@ -3265,15 +3459,15 @@ namespace OpGL
                 }
                 else if (CurrentEditingFocus == FocusOptions.Previews)
                 {
-                    if (e.KeyCode == Keys.Escape)
+                    if (e.Key == Key.Escape)
                     {
                         ExitPreviews();
                     }
-                    else if (e.KeyCode == Keys.Up)
+                    else if (e.Key == Key.Up)
                     {
                         previewScroll = Math.Max(previewScroll - 40, 0);
                     }
-                    else if (e.KeyCode == Keys.Down)
+                    else if (e.Key == Key.Down)
                     {
                         previewScroll = Math.Min(previewScroll + 40, previewMaxScroll);
                     }
@@ -3281,7 +3475,7 @@ namespace OpGL
             }
             else if (CurrentState == GameStates.Playing && isEditor)
             {
-                if (e.KeyCode == Keys.F1)
+                if (e.Key == Key.F1)
                 {
                     StringDrawable sd = new StringDrawable(8, 8, FontTexture, "", Color.LightGray);
                     sd.Layer = 61;
@@ -3305,7 +3499,7 @@ namespace OpGL
                         Freeze = FreezeOptions.Unfrozen;
                     };
                 }
-                else if (e.KeyCode == Keys.F2)
+                else if (e.Key == Key.F2)
                 {
                     if (System.IO.Directory.Exists("levels/" + currentLevelPath))
                     {
@@ -3321,7 +3515,7 @@ namespace OpGL
                         tb.Appear();
                     }
                 }
-                else if (e.KeyCode == Keys.F3)
+                else if (e.Key == Key.F3)
                 {
                     if (System.IO.File.Exists("levels/" + currentLevelPath + "/editorsave.v7s"))
                     {
@@ -3343,25 +3537,24 @@ namespace OpGL
             }
             else if (CurrentState == GameStates.Menu)
             {
-                e.SuppressKeyPress = true;
-                if (e.KeyCode == Keys.Right || e.KeyCode == Keys.Down || e.KeyCode == Keys.D || e.KeyCode == Keys.S)
+                if (e.Key == Key.Right || e.Key == Key.Down || e.Key == Key.D || e.Key == Key.S)
                 {
                     SelectedItem += 1;
                     SelectedItem %= MenuItems.Count;
                     UpdateMenuSelection();
                 }
-                else if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Up || e.KeyCode == Keys.A || e.KeyCode == Keys.W)
+                else if (e.Key == Key.Left || e.Key == Key.Up || e.Key == Key.A || e.Key == Key.W)
                 {
                     SelectedItem -= 1;
                     if (SelectedItem < 0)
                         SelectedItem = MenuItems.Count - 1;
                     UpdateMenuSelection();
                 }
-                else if (e.KeyCode == Keys.Z || e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter || e.KeyCode == Keys.V)
+                else if (e.Key == Key.Z || e.Key == Key.Space || e.Key == Key.Enter || e.Key == Key.V)
                 {
                     MenuItems[SelectedItem].Action?.Invoke();
                 }
-                else if (e.KeyCode == Keys.Escape)
+                else if (e.Key == Key.Escape)
                 {
                     MenuItems.Last().Action();
                 }
@@ -3397,20 +3590,20 @@ namespace OpGL
             CutsceneBars = -1;
         }
 
-        private void GlControl_MouseWheel(object sender, MouseEventArgs e)
+        private void GlControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (CurrentEditingFocus == FocusOptions.ScriptEditor)
             {
                 if (e.Delta > 0)
                 {
-                    if (heldKeys.Contains(Keys.ShiftKey))
+                    if (heldKeys.Contains(Key.LShift))
                         seScrollX = Math.Max(seScrollX - 10, 0);
                     else
                         seScrollY = Math.Max(seScrollY - 10, 0);
                 }
                 else if (e.Delta < 0)
                 {
-                    if (heldKeys.Contains(Keys.ShiftKey))
+                    if (heldKeys.Contains(Key.LShift))
                         seScrollX = Math.Max(Math.Min(seScrollX + 10, typingTo.Width + 16), 0);
                     else
                         seScrollY = Math.Max(Math.Min(seScrollY + 10, typingTo.Height + 16), 0);
@@ -3585,13 +3778,13 @@ namespace OpGL
             selectBoxes.Clear();
             selectedSprites.Clear();
         }
-        private void GlControl_KeyUp(object sender, KeyEventArgs e)
+        private void GlControl_KeyUp(object sender, KeyboardKeyEventArgs e)
         {
-            if (heldKeys.Contains(e.KeyCode) && inputMap.ContainsKey(e.KeyCode))
+            if (heldKeys.Contains(e.Key) && inputMap.ContainsKey(e.Key))
             {
-                inputs[(int)inputMap[e.KeyCode]]--;
+                inputs[(int)inputMap[e.Key]]--;
             }
-            heldKeys.Remove(e.KeyCode);
+            heldKeys.Remove(e.Key);
         }
 
         public Script.Executor ExecuteScript(Script script, Sprite sender, Sprite target)
@@ -3604,197 +3797,31 @@ namespace OpGL
             return scr;
         }
 
-        private void GameLoop()
-        {
-            Stopwatch stp = new Stopwatch();
-            long nextFrame = ticksPerFrame;
-            stp.Start();
+        // GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP - GAME LOOP
+//        private void GameLoop()
+//        {
+//            Stopwatch stp = new Stopwatch();
+//            long nextFrame = ticksPerFrame;
+//            stp.Start();
 
-            while (IsPlaying)
-            {
-                // frame rate limiting
-                while (stp.ElapsedTicks < nextFrame)
-                {
-                    int msToSleep = (int)((float)(nextFrame - stp.ElapsedTicks) / Stopwatch.Frequency - 0.5f);
-                    if (msToSleep > 0)
-                        Thread.Sleep(msToSleep);
-                }
-                long ticksElapsed = stp.ElapsedTicks - nextFrame;
-                int framesDropped = (int)(ticksElapsed / ticksPerFrame);
-                nextFrame += ticksPerFrame * (framesDropped + 1);
-#if TEST
-                long fStart = stp.ElapsedTicks;
-#endif
-                while (bufferKeys.Count > 0)
-                {
-                    HandleKey(bufferKeys[0]);
-                    bufferKeys.RemoveAt(0);
-                }
-                if (keys.Length > 0)
-                {
-                    for (int i = 0; i < keys.Length; i++)
-                    {
-                        KeyPress(keys[i]);
-                    }
-                    keys = "";
-                }
-                for (int i = 0; i < bufferInputs.Count; i++)
-                {
-                    inputs[(int)bufferInputs[i]]++;
-                    lastPressed[(int)bufferInputs[i]] = FrameCount;
-                }
-                bufferInputs.Clear();
-                justMoved = false;
-                if (bufferMove) justMoved = true;
-                bufferMove = false;
-
-                // begin frame
-                if (!isLoading && isInitialized)
-                {
-                    exitCollisions = false;
-                    if (CurrentState == GameStates.Playing)
-                    {
-                        if (Freeze != FreezeOptions.Paused)
-                        {
-                            HandleUserInputs();
-
-                            if (Freeze != FreezeOptions.OnlySprites && CurrentState == GameStates.Playing)
-                                ProcessWorld();
-
-                            BGSprites.Process();
-                            for (int i = 0; i < CurrentScripts.Count; i++)
-                            {
-                                Script.Executor script = CurrentScripts[i];
-                                script.Process();
-                            }
-                            if (CutsceneBars > 0)
-                            {
-                                CutsceneBarBottom.Visible = CutsceneBarTop.Visible = true;
-                                CutsceneBarTop.X += 8;
-                                CutsceneBarBottom.X -= 8;
-                                if (CutsceneBarTop.X >= 0)
-                                {
-                                    CutsceneBarTop.X = 0;
-                                    CutsceneBarBottom.X = 0;
-                                    CutsceneBars = 0;
-                                }
-                            }
-                            else if (CutsceneBars < 0)
-                            {
-                                CutsceneBarTop.X -= 8;
-                                CutsceneBarBottom.X += 8;
-                                if (CutsceneBarTop.X <= -RESOLUTION_WIDTH)
-                                {
-                                    CutsceneBarTop.X = -RESOLUTION_WIDTH;
-                                    CutsceneBarBottom.X = RESOLUTION_WIDTH;
-                                    CutsceneBars = 0;
-                                    CutsceneBarBottom.Visible = CutsceneBarTop.Visible = false;
-                                }
-                            }
-                        }
-                    }
-                    else if (CurrentState == GameStates.Editing)
-                    {
-                        HandleEditingInputs();
-                    }
-                    else if (CurrentState == GameStates.Menu)
-                    {
-                        BGSprites.Process();
-                        ProcessMenu();
-                    }
-                    CurrentSong.Process();
-                    if (CurrentSong.isFaded && MusicFaded is object)
-                    {
-                        Action m = MusicFaded;
-                        MusicFaded = null;
-                        m();
-                    }
-                    for (int i = hudSprites.Count - 1; i >= 0; i--)
-                    {
-                        Sprite d = hudSprites[i];
-                        d.Process();
-                    }
-                    if (previews is object)
-                    {
-                        previews.SortForCollisions();
-                        if (previews is object)
-                        {
-                            List<Sprite> spr = previews.GetPotentialColliders(mouseX, mouseY + previewScroll, 1, 1);
-                            bool foundone = false;
-                            foreach (Sprite sprite in previews)
-                            {
-                                if (sprite.Name is object && sprite.Name != "")
-                                {
-                                    if (spr.Contains(sprite) && !foundone)
-                                    {
-                                        sprite.AdvanceFrame();
-                                        sprite.Color = Color.White;
-                                        foundone = true;
-                                    }
-                                    else
-                                    {
-                                        sprite.ResetAnimation();
-                                        sprite.Color = Color.Gray;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    HandleHUD();
-                    if (FadeSpeed > 0)
-                    {
-                        Color fade = sprites.Color;
-                        if (fade.R < 255)
-                        {
-                            fade = Color.FromArgb(Math.Min(fade.R + FadeSpeed, 255), Math.Min(fade.G + FadeSpeed, 255), Math.Min(fade.B + FadeSpeed, 255));
-                        }
-                        sprites.Color = fade;
-                        BGSprites.Color = fade;
-                        if (fadeHud) hudSprites.Color = fade;
-                        if (fade.R == 255)
-                        {
-                            FadeSpeed = 0;
-                            WhenFaded?.Invoke();
-                        }
-                    }
-                    else if (FadeSpeed < 0)
-                    {
-                        Color fade = BGSprites.Color;
-                        if (fade.R > 0)
-                        {
-                            fade = Color.FromArgb(Math.Max(fade.R + FadeSpeed, 0), Math.Max(fade.G + FadeSpeed, 0), Math.Max(fade.B + FadeSpeed, 0));
-                        }
-                        if (sprites is object)
-                            sprites.Color = fade;
-                        BGSprites.Color = fade;
-                        if (fadeHud) hudSprites.Color = fade;
-                        if (fade.R == 0)
-                        {
-                            FadeSpeed = 0;
-                            WhenFaded?.Invoke();
-                        }
-                    }
-                    sprites?.CheckBuffer();
-                }
-
-                // end frame
-                FrameCount %= int.MaxValue;
-                FrameCount++;
-
-                if (isLoading)
-                {
-                    loadingSprite.Text = "Loading... " + ((int)percent).ToString() + "%";
-                }
-                glControl.Invalidate();
-
-#if TEST
-                float ms = (float)(stp.ElapsedTicks - fStart) / Stopwatch.Frequency * 1000f;
-                ftTotal += ms;
-                ftTotal -= frameTimes[FrameCount % 60];
-                frameTimes[FrameCount % 60] = ms;
-#endif
-            }
-        }
+//            while (IsPlaying)
+//            {
+//                // frame rate limiting
+//                while (stp.ElapsedTicks < nextFrame)
+//                {
+//                    int msToSleep = (int)((float)(nextFrame - stp.ElapsedTicks) / Stopwatch.Frequency - 0.5f);
+//                    if (msToSleep > 0)
+//                        Thread.Sleep(msToSleep);
+//                }
+//                long ticksElapsed = stp.ElapsedTicks - nextFrame;
+//                int framesDropped = (int)(ticksElapsed / ticksPerFrame);
+//                nextFrame += ticksPerFrame * (framesDropped + 1);
+//#if TEST
+//                long fStart = stp.ElapsedTicks;
+//#endif
+                
+//            }
+//        }
 
         private void ProcessMenu()
         {
@@ -3990,7 +4017,7 @@ namespace OpGL
         {
             if (replaceTiles)
                 ReplaceTiles();
-            bool shift = heldKeys.Contains(Keys.ShiftKey);
+            bool shift = heldKeys.Contains(Key.LShift);
             sprites.SortForCollisions();
             if (mouseIn || CurrentEditingFocus == FocusOptions.Dialog)
             {
@@ -4003,12 +4030,12 @@ namespace OpGL
                         selection.Color = Color.Magenta;
                     if (tool != Tools.Spikes)
                     {
-                        if (heldKeys.Contains(Keys.Z))
+                        if (heldKeys.Contains(Key.Z))
                         {
                             tileToolW = 3;
                             tileToolH = 3;
                         }
-                        else if (heldKeys.Contains(Keys.X))
+                        else if (heldKeys.Contains(Key.X))
                         {
                             tileToolW = 5;
                             tileToolH = 5;
@@ -4022,7 +4049,7 @@ namespace OpGL
                 }
                 else if (tool == Tools.Checkpoint || tool == Tools.Start || tool == Tools.Terminal || tool == Tools.CustomSprite)
                 {
-                    if (heldKeys.Contains(Keys.Z))
+                    if (heldKeys.Contains(Key.Z))
                     {
                         flipToolY = true;
                     }
@@ -4030,7 +4057,7 @@ namespace OpGL
                     {
                         flipToolY = false;
                     }
-                    if (heldKeys.Contains(Keys.X))
+                    if (heldKeys.Contains(Key.X))
                     {
                         flipToolX = true;
                     }
@@ -4194,9 +4221,9 @@ namespace OpGL
                     }
                 if (mouseIn)
                 {
-                    if (!heldKeys.Contains(Keys.OemCloseBrackets))
+                    if (!heldKeys.Contains(Key.RBracket))
                         selection.X = (int)Math.Floor((mouseX - (8 * (selection.WidthTiles / 2f))) / 8 + 0.5) * 8;
-                    if (!heldKeys.Contains(Keys.OemOpenBrackets))
+                    if (!heldKeys.Contains(Key.LBracket))
                         selection.Y = (int)Math.Floor((mouseY - (8 * (selection.HeightTiles / 2f))) / 8 + 0.5) * 8;
                 }
                 else
@@ -4240,7 +4267,7 @@ namespace OpGL
                 }
                 else
                 {
-                    if ((heldKeys.Contains(Keys.ControlKey) && leftMouse && tool != Tools.Attach) || tool == Tools.Select)
+                    if ((heldKeys.Contains(Key.LControl) && leftMouse && tool != Tools.Attach) || tool == Tools.Select)
                     {
                         if (selecting)
                         {
@@ -4260,7 +4287,7 @@ namespace OpGL
                                 foreach (Sprite s in col)
                                 {
                                     if (s is BoxSprite && !(s is ScriptBox)) continue;
-                                    if (!heldKeys.Contains(Keys.ControlKey) && (s is Tile || s is ScriptBox)) continue;
+                                    if (!heldKeys.Contains(Key.LControl) && (s is Tile || s is ScriptBox)) continue;
                                     if (!selectedSprites.Contains(s))
                                     {
                                         selectedSprites.Add(s);
@@ -4288,7 +4315,7 @@ namespace OpGL
                         {
                             float x = (int)(mouseX - selectOrigin.X);
                             float y = (int)(mouseY - selectOrigin.Y);
-                            if (!heldKeys.Contains(Keys.Menu))
+                            if (!heldKeys.Contains(Key.Menu))
                             {
                                 x = (int)(x / 8) * 8;
                                 y = (int)(y / 8) * 8;
@@ -4312,7 +4339,7 @@ namespace OpGL
                             if (leftMouse)
                             {
                                 bool drag = false;
-                                if (!heldKeys.Contains(Keys.ShiftKey))
+                                if (!heldKeys.Contains(Key.LShift))
                                 {
                                     List<Sprite> spr = sprites.GetPotentialColliders(mouseX + CameraX, mouseY + CameraY, 1, 1);
                                     foreach (Sprite s in spr)
@@ -4333,7 +4360,7 @@ namespace OpGL
                                 {
                                     tool = Tools.Select;
                                     editorTool.Text = "= - Select";
-                                    if (!heldKeys.Contains(Keys.ShiftKey))
+                                    if (!heldKeys.Contains(Key.LShift))
                                         ClearSelection();
                                     selecting = true;
                                     selectOrigin = new PointF(selection.X, selection.Y);
@@ -4508,7 +4535,7 @@ namespace OpGL
                                         }
                                         ShowDialog("Change Layer", ans, new string[] { }, (r) =>
                                         {
-                                            if (r == DialogResult.OK)
+                                            if (r)
                                             {
                                                 if (int.TryParse(input.Text, out int l))
                                                 {
@@ -4536,7 +4563,7 @@ namespace OpGL
                                         }
                                         ShowDialog("Change Size", ans, new string[] { }, (r) =>
                                         {
-                                            if (r == DialogResult.OK)
+                                            if (r)
                                             {
                                                 if (float.TryParse(input.Text, out float l))
                                                 {
@@ -4588,7 +4615,7 @@ namespace OpGL
                                     if (!selecting)
                                     {
                                         selecting = true;
-                                        TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, false, false, lr: !heldKeys.Contains(Keys.OemCloseBrackets), ud: !heldKeys.Contains(Keys.OemOpenBrackets));
+                                        TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, false, false, lr: !heldKeys.Contains(Key.RBracket), ud: !heldKeys.Contains(Key.LBracket));
                                     }
                                 }
                             }
@@ -4612,7 +4639,7 @@ namespace OpGL
                                 bool lm = leftMouse;
                                 if (!isFill)
                                 {
-                                    if (heldKeys.Contains(Keys.ShiftKey) && !dragging)
+                                    if (heldKeys.Contains(Key.LShift) && !dragging)
                                     {
                                         dragging = true;
                                         selectOrigin = new PointF(selection.X, selection.Y);
@@ -4662,7 +4689,7 @@ namespace OpGL
                                     if (!selecting)
                                     {
                                         selecting = true;
-                                        TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, true, tool == Tools.Background, lr: !heldKeys.Contains(Keys.OemCloseBrackets), ud: !heldKeys.Contains(Keys.OemOpenBrackets));
+                                        TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, true, tool == Tools.Background, lr: !heldKeys.Contains(Key.RBracket), ud: !heldKeys.Contains(Key.LBracket));
                                     }
                                 }
                             }
@@ -4838,15 +4865,15 @@ namespace OpGL
                                     toolPromptImportant = true;
                                     GiveDirection = (d) =>
                                     {
-                                        if (d == Keys.Up)
+                                        if (d == Key.Up)
                                             platform.YVel = -2;
-                                        else if (d == Keys.Down)
+                                        else if (d == Key.Down)
                                             platform.YVel = 2;
-                                        else if (d == Keys.Left)
+                                        else if (d == Key.Left)
                                             platform.XVel = -2;
-                                        else if (d == Keys.Right)
+                                        else if (d == Key.Right)
                                             platform.XVel = 2;
-                                        else if (d == Keys.Escape)
+                                        else if (d == Key.Escape)
                                             sprites.Remove(platform);
                                         toolPromptImportant = false;
                                     };
@@ -4912,15 +4939,15 @@ namespace OpGL
                                     toolPromptImportant = true;
                                     GiveDirection = (d) =>
                                     {
-                                        if (d == Keys.Up)
+                                        if (d == Key.Up)
                                             enemy.YVel = -2;
-                                        else if (d == Keys.Down)
+                                        else if (d == Key.Down)
                                             enemy.YVel = 2;
-                                        else if (d == Keys.Left)
+                                        else if (d == Key.Left)
                                             enemy.XVel = -2;
-                                        else if (d == Keys.Right)
+                                        else if (d == Key.Right)
                                             enemy.XVel = 2;
-                                        else if (d == Keys.Escape)
+                                        else if (d == Key.Escape)
                                             sprites.Remove(enemy);
                                         toolPromptImportant = false;
                                     };
@@ -5140,7 +5167,7 @@ namespace OpGL
                                 bool flipY = flipToolY;
                                 ShowDialog("Which crewmate do you wish to place?", "", crewmen.ToArray(), (r) =>
                                 {
-                                    if (r == DialogResult.OK)
+                                    if (r)
                                     {
                                         Texture tex = TextureFromName(input.Text);
                                         if (tex != null)
@@ -5341,7 +5368,7 @@ namespace OpGL
                             }
                             else if (leftMouse && !stillHolding)
                             {
-                                if (heldKeys.Contains(Keys.ShiftKey))
+                                if (heldKeys.Contains(Key.LShift))
                                 {
                                     stillHolding = true;
                                     List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, 8, 8);
@@ -5840,7 +5867,7 @@ namespace OpGL
                 }
                 ShowDialog("Change which property?", "", properties.ToArray(), (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r)
                     {
                         string answer = input.Text;
                         if (properties.Contains(answer))
@@ -5910,7 +5937,7 @@ namespace OpGL
                             {
                                 ShowDialog(answer + " - " + selectedSprites.First().Properties[answer].Description, val, choices.ToArray(), (r2) =>
                                 {
-                                    if (r2 == DialogResult.OK)
+                                    if (r2)
                                     {
                                         string ans = input.Text;
                                         switch (selectedSprites.First().Properties[answer].Type)
@@ -5987,7 +6014,7 @@ namespace OpGL
                                 }
                                 ShowColorDialog(selProp.Name + " - " + selProp.Description, v, (r2) =>
                                 {
-                                    if (r2 == DialogResult.OK)
+                                    if (r2)
                                     {
                                         foreach (Sprite sprite in selectedSprites)
                                         {
@@ -6023,17 +6050,17 @@ namespace OpGL
                 hudSprites.Add(gd);
                 GiveDirection = (d) =>
                 {
-                    if (d == Keys.Left)
+                    if (d == Key.Left)
                     {
                         platform.Conveyor = -2;
                         platform.Animation = platform.Texture.AnimationFromName("conveyor1l");
                     }
-                    else if (d == Keys.Right)
+                    else if (d == Key.Right)
                     {
                         platform.Conveyor = 2;
                         platform.Animation = platform.Texture.AnimationFromName("conveyor1r");
                     }
-                    else if (d == Keys.Escape)
+                    else if (d == Key.Escape)
                         sprites.Remove(platform);
                     hudSprites.Remove(gd);
                 };
@@ -6279,13 +6306,13 @@ namespace OpGL
                 int s = autoTiles.Size;
                 if (s == 4)
                 {
-                    if (p.X != 0 && heldKeys.Contains(Keys.OemOpenBrackets)) return false;
-                    if (p.Y != 0 && heldKeys.Contains(Keys.OemCloseBrackets)) return false;
+                    if (p.X != 0 && heldKeys.Contains(Key.BracketLeft)) return false;
+                    if (p.Y != 0 && heldKeys.Contains(Key.BracketRight)) return false;
                 }
                 else if (s == 3)
                 {
-                    if (p.X != 0 && heldKeys.Contains(Keys.OemCloseBrackets)) return false;
-                    if (p.Y != 0 && heldKeys.Contains(Keys.OemOpenBrackets)) return false;
+                    if (p.X != 0 && heldKeys.Contains(Key.BracketRight)) return false;
+                    if (p.Y != 0 && heldKeys.Contains(Key.BracketLeft)) return false;
                 }
                 return (gt = GetTile(p.X + x, p.Y + y)) != null && ((!sp && gt.Tag == prefix + autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) ||
                      (p.X < 0 && x % Room.ROOM_WIDTH == 0) ||
@@ -6821,13 +6848,13 @@ namespace OpGL
         {
             float targetX = ActivePlayer.CenterX + (ActivePlayer.XVelocity * 30) - (RESOLUTION_WIDTH / 2);
             float targetY = ActivePlayer.CenterY + (ActivePlayer.YVelocity * 30) - (RESOLUTION_HEIGHT / 2);
-            if (heldKeys.Contains(Keys.L))
+            if (heldKeys.Contains(Key.L))
                 targetX = ActivePlayer.CenterX - RESOLUTION_WIDTH / 10;
-            else if (heldKeys.Contains(Keys.J))
+            else if (heldKeys.Contains(Key.J))
                 targetX = ActivePlayer.CenterX - RESOLUTION_WIDTH / 10 * 9;
-            if (heldKeys.Contains(Keys.K))
+            if (heldKeys.Contains(Key.K))
                 targetY = ActivePlayer.CenterY - RESOLUTION_HEIGHT / 10;
-            else if (heldKeys.Contains(Keys.I))
+            else if (heldKeys.Contains(Key.I))
                 targetY = ActivePlayer.CenterY - RESOLUTION_HEIGHT / 10 * 9;
             targetX = Math.Max(Math.Min(MaxScrollX, targetX), MinScrollX);
             targetY = Math.Max(Math.Min(MaxScrollY, targetY), MinScrollY);
@@ -7000,8 +7027,8 @@ namespace OpGL
             if (!IsPlaying)
             {
                 IsPlaying = true;
-                gameThread = new Thread(GameLoop);
-                gameThread.Start();
+                //gameThread = new Thread(GameLoop);
+                //gameThread.Start();
             }
         }
         public void StopGame() { IsPlaying = false; CurrentSong?.Stop(); }
@@ -7133,7 +7160,7 @@ namespace OpGL
             }
         }
 
-        private void glControl_Render(object sender, GlControlEventArgs e)
+        private void glControl_Render(object sender, FrameEventArgs e)
         {
 #if TEST
             Stopwatch t = new Stopwatch();
@@ -7159,13 +7186,13 @@ namespace OpGL
             if (c != currentColor)
             {
                 currentColor = c;
-                Gl.ClearColor((float)c.R / 255, (float)c.G / 255, (float)c.B / 255, 1);
+                GL.ClearColor((float)c.R / 255, (float)c.G / 255, (float)c.B / 255, 1);
             }
-            Gl.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             if (!isFlashing)
             {
-                Matrix4x4f cam = camera;
+                Matrix4 cam = camera;
                 int offsetX = 0;
                 int offsetY = 0;
                 if (shakeFrames > 0)
@@ -7174,38 +7201,38 @@ namespace OpGL
                     offsetY = r.Next(-shakeIntensity, shakeIntensity + 1);
                     shakeFrames -= 1;
                 }
-                cam.Translate(-((int)CameraX + offsetX), -((int)CameraY + offsetY), 0);
-                int viewMatrixLoc = Gl.GetUniformLocation(program.ID, "view");
+                cam = Matrix4.CreateTranslation(-((int)CameraX + offsetX), -((int)CameraY + offsetY), 0) * cam;
+                int viewMatrixLoc = GL.GetUniformLocation(program.ID, "view");
 
                 if (CurrentEditingFocus != FocusOptions.Tileset && CurrentEditingFocus != FocusOptions.ScriptEditor && isInitialized)
                 {
                     BGSprites?.RenderPrep(viewMatrixLoc, camera);
                     BGSprites?.Render(FrameCount);
 
-                    Gl.UseProgram(program.ID);
-                    Gl.UniformMatrix4f(viewMatrixLoc, 1, false, cam);
+                    GL.UseProgram(program.ID);
+                    GL.UniformMatrix4(viewMatrixLoc, false, ref cam);
                     sprites?.Render(FrameCount, CurrentState == GameStates.Editing);
                 }
 
                 if (CurrentEditingFocus != FocusOptions.ScriptEditor)
                 {
                     hudView = camera;
-                    hudView.Translate(-offsetX, -offsetY, 0);
-                    Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
+                    hudView = Matrix4.CreateTranslation(-offsetX, -offsetY, 0) * hudView;
+                    GL.UniformMatrix4(viewMatrixLoc, false, ref hudView);
                     hudSprites.Render(FrameCount);
                     if (previews is object)
                     {
-                        hudView.Translate(0, -previewScroll, 0);
-                        Gl.UniformMatrix4f(viewMatrixLoc, 1, false, hudView);
+                        hudView = Matrix4.CreateTranslation(0, -previewScroll, 0) * hudView;
+                        GL.UniformMatrix4(viewMatrixLoc, false, ref hudView);
                         previews.Render(FrameCount);
                     }
                 }
                 else
                 {
                     var scrCam = camera;
-                    scrCam.Translate(-seScrollX, -seScrollY, 0);
-                    scrCam.Scale(seZoom, seZoom, 1);
-                    Gl.UniformMatrix4f(viewMatrixLoc, 1, false, scrCam);
+                    scrCam = Matrix4.CreateTranslation(-seScrollX, -seScrollY, 0) * scrCam;
+                    scrCam = Matrix4.CreateScale(seZoom, seZoom, 1) * scrCam;
+                    GL.UniformMatrix4(viewMatrixLoc, false, ref scrCam);
                     scriptEditor.AllTogether.Render(FrameCount);
                 }
             }
@@ -7226,6 +7253,8 @@ namespace OpGL
                     timerSprite.Visible = true;
             }
 #endif
+            GL.Flush();
+            gameWindow.SwapBuffers();
         }
 
         public JObject CreateSave()
@@ -7480,11 +7509,7 @@ namespace OpGL
                     Scripts.Add(scName, script);
                 }
             }
-            var res = glControl.BeginInvoke((MethodInvoker)delegate { LoadAllTextures(); });
-            while (!res.IsCompleted)
-            {
-                Thread.Sleep(1);
-            }
+            LoadAllTextures();
             //Settings
             WidthRooms = (int)loadFrom["Width"];
             HeightRooms = (int)loadFrom["Height"];

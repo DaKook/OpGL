@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using OpenGL;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpGL
+namespace V7
 {
     class MapSprite : RectangleSprite
     {
@@ -179,14 +179,14 @@ namespace OpGL
         protected bool updateBuffer = true;
         protected bool firstRender = true;
 
-        public override uint VAO { get; set; }
+        public override int VAO { get; set; }
 
         public override void UnsafeDraw()
         {
             if (updateBuffer)
                 UpdateBuffer();
 
-            Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, instances);
+            GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, instances);
         }
 
         protected void UpdateBuffer()
@@ -195,27 +195,29 @@ namespace OpGL
             {
                 firstRender = false;
 
-                VAO = Gl.CreateVertexArray();
-                Gl.BindVertexArray(VAO);
+                int vao;
+                GL.CreateVertexArrays(1, out vao);
+                VAO = vao;
+                GL.BindVertexArray(VAO);
 
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, BaseVBO);
-                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(0);
-                Gl.EnableVertexAttribArray(1);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, BaseVBO);
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
 
-                ibo = Gl.CreateBuffer();
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(2);
-                Gl.EnableVertexAttribArray(3);
-                Gl.VertexAttribDivisor(2, 1);
-                Gl.VertexAttribDivisor(3, 1);
+                GL.CreateBuffers(1, out ibo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(2);
+                GL.EnableVertexAttribArray(3);
+                GL.VertexAttribDivisor(2, 1);
+                GL.VertexAttribDivisor(3, 1);
             }
 
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)bufferData.Length * sizeof(float), bufferData, BufferUsage.DynamicDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            GL.BufferData(BufferTarget.ArrayBuffer, bufferData.Length * sizeof(float), bufferData, BufferUsageHint.DynamicDraw);
             updateBuffer = false;
         }
     }

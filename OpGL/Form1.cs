@@ -1,20 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using OpenGL;
-using Newtonsoft.Json.Linq;
+using OpenTK;
 
-namespace OpGL
+namespace V7
 {
     public partial class Form1 : Form
     {
-        Game game;
+        //Game game;
 
         public Form1()
         {
@@ -43,7 +35,7 @@ namespace OpGL
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            game.StopGame();
+            //game.StopGame();
         }
 
         // This timer is used in order to take code out of the Form's Load handler
@@ -52,8 +44,11 @@ namespace OpGL
             timer1.Enabled = false;
             timer1.Dispose();
 
-            game = new Game(glControl);
-            game.QuitGame += (sender2, e2) => { Application.Exit(); };
+            GameWindow gw = new GameWindow();
+            gw.Title = "VVVVVVV";
+            gw.Run(60, 60);
+
+            //game.QuitGame += (sender2, e2) => { Application.Exit(); };
         }
 
         private void GlControl_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)

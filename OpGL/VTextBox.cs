@@ -4,9 +4,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenGL;
 
-namespace OpGL
+namespace V7
 {
     public class VTextBox : StringDrawable
     {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Drawing;
 
-namespace OpGL
+namespace V7
 {
     class PushSprite : Sprite, IPlatform
     {
@@ -40,8 +40,8 @@ namespace OpGL
         {
             base.Process();
             YVel += Gravity;
-            if (YVel > Crewman.TerminalVelocity) YVel = Crewman.TerminalVelocity;
-            else if (YVel < -Crewman.TerminalVelocity) YVel = -Crewman.TerminalVelocity;
+            if (YVel > Crewman.UniversalTerminalVelocity) YVel = Crewman.UniversalTerminalVelocity;
+            else if (YVel < -Crewman.UniversalTerminalVelocity) YVel = -Crewman.UniversalTerminalVelocity;
             if (XVel > 0)
             {
                 XVel -= Acceleration;

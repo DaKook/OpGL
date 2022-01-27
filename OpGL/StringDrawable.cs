@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using OpenGL;
+using OpenTK.Graphics.OpenGL;
 
-namespace OpGL
+namespace V7
 {
     public class StringDrawable : InstancedSprite
     {
@@ -164,25 +164,6 @@ namespace OpGL
             ColorModifier = AnimatedColor.Default;
 
             Text = text;
-        }
-
-        /// <summary>
-        /// Performs OpenGL bindings and uniform gets/updates before drawing.
-        /// </summary>
-        public override void SafeDraw()
-        {
-            if (!Visible) return;
-            Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
-            Gl.BindVertexArray(VAO);
-
-            int modelLoc = Texture.Program.ModelLocation;
-            Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
-            int texLoc = Texture.Program.TexLocation;
-            Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
-            int colorLoc = Texture.Program.ColorLocation;
-            Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
-
-            UnsafeDraw();
         }
 
         public override SortedList<string, SpriteProperty> Properties

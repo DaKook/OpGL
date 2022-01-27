@@ -5,9 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using OpenGL;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
-namespace OpGL
+namespace V7
 {
     public class Sprite : IDisposable
     {
@@ -49,8 +50,8 @@ namespace OpGL
                     p = Animation.GetFrame(value);
                 else
                     p = new Point(0, 0);
-                TexMatrix.Translate(p.X + animationOffset.X, p.Y + animationOffset.Y, 0);
-                TexMatrix.Scale(extent.X, extent.Y, 1);
+                TexMatrix = Matrix4.CreateTranslation(p.X + animationOffset.X, p.Y + animationOffset.Y, 0) * TexMatrix;
+                TexMatrix = Matrix4.CreateScale(extent.X, extent.Y, 1) * TexMatrix;
             }
         }
         public double DX;
@@ -108,7 +109,7 @@ namespace OpGL
                 return Animation.GetFrame(animFrame).Y;
             }
         }
-        public virtual uint TextureID { get => Texture.ID; }
+        public virtual int TextureID { get => Texture.ID; }
         public SortedList<string, float> Tags = new SortedList<string, float>();
 
         public bool Visible { get; set; } = true;
@@ -147,14 +148,14 @@ namespace OpGL
         public bool KillCrewmen { get; set; } = false;
         public Texture Texture { get; protected set; }
         public virtual ProgramData Program => Texture?.Program;
-        public virtual uint VAO { get => Texture.baseVAO; set { } }
+        public virtual int VAO { get => Texture.baseVAO; set { } }
         public bool DidCollision = false;
 
         public bool IsWarpingV;
         public bool IsWarpingH;
 
-        public Matrix4x4f LocMatrix;
-        public Matrix4x4f TexMatrix;
+        public Matrix4 LocMatrix;
+        public Matrix4 TexMatrix;
 
         private PointF extent = new PointF(1, 1);
         public float Size = 1;
@@ -169,8 +170,8 @@ namespace OpGL
             InitialY = y;
 
             Texture = texture;
-            TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
-            TexMatrix.Translate(texX, texY, 0f);
+            TexMatrix = Matrix4.CreateScale(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
+            TexMatrix = Matrix4.CreateTranslation(texX, texY, 0f) * TexMatrix;
 
             Animation = new Animation(new Point[] { new Point(texX, texY) }, new Rectangle(0, 0, texture.TileSizeX, texture.TileSizeY), texture);
             if (Animation == null)
@@ -189,7 +190,7 @@ namespace OpGL
             if (texture != null)
             {
                 Texture = texture;
-                TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
+                TexMatrix = Matrix4.CreateScale(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
             }
         }
 
@@ -218,13 +219,13 @@ namespace OpGL
 
             Texture = texture;
             if (texture != null)
-                TexMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
+                TexMatrix = Matrix4.CreateScale(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
 
             Animation = animation;
             if (animation != null)
             {
                 Point p = Animation.GetFrame(animFrame);
-                TexMatrix.Translate(p.X, p.Y, 0f);
+                TexMatrix = Matrix4.CreateTranslation(p.X, p.Y, 0f) * TexMatrix;
             }
         }
 
@@ -233,34 +234,35 @@ namespace OpGL
             return Right + offsetX > x && X + offsetX < x + width
                 && Bottom + offsetY > y && Y + offsetY < y + height;
         }
+
         public bool IsOverlapping(Sprite other)
         {
-            bool ret = Within(other.X, other.Y, other.Width, other.Height);
-            if (!ret && MultiplePositions)
+            bool over = Within(other.X, other.Y, other.Width, other.Height);
+            if (!over && MultiplePositions)
             {
                 foreach (PointF offset in Offsets)
                 {
-                    if (ret = Right + offset.X > other.X && X + offset.X < other.Right
+                    if (over = Right + offset.X > other.X && X + offset.X < other.Right
                     && Bottom + offset.Y > other.Y && Y + offset.Y < other.Bottom) break;
                 }
             }
-            if (!ret && other.MultiplePositions)
+            if (!over && other.MultiplePositions)
             {
                 foreach (PointF offsetO in other.Offsets)
                 {
-                    ret = Within(other.X + offsetO.X, other.Y + offsetO.Y, other.Width, other.Height);
-                    if (!ret && MultiplePositions)
+                    over = Within(other.X + offsetO.X, other.Y + offsetO.Y, other.Width, other.Height);
+                    if (!over && MultiplePositions)
                     {
                         foreach (PointF offset in Offsets)
                         {
-                            if (ret = Right + offset.X > other.X + offsetO.X && X + offset.X < other.Right + offsetO.X
+                            if (over = Right + offset.X > other.X + offsetO.X && X + offset.X < other.Right + offsetO.X
                             && Bottom + offset.Y > other.Y + offsetO.Y && Y + offset.Y < other.Bottom + offsetO.Y) break;
                         }
-                        if (ret) break;
+                        if (over) break;
                     }
                 }
             }
-            return ret;
+            return over;
         }
 
         /// <summary>
@@ -269,15 +271,15 @@ namespace OpGL
         public virtual void SafeDraw()
         {
             if (!Visible) return;
-            Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
-            Gl.BindVertexArray(VAO);
+            GL.BindTexture(TextureTarget.Texture2D, Texture.ID);
+            GL.BindVertexArray(VAO);
 
             int modelLoc = Texture.Program.ModelLocation;
-            Gl.UniformMatrix4f(modelLoc, 1, false, LocMatrix);
+            GL.UniformMatrix4(modelLoc, false, ref LocMatrix);
             int texLoc = Texture.Program.TexLocation;
-            Gl.UniformMatrix4f(texLoc, 1, false, TexMatrix);
+            GL.UniformMatrix4(texLoc, false, ref TexMatrix);
             int colorLoc = Texture.Program.ColorLocation;
-            Gl.Uniform4f(colorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
+            GL.Uniform4(colorLoc, new Vector4((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
 
             UnsafeDraw();
         }
@@ -291,31 +293,31 @@ namespace OpGL
                 x = (int)Math.Round(X - (Animation.Hitbox.X * Size));
                 y = (int)Math.Round(Y - (Animation.Hitbox.Y * Size));
             }
-            LocMatrix = Matrix4x4f.Translated(x, y, 0);
+            LocMatrix = Matrix4.CreateTranslation(x, y, 0);
             if (flipX)
             {
-                LocMatrix.Scale(-1, 1, 1);
-                LocMatrix.Translate(-Animation.Hitbox.X * 2 * Size - Width, 0, 0);
+                LocMatrix = Matrix4.CreateScale(-1, 1, 1) * LocMatrix;
+                LocMatrix = Matrix4.CreateTranslation(-Animation.Hitbox.X * 2 * Size - Width, 0, 0) * LocMatrix;
             }
             if (flipY)
             {
-                LocMatrix.Scale(1, -1, 1);
-                LocMatrix.Translate(0, -Animation.Hitbox.Y * 2 * Size - Height, 0);
+                LocMatrix = Matrix4.CreateScale(1, -1, 1) * LocMatrix;
+                LocMatrix = Matrix4.CreateTranslation(0, -Animation.Hitbox.Y * 2 * Size - Height, 0) * LocMatrix;
             }
-            LocMatrix.Scale(extent.X * Size, extent.Y * Size, 1);
+            LocMatrix = Matrix4.CreateScale(extent.X * Size, extent.Y * Size, 1) * LocMatrix;
         }
         // Just the render call; everything should be set up before calling this.
         public virtual void UnsafeDraw()
         {
-            Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
+            GL.DrawArrays(PrimitiveType.Polygon, 0, 4);
             if (MultiplePositions)
             {
                 PointF lastOffset = new PointF(0, 0);
                 foreach (PointF offset in Offsets)
                 {
-                    LocMatrix.Translate((offset.X - lastOffset.X) * (flipX ? -1 : 1), (offset.Y - lastOffset.Y) * (flipY ? -1 : 1), 0);
-                    Gl.UniformMatrix4f(Texture.Program.ModelLocation, 1, false, LocMatrix);
-                    Gl.DrawArrays(PrimitiveType.Polygon, 0, 4);
+                    LocMatrix = Matrix4.CreateTranslation((offset.X - lastOffset.X) * (flipX ? -1 : 1), (offset.Y - lastOffset.Y) * (flipY ? -1 : 1), 0) * LocMatrix;
+                    GL.UniformMatrix4(Texture.Program.ModelLocation, false, ref LocMatrix);
+                    GL.DrawArrays(PrimitiveType.Polygon, 0, 4);
                     lastOffset = offset;
                 }
             }
@@ -384,7 +386,7 @@ namespace OpGL
             if (testFor == this || Immovable || Static) return null;
 
             CollisionData ret = null;
-            if ((Solid != SolidState.NonSolid) && testFor.Solid != SolidState.NonSolid || testFor is WarpLine)
+            if ((Solid != SolidState.NonSolid) && testFor.Solid != SolidState.NonSolid || testFor.AlwaysCollide)
             {
                 if (IsOverlapping(testFor))
                     ret = GetCollisionData(testFor);
@@ -393,6 +395,18 @@ namespace OpGL
         }
         protected virtual CollisionData GetCollisionData(Sprite testFor)
         {
+            bool isTile = testFor is Tile;
+            int direction = -1;
+            if (isTile)
+            {
+                direction = (int)(testFor as Tile).State;
+                if (direction < 5)
+                {
+                    direction = -1;
+                }
+                else
+                    direction -= 5;
+            }
             for (int i = -1; i < Offsets.Count; i++)
             {
                 float ofX = i > -1 ? Offsets[i].X : 0;
@@ -404,16 +418,16 @@ namespace OpGL
                     if (!testFor.Within(DX + ofX, DY + ofY, Width, Height, ofXO, ofYO)) continue;
                     // check for vertical collision first
                     // top
-                    if (Math.Round(PreviousY + PreviousHeight + ofY, 4) <= Math.Round(testFor.PreviousY, 4) + ofYO)
+                    if (Math.Round(PreviousY + PreviousHeight + ofY, 4) <= Math.Round(testFor.PreviousY, 4) + ofYO && direction < 1)
                         return new CollisionData(true, DY + Height + ofY - (testFor.DY + ofYO), testFor);
                     // bottom
-                    else if (Math.Round(PreviousY + ofY, 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4))
+                    else if (Math.Round(PreviousY + ofY, 4) >= Math.Round(testFor.PreviousY + testFor.Height + ofYO, 4) && (direction == -1 || direction == 1))
                         return new CollisionData(true, DY + ofY - (testFor.DY + testFor.Height + ofYO), testFor);
                     // right
-                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4))
+                    else if (Math.Round(PreviousX + PreviousWidth + ofX, 4) <= Math.Round(testFor.PreviousX + ofXO, 4) && (direction == -1 || direction == 2))
                         return new CollisionData(false, DX + Width + ofX - (testFor.DX + ofXO), testFor);
                     // left
-                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4))
+                    else if (Math.Round(PreviousX + ofX, 4) >= Math.Round(testFor.PreviousX + testFor.Width + ofXO, 4) && (direction == -1 || direction == 3))
                         return new CollisionData(false, DX + ofX - (testFor.DX + testFor.Width + ofXO), testFor);
                     else if (testFor.AlwaysCollide)
                         return new CollisionData(true, 0, testFor);

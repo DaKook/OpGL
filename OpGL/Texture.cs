@@ -1,4 +1,5 @@
-﻿using OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpGL
+namespace V7
 {
     public class Texture
     {
@@ -14,15 +15,15 @@ namespace OpGL
         public SortedList<int, int> CharacterWidths { get; set; }
         public SortedList<string,Animation> Animations { get; set; }
         public string Name { get; private set; }
-        public uint ID { get; private set; }
+        public int ID { get; private set; }
         public float Width { get; private set; }
         public float Height { get; private set; }
         public int TileSizeX { get; set; }
         public int TileSizeY { get; set; }
         public TextureProgram Program { get; private set; }
-        public uint baseVAO { get; private set; }
-        public uint baseVBO { get; private set; }
-        public Matrix4x4f BaseTexMatrix { get; private set; }
+        public int baseVAO { get; private set; }
+        public int baseVBO { get; private set; }
+        public Matrix4 BaseTexMatrix { get; private set; }
         public Color TextBoxColor { get; set; }
         public int Updated = 0;
         public string Squeak = "";
@@ -42,7 +43,7 @@ namespace OpGL
             return anim;
         }
 
-        public void Update(float width, float height, int tileSize, int tileSize2, uint vao, uint vbo)
+        public void Update(float width, float height, int tileSize, int tileSize2, int vao, int vbo)
         {
             Width = width;
             Height = height;
@@ -50,11 +51,11 @@ namespace OpGL
             TileSizeY = tileSize2;
             baseVAO = vao;
             baseVBO = vbo;
-            BaseTexMatrix = Matrix4x4f.Scaled(tileSize / width, tileSize2 / height, 1f);
+            BaseTexMatrix = Matrix4.CreateScale(tileSize / width, tileSize2 / height, 1f);
             Updated += 1;
         }
 
-        public Texture(uint id, float width, float height, int tileSize, int tileSize2, string name, TextureProgram program, uint vao, uint vbo)
+        public Texture(int id, float width, float height, int tileSize, int tileSize2, string name, TextureProgram program, int vao, int vbo)
         {
             ID = id;
             Width = width;
@@ -65,7 +66,7 @@ namespace OpGL
             Program = program;
             baseVAO = vao;
             baseVBO = vbo;
-            BaseTexMatrix = Matrix4x4f.Scaled(tileSize / width, tileSize2 / height, 1f);
+            BaseTexMatrix = Matrix4.CreateScale(tileSize / width, tileSize2 / height, 1f);
         }
     }
 }

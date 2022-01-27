@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Collections;
 using Point = System.Drawing.Point;
 
-using OpenGL;
 using System.Drawing;
+using OpenTK.Graphics.OpenGL;
+using OpenTK;
 
-namespace OpGL
+namespace V7
 {
     public class SpriteCollection : List<Sprite>, IDisposable
     {
@@ -70,9 +71,9 @@ namespace OpGL
                 n.ResetAnimation();
                 tileTexture.Program.Reset();
                 tileTexture.Program.Prepare(n, frame);
-                Gl.BindVertexArray(vao);
-                Gl.Uniform4f(tileTexture.Program.MasterColorLocation, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
-                Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, tiles.Count);
+                GL.BindVertexArray(vao);
+                GL.Uniform4(tileTexture.Program.MasterColorLocation, new Vector4((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
+                GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, tiles.Count);
             }
             for (int i = 0; i < Count; i++)
             {
@@ -88,8 +89,8 @@ namespace OpGL
                     lastProgram = d.Program;
                     lastProgram.Reset();
                     int masterColorLoc = lastProgram.MasterColorLocation;
-                    Gl.UseProgram(lastProgram.ID);
-                    Gl.Uniform4f(masterColorLoc, 1, new Vertex4f((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
+                    GL.UseProgram(lastProgram.ID);
+                    GL.Uniform4(masterColorLoc, new Vector4((float)Color.R / 255, (float)Color.G / 255, (float)Color.B / 255, (float)Color.A / 255));
                 }
                 lastProgram.Prepare(d, frame);
 
@@ -136,27 +137,27 @@ namespace OpGL
             {
                 firstRender = false;
 
-                vao = Gl.CreateVertexArray();
-                Gl.BindVertexArray(vao);
+                GL.CreateVertexArrays(1, out vao);
+                GL.BindVertexArray(vao);
 
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, texture.baseVBO);
-                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(0);
-                Gl.EnableVertexAttribArray(1);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, texture.baseVBO);
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
 
-                ibo = Gl.CreateBuffer();
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(2);
-                Gl.EnableVertexAttribArray(3);
-                Gl.VertexAttribDivisor(2, 1);
-                Gl.VertexAttribDivisor(3, 1);
+                GL.CreateBuffers(1, out ibo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(2);
+                GL.EnableVertexAttribArray(3);
+                GL.VertexAttribDivisor(2, 1);
+                GL.VertexAttribDivisor(3, 1);
             }
 
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)tilesBuffer.Length * sizeof(float), tilesBuffer, BufferUsage.DynamicDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            GL.BufferData(BufferTarget.ArrayBuffer, tilesBuffer.Length * sizeof(float), tilesBuffer, BufferUsageHint.DynamicDraw);
             updateBuffer = false;
         }
 

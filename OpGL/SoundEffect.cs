@@ -8,7 +8,7 @@ using NAudio.Wave;
 //using CSCore.Codecs.WAV;
 //using CSCore.SoundOut;
 
-namespace OpGL
+namespace V7
 {
     public class SoundEffect : IDisposable
     {

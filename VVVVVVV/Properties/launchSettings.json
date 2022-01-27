@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "VVVVVVV": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

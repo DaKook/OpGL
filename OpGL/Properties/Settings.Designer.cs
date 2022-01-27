@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace OpGL.Properties
+namespace V7.Properties
 {
 
 

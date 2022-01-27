@@ -1,4 +1,5 @@
-﻿using OpenGL;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -6,15 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpGL
+namespace V7
 {
     public class RectangleSprite : Sprite
     {
         public static ProgramData BaseProgram;
-        public static uint BaseVAO;
-        public static uint BaseVBO;
-        public override uint VAO { get => BaseVAO; set { } }
-        public override uint TextureID => 0;
+        public static int BaseVAO;
+        public static int BaseVBO;
+        public override int VAO { get => BaseVAO; set { } }
+        public override int TextureID => 0;
         public override ProgramData Program => BaseProgram;
 
         private float w;
@@ -54,8 +55,8 @@ namespace OpGL
 
         public override void RenderPrep()
         {
-            LocMatrix = Matrix4x4f.Translated(X, Y, 0);
-            LocMatrix.Scale(w, h, 1);
+            LocMatrix = Matrix4.CreateTranslation(X, Y, 0);
+            LocMatrix = Matrix4.CreateScale(w, h, 1) * LocMatrix;
         }
     }
 }

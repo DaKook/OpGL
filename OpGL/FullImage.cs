@@ -1,12 +1,13 @@
-﻿using OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using OpenTK;
 
-namespace OpGL
+namespace V7
 {
     public class FullImage : Sprite
     {
@@ -19,7 +20,7 @@ namespace OpGL
         {
             Solid = SolidState.NonSolid;
             Static = true;
-            TexMatrix = Matrix4x4f.Identity;
+            TexMatrix = Matrix4.Identity;
         }
 
         public override void Process()
@@ -30,20 +31,20 @@ namespace OpGL
         public override void ChangeTexture(Texture texture)
         {
             base.ChangeTexture(texture);
-            TexMatrix = Matrix4x4f.Identity;
+            TexMatrix = Matrix4.Identity;
         }
 
         public override void RenderPrep()
         {
-            LocMatrix = Matrix4x4f.Translated((int)X, (int)Y, 0);
-            LocMatrix.Scale(Texture.Width * Size / Texture.TileSizeX, Texture.Height * Size / Texture.TileSizeY, 1);
+            LocMatrix = Matrix4.CreateTranslation((int)X, (int)Y, 0);
+            LocMatrix *= Matrix4.CreateScale(Texture.Width * Size / Texture.TileSizeX, Texture.Height * Size / Texture.TileSizeY, 1);
             if (flipX)
             {
-                LocMatrix.Scale(-1, 1, 1);
+                LocMatrix *= Matrix4.CreateScale(-1, 1, 1);
             }
             if (flipY)
             {
-                LocMatrix.Scale(1, -1, 1);
+                LocMatrix *= Matrix4.CreateScale(1, -1, 1);
             }
         }
     }

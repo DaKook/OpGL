@@ -3,8 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using OpenTK.Input;
 
-namespace OpGL
+namespace V7
 {
     public class Command
     {
@@ -376,8 +377,8 @@ namespace OpGL
                 if (args[0] == "key")
                 {
                     string k = args.ElementAtOrDefault(1) ?? "";
-                    if (k.Length == 1 && int.TryParse(k, out int _)) k = "D" + k;
-                    Enum.TryParse(k, true, out System.Windows.Forms.Keys key);
+                    if (k.Length == 1 && int.TryParse(k, out int _)) k = "Number" + k;
+                    Enum.TryParse(k, true, out Key key);
                     return new Number(s, (e) => game.IsKeyHeld(key) ? 1 : 0);
                 }
                 else if (args[0] == "rand")

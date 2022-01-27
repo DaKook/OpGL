@@ -4,13 +4,14 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenGL;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
-namespace OpGL
+namespace V7
 {
     public class ProgramData
     {
-        public uint ID;
+        public int ID;
         public int MasterColorLocation;
         public int ColorLocation;
         public int ModelLocation;
@@ -24,27 +25,27 @@ namespace OpGL
             isTexture = -1;
         }
 
-        public ProgramData(uint id)
+        public ProgramData(int id)
         {
             ID = id;
-            ModelLocation = Gl.GetUniformLocation(id, "model");
-            ColorLocation = Gl.GetUniformLocation(id, "color");
-            IsTextureLocation = Gl.GetUniformLocation(id, "isTexture");
-            MasterColorLocation = Gl.GetUniformLocation(id, "masterColor");
+            ModelLocation = GL.GetUniformLocation(id, "model");
+            ColorLocation = GL.GetUniformLocation(id, "color");
+            IsTextureLocation = GL.GetUniformLocation(id, "isTexture");
+            MasterColorLocation = GL.GetUniformLocation(id, "masterColor");
         }
 
         public virtual void Prepare(Sprite sprite, int frame)
         {
-            Gl.UniformMatrix4f(ModelLocation, 1, false, sprite.LocMatrix);
-            Gl.BindVertexArray(sprite.VAO);
+            GL.UniformMatrix4(ModelLocation, false, ref sprite.LocMatrix);
+            GL.BindVertexArray(sprite.VAO);
             if (sprite.Texture is null && isTexture != 0)
             {
-                Gl.Uniform1(IsTextureLocation, 0);
+                GL.Uniform1(IsTextureLocation, 0);
                 isTexture = 0;
             }
             else if (sprite.Texture is object && isTexture != 1)
             {
-                Gl.Uniform1(IsTextureLocation, 1);
+                GL.Uniform1(IsTextureLocation, 1);
                 isTexture = 1;
             }
             //if (sprite.Color.ToArgb() != lastColor || sprite.ColorModifier is object)
@@ -62,14 +63,14 @@ namespace OpGL
                     b *= (float)c.B / 255;
                     a *= (float)c.A / 255;
                 }
-                Gl.Uniform4f(ColorLocation, 1, new Vertex4f(r, g, b, a));
+                GL.Uniform4(ColorLocation, new Vector4(r, g, b, a));
             }
         }
     }
 
     public class VectorProgram : ProgramData
     {
-        public VectorProgram(uint id) : base(id)
+        public VectorProgram(int id) : base(id)
         {
         }
     }
@@ -85,9 +86,9 @@ namespace OpGL
             lastTex = null;
         }
 
-        public TextureProgram(uint id) : base(id)
+        public TextureProgram(int id) : base(id)
         {
-            TexLocation = Gl.GetUniformLocation(id, "texMatrix");
+            TexLocation = GL.GetUniformLocation(id, "texMatrix");
         }
 
         public override void Prepare(Sprite sprite, int frame)
@@ -96,10 +97,10 @@ namespace OpGL
             if (sprite.Texture != null && lastTex != sprite.Texture)
             {
                 lastTex = sprite.Texture;
-                Gl.BindTexture(TextureTarget.Texture2d, lastTex.ID);
+                GL.BindTexture(TextureTarget.Texture2D, lastTex.ID);
             }
-            Gl.UniformMatrix4f(ModelLocation, 1, false, sprite.LocMatrix);
-            Gl.UniformMatrix4f(TexLocation, 1, false, sprite.TexMatrix);
+            GL.UniformMatrix4(ModelLocation, false, ref sprite.LocMatrix);
+            GL.UniformMatrix4(TexLocation, false, ref sprite.TexMatrix);
         }
     }
 }

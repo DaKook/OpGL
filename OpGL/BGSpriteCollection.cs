@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using OpenGL;
+using OpenTK.Graphics.OpenGL;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,14 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpGL
+namespace V7
 {
     public class BGSpriteCollection : SpriteCollection
     {
-        private Matrix4x4f matrix;
+        private Matrix4 matrix;
         public PointF Location;
         private float[] buffer;
-        private Matrix4x4f texMatrix;
+        private Matrix4 texMatrix;
         private bool firstRender = true;
         private uint ibo;
         private TextureProgram program;
@@ -48,7 +49,7 @@ namespace OpGL
 
         public Texture Texture { get; private set; }
 
-        public uint VAO { get; private set; }
+        public int VAO { get; private set; }
 
         public BGSpriteCollection(Texture texture, Game game)
         {
@@ -58,7 +59,7 @@ namespace OpGL
             Texture = texture;
             program = texture.Program;
             buffer = new float[] { };
-            texMatrix = Matrix4x4f.Scaled(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
+            texMatrix = Matrix4.CreateScale(texture.TileSizeX / texture.Width, texture.TileSizeY / texture.Height, 1f);
             save = new JArray();
             owner = game;
             Width = Game.RESOLUTION_WIDTH;
@@ -169,11 +170,11 @@ namespace OpGL
             Height = Game.RESOLUTION_HEIGHT;
         }
 
-        public void RenderPrep(int viewLoc, Matrix4x4f baseCamera)
+        public void RenderPrep(int viewLoc, Matrix4 baseCamera)
         {
             matrix = baseCamera;
-            Gl.UniformMatrix4f(viewLoc, 1, false, matrix);
-            Gl.Uniform1(program.IsTextureLocation, 1);
+            GL.UniformMatrix4(viewLoc, false, ref matrix);
+            GL.Uniform1(program.IsTextureLocation, 1);
         }
 
         public void Process()
@@ -223,13 +224,14 @@ namespace OpGL
         public override void Render(int frame, bool showInvisible = false)
         {
             if (!Visible) return;
-            Gl.BindTexture(TextureTarget.Texture2d, Texture.ID);
-            Gl.BindVertexArray(VAO);
-            Gl.UseProgram(program.ID);
+            GL.BindTexture(TextureTarget.Texture2D, Texture.ID);
+            GL.BindVertexArray(VAO);
+            GL.UseProgram(program.ID);
             UpdateBuffer();
-            Gl.UniformMatrix4f(program.ModelLocation, 1, false, Matrix4x4f.Identity);
-            Gl.UniformMatrix4f(program.TexLocation, 1, false, texMatrix);
-            Gl.Uniform4f(program.MasterColorLocation, 1, new Vertex4f(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f));
+            Matrix4 identity = Matrix4.Identity;
+            GL.UniformMatrix4(program.ModelLocation, false, ref identity);
+            GL.UniformMatrix4(program.TexLocation, false, ref texMatrix);
+            GL.Uniform4(program.MasterColorLocation, new Vector4(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f));
             float r = (float)BaseColor.R / 255;
             float g = (float)BaseColor.G / 255;
             float b = (float)BaseColor.B / 255;
@@ -251,8 +253,8 @@ namespace OpGL
                 g *= g2;
                 b *= b2;
             }
-            Gl.Uniform4f(Texture.Program.ColorLocation, 1, new Vertex4f(r, g, b, a));
-            Gl.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, buffer.Length / 4);
+            GL.Uniform4(Texture.Program.ColorLocation, new Vector4(r, g, b, a));
+            GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, buffer.Length / 4);
         }
 
         public void UpdateBuffer()
@@ -261,27 +263,29 @@ namespace OpGL
             {
                 firstRender = false;
 
-                VAO = Gl.CreateVertexArray();
-                Gl.BindVertexArray(VAO);
+                int vao = 0;
+                GL.CreateVertexArrays(1, out vao);
+                VAO = vao;
+                GL.BindVertexArray(VAO);
 
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, Texture.baseVBO);
-                Gl.VertexAttribPointer(0, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(1, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(0);
-                Gl.EnableVertexAttribArray(1);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, Texture.baseVBO);
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(0);
+                GL.EnableVertexAttribArray(1);
 
-                ibo = Gl.CreateBuffer();
-                Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-                Gl.VertexAttribPointer(2, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)0);
-                Gl.VertexAttribPointer(3, 2, VertexAttribType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
-                Gl.EnableVertexAttribArray(2);
-                Gl.EnableVertexAttribArray(3);
-                Gl.VertexAttribDivisor(2, 1);
-                Gl.VertexAttribDivisor(3, 1);
+                GL.CreateBuffers(1, out ibo);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+                GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)0);
+                GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (IntPtr)(2 * sizeof(float)));
+                GL.EnableVertexAttribArray(2);
+                GL.EnableVertexAttribArray(3);
+                GL.VertexAttribDivisor(2, 1);
+                GL.VertexAttribDivisor(3, 1);
             }
 
-            Gl.BindBuffer(BufferTarget.ArrayBuffer, ibo);
-            Gl.BufferData(BufferTarget.ArrayBuffer, (uint)buffer.Length * sizeof(float), buffer, BufferUsage.DynamicDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ibo);
+            GL.BufferData(BufferTarget.ArrayBuffer, buffer.Length * sizeof(float), buffer, BufferUsageHint.DynamicDraw);
         }
 
         public new void Add(Sprite sprite)
@@ -304,7 +308,7 @@ namespace OpGL
             Texture = game.TextureFromName((string)loadFrom["Texture"] ?? "");
             program = Texture.Program;
             Clear();
-            texMatrix = Matrix4x4f.Scaled(Texture.TileSizeX / Texture.Width, Texture.TileSizeY / Texture.Height, 1f);
+            texMatrix = Matrix4.CreateScale(Texture.TileSizeX / Texture.Width, Texture.TileSizeY / Texture.Height, 1f);
             save = new JArray();
             float mx = (float)(loadFrom["XSpeed"] ?? 1);
             float my = (float)(loadFrom["YSpeed"] ?? 0);
