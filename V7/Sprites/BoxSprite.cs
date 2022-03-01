@@ -64,9 +64,6 @@ namespace V7
 
         public BoxSprite(float x, float y, Texture texture, int widthTiles, int heightTiles, Color? color = null) : base(x, y, texture)
         {
-            if (texture.Width / texture.TileSizeX != 4 || texture.Height / texture.TileSizeY != 4)
-                throw new InvalidOperationException("A BoxSprite's texture must be 4x4 tiles.");
-
             Color = color ?? Color.White;
 
             w = widthTiles;
@@ -74,9 +71,9 @@ namespace V7
             SetBuffer();
         }
 
-        public override void Process()
-        {
-            // do nothing
-        }
+        //public override void Process()
+        //{
+        //    // do nothing
+        //}
     }
 }

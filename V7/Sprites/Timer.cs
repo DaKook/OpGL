@@ -33,7 +33,7 @@ namespace V7
                 frameCount += 1;
                 if (frameCount >= Interval)
                 {
-                    Owner.ExecuteScript(Script, this, Target, new Number[] { });
+                    Owner.ExecuteScript(Script, this, Target, new DecimalVariable[] { });
                     frameCount = 0;
                 }
             }

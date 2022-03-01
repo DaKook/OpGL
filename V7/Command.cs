@@ -38,546 +38,72 @@ namespace V7
             action(executor, sender, target);
         }
 
-        private static Sprite[] getSprite(string s, Game game, Script.Executor e)
+        private static SpriteVariable getSprite(string s, Game game, Script.Executor e)
         {
-            switch ((s ?? "").ToLower())
+            if (string.IsNullOrEmpty(s)) return new SpriteVariable("", null);
+            Sprite ret = game.SpriteFromName(s);
+            if (ret is null)
             {
-                case "player":
-                    return new Sprite[] { game.ActivePlayer };
-                case "this":
-                case "self":
-                    return new Sprite[] { e.Sender };
-                case "target":
-                    return new Sprite[] { e.Target };
-                case "all":
-                    return game.GetAll((sp) => !sp.Static);
-                case "enemies":
-                    return game.GetAll((sp) => sp is Enemy);
-                case "platforms":
-                    return game.GetAll((sp) => sp is Platform);
-                case "crewmen":
-                    return game.GetAll((sp) => sp is Crewman);
-                default:
-                    {
-                        if (s.ToLower().StartsWith("hud:"))
-                        {
-                            s = s.Substring(4);
-                            if (game.hudSp.TryGetValue(s, out Sprite spr))
-                                return new Sprite[] { spr };
-                            List<Sprite> ret = new List<Sprite>();
-                            int i = 0;
-                            while (game.hudSp.TryGetValue("," + s + i.ToString(), out spr))
-                            {
-                                ret.Add(spr);
-                                i++;
-                            }
-                            return ret.ToArray();
-                        }
-                        else
-                        {
-                            Sprite sprite = game.SpriteFromName(s ?? "");
-                            if (sprite is object)
-                                return new Sprite[] { sprite };
-                            if (e.CreatedSprites.TryGetValue(s, out Sprite[] ret))
-                                return ret;
-                            Number n = GetNumber(s, game, e);
-                            if (n.SpritePointer is object)
-                            {
-                                return n.SpritePointer;
-                            }
-                            return new Sprite[] { };
-                        }
-                    }
+                if (game.Vars.TryGetValue(s, out Variable v) && v.TryConvert(Variable.VarTypes.Sprite, out v, e))
+                    return v as SpriteVariable;
+                if ((v = Variable.DoMath(s, e))?.TryConvert(Variable.VarTypes.Sprite, out v, e) ?? false)
+                    return v as SpriteVariable;
             }
+            return new SpriteVariable(s, ret);
         }
 
         public static SortedSet<string> Pointers = new SortedSet<string>() { "trinkets", "totaltrinkets", "roomx", "roomy", "camerax", "cameray", "input", "action", "music" };
         public static SortedSet<string> SpritePointers = new SortedSet<string>() { "x", "y", "centerx", "centery", "right", "bottom", "width", "height", "trinkets", "gravity", "direction", "input", "xvelocity", "yvelocity", "texture", "animation" };
         static SortedSet<char> operators = new SortedSet<char>() { '+', '-', '*', '/', '=', '!', '&', '|', '>', '<' };
 
-        public static Number GetNumber(string s, Game game, Script.Executor e, List<Number> newNumbers = null)
+        public static DecimalVariable GetNumber(string s, Game game, Script.Executor e, List<DecimalVariable> newNumbers = null)
         {
-            if (s is null) return new Number("", 0f);
-            if (newNumbers is null) newNumbers = new List<Number>();
-            if (s.Contains("("))
             {
-                int io = s.IndexOf("(");
-                int ps = 1;
-                int ic = io + 1;
-                while (ps > 0 && ic > -1)
-                {
-                    ic = s.IndexOfAny(new char[] { '(', ')' }, ic) + 1;
-                    if (ic > 0 && s[ic - 1] == '(')
-                        ps++;
-                    else
-                        ps--;
-                }
-                ic -= 1;
-                string p = s.Substring(io + 1, ic - io - 1);
-                Number n = GetNumber(p, game, e, newNumbers);
-                s = s.Remove(io, ic - io + 1);
-                int nn = newNumbers.Count;
-                s = s.Insert(io, "," + nn.ToString() + ",");
-                newNumbers.Add(n);
+                if (string.IsNullOrEmpty(s)) return new DecimalVariable("", 0);
+                Variable var = Variable.DoMath(s, e);
+                if (var?.TryConvert(Variable.VarTypes.Decimal, out Variable ret, e) ?? false)
+                    return ret as DecimalVariable;
             }
-            if (s.StartsWith(",") && s.EndsWith(","))
-            {
-                s = s.Substring(1, s.Length - 2);
-                int i = int.Parse(s);
-                return newNumbers[i];
-            }
-            s = s.Trim();
-            bool hasMinus = false;
-            {
-                int ind = s.IndexOf('-');
-                while (ind > -1)
-                {
-                    if (ind != 0 && !operators.Contains(s[ind - 1]))
-                    {
-                        hasMinus = true;
-                        break;
-                    }
-                    ind = s.IndexOf('-', ind + 1);
-                }
-            }
-            if (s.Contains('&'))
-            {
-                string[] numbers = s.Split('&');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 1;
-                    for (int i = 0; i < values.Length; i++)
-                    {
-                        if (values[i].Value == 0)
-                        {
-                            ret = 0;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('|'))
-            {
-                string[] numbers = s.Split('|');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 0;
-                    for (int i = 0; i < values.Length; i++)
-                    {
-                        if (values[i].Value != 0)
-                        {
-                            ret = 1;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('='))
-            {
-                string[] numbers = s.Split('=');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 1;
-                    float n = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        if (n != values[i].Value)
-                        {
-                            ret = 0;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('!'))
-            {
-                string[] numbers = s.Split('!');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 1;
-                    float n = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        if (n == values[i].Value)
-                        {
-                            ret = 0;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('>'))
-            {
-                string[] numbers = s.Split('>');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 1;
-                    float n = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        if (n <= values[i].Value)
-                        {
-                            ret = 0;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('<'))
-            {
-                string[] numbers = s.Split('<');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = 1;
-                    float n = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        if (n >= values[i].Value)
-                        {
-                            ret = 0;
-                        }
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('+'))
-            {
-                string[] numbers = s.Split('+');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        ret += values[i].Value;
-                    }
-                    return ret;
-                });
-            }
-            else if (hasMinus)
-            {
-                List<string> numbers = new List<string>();
-                int ind = s.IndexOf('-');
-                int li = 0;
-                while (ind > -1)
-                {
-                    if (ind != 0 && !operators.Contains(s[ind - 1]))
-                    {
-                        numbers.Add(s.Substring(li, ind - li));
-                        li = ind + 1;
-                    }
-                    ind = s.IndexOf('-', ind + 1);
-                }
-                numbers.Add(s.Substring(li));
-                Number[] values = new Number[numbers.Count];
-                for (int i = 0; i < numbers.Count; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        ret -= values[i].Value;
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('*'))
-            {
-                string[] numbers = s.Split('*');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        ret *= values[i].Value;
-                    }
-                    return ret;
-                });
-            }
-            else if (s.Contains('/'))
-            {
-                string[] numbers = s.Split('/');
-                Number[] values = new Number[numbers.Length];
-                for (int i = 0; i < numbers.Length; i++)
-                {
-                    values[i] = GetNumber(numbers[i], game, e, newNumbers);
-                }
-                return new Number(s, () =>
-                {
-                    float ret = values[0].Value;
-                    for (int i = 1; i < values.Length; i++)
-                    {
-                        ret /= values[i].Value;
-                    }
-                    return ret;
-                });
-            }
-            if (s.StartsWith("?"))
-            {
-                s = s.Substring(1);
-                if (s.Contains(":"))
-                {
-                    string[] ss = s.Split(':');
-                    ss[0] = ss[0];
-                    string tag = ss[1];
-                    ss[1] = ss[1].ToLower();
-                    if (ss.Length == 2)
-                    {
-                        Func<float> ret = () =>
-                        {
-                            Sprite sprite = getSprite(ss[0], game, e).FirstOrDefault();
-                            if (sprite is object)
-                            {
-                                switch (ss[1])
-                                {
-                                    case "x":
-                                        return sprite.X - game.CurrentRoom.GetX;
-                                    case "y":
-                                        return sprite.Y - game.CurrentRoom.GetY;
-                                    case "centerx":
-                                        return sprite.CenterX - game.CurrentRoom.GetX;
-                                    case "centery":
-                                        return sprite.CenterY - game.CurrentRoom.GetY;
-                                    case "right":
-                                        return sprite.Right - game.CurrentRoom.GetX;
-                                    case "bottom":
-                                        return sprite.Bottom - game.CurrentRoom.GetY;
-                                    case "width":
-                                        return sprite.Width;
-                                    case "height":
-                                        return sprite.Height;
-                                    case "trinkets":
-                                        return sprite is Crewman ? (sprite as Crewman).PendingTrinkets.Count + (sprite as Crewman).HeldTrinkets.Count : 0;
-                                    case "gravity":
-                                        return sprite.Gravity;
-                                    case "direction":
-                                        return sprite.FlipX ? 1 : -1;
-                                    case "input":
-                                        return sprite is Crewman ? (sprite as Crewman).InputDirection : 0;
-                                    case "xvelocity":
-                                        return sprite is IMovingSprite ? (sprite as IMovingSprite).XVelocity : 0;
-                                    case "yvelocity":
-                                        return sprite is IMovingSprite ? (sprite as IMovingSprite).YVelocity : 0;
-                                    case "texture":
-                                        return game.Textures.IndexOfKey(sprite.Texture.Name);
-                                    case "animation":
-                                        return sprite.Texture.Animations.IndexOfKey(sprite.Animation.Name);
-                                    case "on":
-                                        return sprite is Lever ? ((sprite as Lever).On ? 1 : 0) : 0;
-                                }
-                                if (sprite.Tags.TryGetValue(tag, out float tagValue))
-                                    return tagValue;
-                            }
-                            return 0f;
-                        };
-                        return new Number(s, ret);
-                    }
-                }
-                else
-                {
-                    switch (s.ToLower())
-                    {
-                        case "trinkets":
-                            return new Number(s, () => game.CollectedTrinkets.Count);
-                        case "totaltrinkets":
-                            return new Number(s, () => game.LevelTrinkets.Count);
-                        case "roomx":
-                            return new Number(s, () => game.CurrentRoom.X);
-                        case "roomy":
-                            return new Number(s, () => game.CurrentRoom.Y);
-                        case "camerax":
-                            return new Number(s, () => game.CameraX);
-                        case "cameray":
-                            return new Number(s, () => game.CameraY);
-                        case "input":
-                            return new Number(s, () => 
-                            {
-                                int ret = 0;
-                                if (game.IsInputActive(Game.Inputs.Left))
-                                    ret -= 1;
-                                if (game.IsInputActive(Game.Inputs.Right))
-                                    ret += 1;
-                                return ret;
-                            });
-                        case "action":
-                            return new Number(s, () => game.IsInputActive(Game.Inputs.Jump) ? 1 : 0);
-                        case "music":
-                            return new Number(s, () => game.Songs.IndexOfKey(game.CurrentSong.Name));
-                        default:
-                            break;
-                    }
-                }
-            }
-            else if (s.StartsWith("@"))
-            {
-                string[] args = s.Substring(1).Split(':');
-                if (args.Length > 0) args[0] = args[0].ToLower();
-                else args = new string[] { "" };
-                if (args[0] == "key")
-                {
-                    string k = args.ElementAtOrDefault(1) ?? "";
-                    if (k.Length == 1 && int.TryParse(k, out int _)) k = "Number" + k;
-                    Enum.TryParse(k, true, out Keys key);
-                    return new Number(s, () => game.IsKeyHeld(key) ? 1 : 0);
-                }
-                else if (args[0] == "rand")
-                {
-                    Number min = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e, newNumbers);
-                    Number max = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e, newNumbers);
-                    return new Number(s, () =>
-                    {
-                        return new Random().Next((int)min.Value, (int)max.Value + 1);
-                    });
-                }
-                else if (args[0] == "int")
-                {
-                    Number num = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e, newNumbers);
-                    return new Number(s, () =>
-                    {
-                        return (int)num.Value;
-                    });
-                }
-                else if (args[0] == "sin")
-                {
-                    Number num = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e, newNumbers);
-                    return new Number(s, () =>
-                    {
-                        return (float)Math.Sin(num.Value);
-                    });
-                }
-                else if (args[0] == "cos")
-                {
-                    Number num = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e, newNumbers);
-                    return new Number(s, () =>
-                    {
-                        return (float)Math.Cos(num.Value);
-                    });
-                }
-                else if (args[0] == "tan")
-                {
-                    Number num = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e, newNumbers);
-                    return new Number(s, () =>
-                    {
-                        return (float)Math.Tan(num.Value);
-                    });
-                }
-                else if (args[0] == "input")
-                {
-                    if (Game.InputNames.TryGetValue(args[1], out Game.Inputs input))
-                    {
-                        return new Number(s, () => { return game.IsInputActive(input) ? 1 : 0; });
-                    }
-                    else
-                        return 0;
-                }
-                else
-                    return 0;
-            }
-            if (game.Vars.ContainsKey(s))
-                return game.Vars[s];
-            else
-            {
-                int index;
-                if (Number.TryParse(s, out Number ret))
-                    return ret;
-                else if ((index = e.Script.GetArgIndex(s)) > -1)
-                {
-                    return e.GetArg(index);
-                }
-                else
-                {
-                    Number n = new Number(s, 0);
-                    game.Vars.Add(s, n);
-                    return n;
-                }
-            }
+            return new DecimalVariable("", 0f);
         }
-        private static Texture getTexture(string s, Game game, Script.Executor e)
+        private static TextureVariable getTexture(string s, Game game, Script.Executor e)
         {
-            if (string.IsNullOrEmpty(s)) return null;
+            if (string.IsNullOrEmpty(s)) return new TextureVariable("", null);
             Texture ret = game.TextureFromName(s);
             if (ret is null)
             {
-                int n = (int)GetNumber(s, game, e).Value;
-                if (n > -1 && n < game.Textures.Count)
-                    ret = game.Textures.Values[n];
+                if (game.Vars.TryGetValue(s, out Variable v) && v.TryConvert(Variable.VarTypes.Texture, out v, e))
+                    return v as TextureVariable;
+                if (Variable.DoMath(s, e)?.TryConvert(Variable.VarTypes.Texture, out v, e) ?? false)
+                    return v as TextureVariable;
             }
-            return ret;
+            return new TextureVariable(s, ret);
         }
-        private static Animation getAnimation(string s, Game game, Texture t, Script.Executor e)
+        private static AnimationVariable getAnimation(string s, Game game, Texture t, Script.Executor e)
         {
-            if (string.IsNullOrEmpty(s) || t is null) return null;
-            if (s.StartsWith("$"))
-            {
-                s = s[1..];
-                Number n = GetNumber(s, game, e);
-                int i = (int)Math.Round(n.Value);
-                int x = i % ((int)t.Width / t.TileSizeX);
-                int y = i / ((int)t.Width / t.TileSizeX);
-                return Animation.Static(x, y, t);
-            }
+            if (string.IsNullOrEmpty(s)) return new AnimationVariable("", null);
             Animation ret = t.AnimationFromName(s);
             if (ret is null)
             {
-                int n = (int)GetNumber(s, game, e).Value;
-                if (n > -1 && n < game.Textures.Count)
-                    ret = t.Animations.Values[n];
+                if (game.Vars.TryGetValue(s, out Variable v) && v.TryConvert(Variable.VarTypes.Animation, out v, e))
+                    return v as AnimationVariable;
+                if (Variable.DoMath(s, e)?.TryConvert(Variable.VarTypes.Animation, out v, e) ?? false)
+                    return v as AnimationVariable;
             }
-            return ret;
+            return new AnimationVariable(s, ret);
         }
-        private static SoundEffect getSound(string s, Game game, Script.Executor e)
+        private static SoundVariable getSound(string s, Game game, Script.Executor e)
         {
             if (string.IsNullOrEmpty(s)) return null;
             SoundEffect ret = game.GetSound(s);
             if (ret is null)
             {
-                int n = (int)GetNumber(s, game, e).Value;
-                if (n > -1 && n < game.Textures.Count)
-                    ret = game.Sounds.Values[n];
+                if (game.Vars.TryGetValue(s, out Variable v) && v.TryConvert(Variable.VarTypes.Sound, out v, e))
+                    return v as SoundVariable;
+                if (Variable.DoMath(s, e).TryConvert(Variable.VarTypes.Sound, out v, e))
+                    return v as SoundVariable;
             }
-            return ret;
+            return new SoundVariable(s, ret);
         }
         private static Music getMusic(string s, Game game, Script.Executor e)
         {
@@ -871,8 +397,8 @@ namespace V7
         private delegate Command cmd(Game game, string[] args);
         private static Dictionary<string, Syntax> cmdTypes = new Dictionary<string, Syntax> {
             { "arg", new Syntax(null, new ArgTypes[] { ArgTypes.None, ArgTypes.ArgType, ArgTypes.None }) },
-            { "say", new Syntax(SayCommand, new ArgTypes[] { ArgTypes.Int, ArgTypes.Color }) },
-            { "text", new Syntax(TextCommand, new ArgTypes[] { ArgTypes.Color, ArgTypes.Number, ArgTypes.Number, ArgTypes.Int }) },
+            { "say", new Syntax(SayCommand, new ArgTypes[] { ArgTypes.Int, ArgTypes.Color }, 0) },
+            { "text", new Syntax(TextCommand, new ArgTypes[] { ArgTypes.Color, ArgTypes.Number, ArgTypes.Number, ArgTypes.Int }, 3) },
             { "changefont", new Syntax(ChangeFontCommand, new ArgTypes[] { ArgTypes.Texture }) },
             { "delay", new Syntax(WaitCommand, new ArgTypes[] { ArgTypes.Number }) },
             { "playercontrol", new Syntax(PlayerControlCommand, new ArgTypes[] { ArgTypes.Bool }) },
@@ -952,7 +478,7 @@ namespace V7
             { "rand", new Syntax(RandomCommand, new ArgTypes[] { ArgTypes.Number, ArgTypes.Number, ArgTypes.Number }) },
             { "ondeath", new Syntax(DeathScriptCommand, new ArgTypes[] { ArgTypes.Script }) },
             { "onrespawn", new Syntax(RespawnScriptCommand, new ArgTypes[] { ArgTypes.Script }) },
-            { "hudtext", new Syntax(HudTextCommand, new ArgTypes[] { ArgTypes.None, ArgTypes.Number, ArgTypes.Number, ArgTypes.Color, ArgTypes.Int }) },
+            { "hudtext", new Syntax(HudTextCommand, new ArgTypes[] { ArgTypes.None, ArgTypes.Number, ArgTypes.Number, ArgTypes.Color, ArgTypes.Int }, 4) },
             { "hudsprite", new Syntax(HudSpriteCommand, new ArgTypes[] { ArgTypes.None, ArgTypes.Number, ArgTypes.Number, ArgTypes.Color, ArgTypes.Texture, ArgTypes.Animation }) },
             { "hudreplace", new Syntax(HudReplaceCommand, new ArgTypes[] { ArgTypes.None, ArgTypes.None, ArgTypes.Number, ArgTypes.NumberFormat }) },
             { "hudsize", new Syntax(HudSizeCommand, new ArgTypes[] { ArgTypes.None, ArgTypes.Number }) },
@@ -997,10 +523,12 @@ namespace V7
         {
             public cmd command;
             public ArgTypes[] args;
-            public Syntax(cmd cmd, ArgTypes[] arg)
+            public int linesIndex;
+            public Syntax(cmd cmd, ArgTypes[] arg, int lines = -1)
             {
                 command = cmd;
                 args = arg;
+                linesIndex = lines;
             }
         }
 
@@ -1027,8 +555,131 @@ namespace V7
         }
 
         private static SortedList<string, int> argNames;
+        public static Command[] ParseScript2(Game game, string script, Script scr)
+        {
+            argNames = new SortedList<string, int>();
+            scr.ClearArgs();
+            string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' });
+            List<Command> commands = new List<Command>();
+            int i = 0;
+            char[] dividers = new char[] { '(', '=' };
+            while (i < lines.Length)
+            {
+                string line = lines[i].TrimStart();
+                if (line.StartsWith("#"))
+                {
+                    i++;
+                    continue;
+                }
+                else if (line.StartsWith(">"))
+                {
+                    line = line.Substring(1);
+                    scr.AddMarker(line, commands.Count);
+                    i++;
+                    continue;
+                }
+                else if (line == "{")
+                {
+                    scr.OpenBraces(commands.Count);
+                    i++;
+                    continue;
+                }
+                else if (line == "}")
+                {
+                    scr.CloseBraces(commands.Count);
+                    i++;
+                    continue;
+                }
+                int dividerIndex = line.IndexOfAny(dividers);
+                if (dividerIndex == 0)
+                {
+                    continue;
+                }
+                else if (dividerIndex == -1)
+                {
+                    line += "()";
+                    dividerIndex = line.Length - 2;
+                }
+                char divider = line[dividerIndex];
+                Command command;
+                if (divider == '=')
+                {
+                    //if (operators.Contains(line[--dividerIndex]))
+                    //{
+                    //    op = line[dividerIndex - 1] + "=";
+                    //}
+                    command = new Command(game, (e, sender, target) =>
+                    {
+                        string leftSide = line[..dividerIndex];
+                        leftSide = leftSide.TrimEnd();
+                        Variable var1 = GetFullVariable(leftSide, game, e);
+                        string rightSide = line.Substring(dividerIndex + 1);
+                        rightSide = rightSide.Trim();
+                        Variable var2 = Variable.DoMath(rightSide, e);
+                        if (var1.VarType == var2.VarType || var2.TryConvert(var1.VarType, out var2, e))
+                        {
+                            var1.Set(var2);
+                        }
+                    });
+                    commands.Add(command);
+                }
+                else if (divider == '(')
+                {
+                    string leftSide = line[..dividerIndex];
+                    leftSide = leftSide.TrimEnd();
+                    int rsIndex = line.LastIndexOf(')');
+                    if (rsIndex == -1)
+                    {
+                        rsIndex = line.Length;
+                    }
+                    if (rsIndex - dividerIndex - 1 < 0) continue;
+                    string rightSide = line.Substring(dividerIndex + 1, rsIndex - dividerIndex - 1);
+                    if (cmdTypes.TryGetValue(leftSide, out Syntax cmdSyntax))
+                    {
+                        List<string> argsList = new List<string>();
+                        argsList.Add(leftSide);
+                        argsList.AddRange(rightSide.Split(','));
+                        if (cmdSyntax.linesIndex > -1)
+                        {
+                            if (!int.TryParse(argsList.ElementAtOrDefault(cmdSyntax.linesIndex + 1), out int linesCount) || linesCount == 0) continue;
+                            string text = lines[i + 1];
+                            for (int j = 1; j < linesCount && j + i + 1 < lines.Length; j++)
+                            {
+                                text += "\n" + lines[j + i + 1];
+                            }
+                            argsList.Add(text);
+                        }
+                        commands.Add(cmdSyntax.command(game, argsList.ToArray()));
+                    }
+                }
+                i++;
+            }
+            return commands.ToArray();
+        }
+
+        private static Variable GetFullVariable(string s, Game game, Script.Executor e)
+        {
+            Variable var;
+            int ind = s.IndexOf(':');
+            string arg;
+            bool done;
+            if (done = ind == -1) ind = s.Length;
+            arg = s.Substring(0, ind);
+            var = Variable.GetVariable(arg, e);
+            while (!done)
+            {
+                s = s.Substring(ind + 1);
+                if (done = (ind = s.IndexOf(':')) == -1)
+                    ind = s.Length;
+                arg = s.Substring(0, ind);
+                var = var.GetProperty(arg, e);
+            }
+            return var;
+        }
+
         public static Command[] ParseScript(Game game, string script, Script scr)
         {
+            return ParseScript2(game, script, scr);
             argNames = new SortedList<string, int>();
             scr.ClearArgs();
             string[] lines = script.Replace(Environment.NewLine, "\n").Split(new char[] { '\n' });
@@ -1136,7 +787,7 @@ namespace V7
             return new Command(game, (e, sender, target) =>
             {
                 Color sayTextBoxColor = Color.Gray;
-                Crewman sayCrewman = getSprite(args.ElementAtOrDefault(2) ?? "", game, e).FirstOrDefault() as Crewman;
+                Crewman sayCrewman = getSprite(args.ElementAtOrDefault(2) ?? "", game, e).Value as Crewman;
                 SoundEffect squeak = null;
                 if (sayCrewman is object)
                 {
@@ -1297,8 +948,8 @@ namespace V7
             }
             return new Command(game, (e, sender, target) =>
             {
-                Number txX = GetNumber(args.ElementAtOrDefault(2 + txArgOffset), game, e);
-                Number txY = GetNumber(args.ElementAtOrDefault(3 + txArgOffset), game, e);
+                DecimalVariable txX = GetNumber(args.ElementAtOrDefault(2 + txArgOffset), game, e);
+                DecimalVariable txY = GetNumber(args.ElementAtOrDefault(3 + txArgOffset), game, e);
                 VTextBox tb = new VTextBox(txX.Value, txY.Value, game.FontTexture, args.Last(), txTextBoxColor) { Layer = 50 };
                 tb.ParseStyles();
                 e.TextBoxes.Add(tb);
@@ -1323,7 +974,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number frames = GetNumber(args.LastOrDefault(), game, e);
+                DecimalVariable frames = GetNumber(args.LastOrDefault(), game, e);
                 e.WaitingFrames = (int)frames.Value;
             }, true);
         }
@@ -1343,12 +994,9 @@ namespace V7
             bool sad = (s == "sad" || s == "1");
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e);
-                foreach (Sprite sprite in sprites)
-                {
-                    if (sprite is Crewman)
-                        (sprite as Crewman).Sad = sad;
-                }
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e).Value;
+                if (sprite is Crewman)
+                    (sprite as Crewman).Sad = sad;
             });
         }
         private static Command CheckpointCommand(Game game, string[] args)
@@ -1466,9 +1114,17 @@ namespace V7
             string replace = args.ElementAtOrDefault(1) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Number with = GetNumber(args.ElementAtOrDefault(2), game, e);
-                float w = with.Value;
-                string replaceWith = FormatNumber(w, args.ElementAtOrDefault(3) ?? "false");
+                Variable with = Variable.DoMath(args.ElementAtOrDefault(2), e);
+                string replaceWith;
+                if (with is IntegerVariable && with.TryConvert(Variable.VarTypes.Decimal, out Variable dv, e))
+                {
+                    float w = (dv as DecimalVariable).Value;
+                    replaceWith = FormatNumber(w, args.ElementAtOrDefault(3) ?? "false");
+                }
+                else
+                {
+                    replaceWith = with.ToString();
+                }
                 if (replace != null && replace != "")
                 {
                     VTextBox tb = e.TextBoxes.Last();
@@ -1541,22 +1197,19 @@ namespace V7
         {
             return new Command(game, (e, sender, target) => 
             {
-                getSound(args.LastOrDefault() ?? "", game, e)?.Play();
+                getSound(args.LastOrDefault() ?? "", game, e).Value?.Play();
             });
         }
         private static Command AddSpriteCommand(Game game, string[] args)
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1), game, e);
+                Sprite s = getSprite(args.ElementAtOrDefault(1), game, e).Value;
                 if (s != null)
                 {
-                    foreach (Sprite sprite in s)
-                    {
-                        Number x = GetNumber(args.ElementAtOrDefault(2), game, e);
-                        Number y = GetNumber(args.ElementAtOrDefault(3), game, e);
-                        game.AddSprite(sprite, x.Value, y.Value);
-                    }
+                    DecimalVariable x = GetNumber(args.ElementAtOrDefault(2), game, e);
+                    DecimalVariable y = GetNumber(args.ElementAtOrDefault(3), game, e);
+                    game.AddSprite(s, x.Value, y.Value);
                 }
             }, false);
         }
@@ -1575,17 +1228,14 @@ namespace V7
             }
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                Crewman crewman2 = getSprite(args.ElementAtOrDefault(3) ?? "", game, e).FirstOrDefault() as Crewman;
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                Crewman crewman2 = getSprite(args.ElementAtOrDefault(3) ?? "", game, e).Value as Crewman;
+                if (sprite is Crewman)
                 {
-                    if (sprite is Crewman)
-                    {
-                        if (crewman2 is null) crewman2 = game.ActivePlayer;
-                        (sprite as Crewman).AIState = aiState;
-                        if (aiState != Crewman.AIStates.Stand)
-                            (sprite as Crewman).Target = crewman2;
-                    }
+                    if (crewman2 is null) crewman2 = game.ActivePlayer;
+                    (sprite as Crewman).AIState = aiState;
+                    if (aiState != Crewman.AIStates.Stand)
+                        (sprite as Crewman).Target = crewman2;
                 }
             }, false);
         }
@@ -1593,8 +1243,8 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number frames = GetNumber(args.ElementAtOrDefault(1), game, e);
-                Number intensity = GetNumber(args.ElementAtOrDefault(2) ?? "2", game, e);
+                DecimalVariable frames = GetNumber(args.ElementAtOrDefault(1), game, e);
+                DecimalVariable intensity = GetNumber(args.ElementAtOrDefault(2) ?? "2", game, e);
                 game.Shake((int)frames.Value, (int)intensity.Value);
             });
         }
@@ -1602,10 +1252,10 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number frames = GetNumber(args.ElementAtOrDefault(1), game, e);
-                Number r = GetNumber(args.ElementAtOrDefault(2), game, e);
-                Number g = GetNumber(args.ElementAtOrDefault(3), game, e);
-                Number b = GetNumber(args.ElementAtOrDefault(4), game, e);
+                DecimalVariable frames = GetNumber(args.ElementAtOrDefault(1), game, e);
+                DecimalVariable r = GetNumber(args.ElementAtOrDefault(2), game, e);
+                DecimalVariable g = GetNumber(args.ElementAtOrDefault(3), game, e);
+                DecimalVariable b = GetNumber(args.ElementAtOrDefault(4), game, e);
                 if (args.Length < 5) r = g = b = 255;
                 game.Flash((int)frames.Value, (int)r.Value, (int)g.Value, (int)b.Value);
             });
@@ -1614,7 +1264,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number speed = GetNumber(args.LastOrDefault(), game, e);
+                DecimalVariable speed = GetNumber(args.LastOrDefault() ?? "0", game, e);
                 if (speed.Value == 0) speed = 1;
                 game.CurrentSong.FadeOut(speed.Value);
             }, false);
@@ -1623,7 +1273,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number speed = GetNumber(args.LastOrDefault(), game, e);
+                DecimalVariable speed = GetNumber(args.LastOrDefault() ?? "0", game, e);
                 if (speed.Value == 0) speed = 1;
                 game.CurrentSong.FadeIn(speed.Value);
             }, false);
@@ -1661,16 +1311,13 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1), game, e);
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1), game, e).Value;
+                Crewman c = sprite as Crewman;
+                if (c is object)
                 {
-                    Crewman c = sprite as Crewman;
-                    if (c is object)
+                    if (int.TryParse(args.ElementAtOrDefault(2) ?? "0", out int p))
                     {
-                        if (int.TryParse(args.ElementAtOrDefault(2) ?? "0", out int p))
-                        {
-                            c.InputDirection = Math.Sign(p);
-                        }
+                        c.InputDirection = Math.Sign(p);
                     }
                 }
             });
@@ -1679,17 +1326,14 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                Crewman c = sprite as Crewman;
+                if (c is object)
                 {
-                    Crewman c = sprite as Crewman;
-                    if (c is object)
+                    Script s = game.ScriptFromName(args.Last());
+                    if (s is object)
                     {
-                        Script s = game.ScriptFromName(args.Last());
-                        if (s is object)
-                        {
-                            c.Script = s;
-                        }
+                        c.Script = s;
                     }
                 }
             });
@@ -1708,7 +1352,7 @@ namespace V7
             string option = (args.ElementAtOrDefault(3) ?? "").ToLower();
             return new Command(game, (e, sender, target) =>
             {
-                Number n = GetNumber(args.ElementAtOrDefault(1), game, e);
+                DecimalVariable n = GetNumber(args.ElementAtOrDefault(1), game, e);
                 if (isElseif && e.IfSatisfied)
                 {
                     if (args.Length == 2)
@@ -1719,7 +1363,7 @@ namespace V7
                 if (n.Value != 0)
                 {
                     e.IfSatisfied = true;
-                    Script.Executor scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new Number[] { }, false, e.CreatedSprites);
+                    Script.Executor scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new DecimalVariable[] { }, false, e.Locals);
                     switch (option)
                     {
                         case "wait":
@@ -1755,18 +1399,18 @@ namespace V7
             {
                 if (e.IfSatisfied)
                 {
-                    if (args.Length == 1)
+                    if ((args.ElementAtOrDefault(1) ?? "") == "")
                         e.SkipAhead();
                     e.Continue();
                     return;
                 }
                 Script.Executor scr = null;
-                scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new Number[] { });
+                scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new DecimalVariable[] { });
                 if (scr is object)
                 {
-                    for (int i = 0; i < e.CreatedSprites.Count; i++)
+                    for (int i = 0; i < e.Locals.Count; i++)
                     {
-                        scr.CreatedSprites.Add(e.CreatedSprites.Keys[i], e.CreatedSprites.Values[i]);
+                        scr.Locals.Add(e.Locals.Keys[i], e.Locals.Values[i]);
                     }
                     switch (option)
                     {
@@ -1806,26 +1450,13 @@ namespace V7
             string option = (args.ElementAtOrDefault(4) ?? "").ToLower();
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s1 = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                Sprite[] s2 = getSprite(args.ElementAtOrDefault(2) ?? "", game, e);
-                bool yes = false;
-                foreach (Sprite sprite in s1)
-                {
-                    foreach (Sprite sprite1 in s2)
-                    {
-                        if (sprite.IsOverlapping(sprite1) is object)
-                        {
-                            yes = true;
-                            break;
-                        }
-                    }
-                    if (yes)
-                        break;
-                }
+                Sprite s1 = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                Sprite s2 = getSprite(args.ElementAtOrDefault(2) ?? "", game, e).Value;
+                bool yes = s1.IsOverlapping(s2) is object;
                 if (yes)
                 {
                     e.IfSatisfied = true;
-                    Script.Executor scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new Number[] { }, false, e.CreatedSprites);
+                    Script.Executor scr = game.ExecuteScript(game.ScriptFromName(script), sender, target, new DecimalVariable[] { }, false, e.Locals);
                     switch (option)
                     {
                         case "wait":
@@ -1862,20 +1493,20 @@ namespace V7
                 s = true;
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number xSp = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
-                Number ySp = GetNumber(args.ElementAtOrDefault(6) ?? "", game, e);
-                Texture t = getTexture(texture, game, e);
-                Animation a = getAnimation(animation, game, t, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable xSp = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
+                DecimalVariable ySp = GetNumber(args.ElementAtOrDefault(6) ?? "", game, e);
+                Texture t = getTexture(texture, game, e).Value;
+                Animation a = getAnimation(animation, game, t, e).Value;
                 if (a is object)
                 {
                     Enemy enemy = new Enemy(x.Value, y.Value, t, a, xSp.Value, ySp.Value, game.CurrentRoom.Color) { Name = name };
                     enemy.SyncAnimation(game.FrameCount);
                     if (!s)
                         enemy.Solid = Sprite.SolidState.NonSolid;
-                    e.CreatedSprites.Remove(name);
-                    e.CreatedSprites.Add(name, new Sprite[] { enemy });
+                    e.Locals.Remove(name);
+                    e.Locals.Add(name, new SpriteVariable(name, enemy));
                     game.AddSprite(enemy, enemy.X, enemy.Y);
                 }
             });
@@ -1887,9 +1518,9 @@ namespace V7
             string yAlign = args.ElementAtOrDefault(4)?.ToLower() ?? "y";
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
-                Sprite s = getSprite(sprite, game, e).FirstOrDefault();
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
+                Sprite s = getSprite(sprite, game, e).Value;
                 if (s is object)
                     switch (xAlign)
                     {
@@ -1921,34 +1552,27 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                for (int i = 0; i < s.Length; i++)
-                {
-                    Sprite sprite = s[i];
-                    sprite.X += x.Value;
-                    sprite.Y += y.Value;
-                }
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                sprite.X += x.Value;
+                sprite.Y += y.Value;
             });
         }
         private static Command SetBoundsCommand(Game game, string[] args)
         {
-            string sprite = args.ElementAtOrDefault(1) ?? "";
+            string spr = args.ElementAtOrDefault(1) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number w = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
-                Number h = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
-                Sprite[] sprites = getSprite(sprite, game, e);
-                foreach (Sprite spr in sprites)
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable w = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
+                DecimalVariable h = GetNumber(args.ElementAtOrDefault(5) ?? "", game, e);
+                Sprite sprite = getSprite(spr, game, e).Value;
+                IBoundSprite s = sprite as IBoundSprite;
+                if (s is object)
                 {
-                    IBoundSprite s = spr as IBoundSprite;
-                    if (s is object)
-                    {
-                        s.Bounds = new Rectangle((int)x.Value + (int)game.CurrentRoom.GetX - (int)s.InitialX, (int)y.Value + (int)game.CurrentRoom.GetY - (int)s.InitialY, (int)w.Value, (int)h.Value);
-                    }
+                    s.Bounds = new Rectangle((int)x.Value + (int)game.CurrentRoom.GetX - (int)s.InitialX, (int)y.Value + (int)game.CurrentRoom.GetY - (int)s.InitialY, (int)w.Value, (int)h.Value);
                 }
             });
         }
@@ -1957,11 +1581,8 @@ namespace V7
             string sprite = args.ElementAtOrDefault(1)?.ToLower() ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(sprite, game, e);
-                foreach (Sprite spr in s)
-                {
-                    spr.FlipY = !spr.FlipY;
-                }
+                Sprite s = getSprite(sprite, game, e).Value;
+                s.FlipY = !s.FlipY;
             });
         }
         private static Command DeleteSpriteCommand(Game game, string[] args)
@@ -1969,9 +1590,8 @@ namespace V7
             string sprite = args.ElementAtOrDefault(1) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(sprite, game, e);
-                foreach (Sprite spr in s)
-                    game.RemoveSprite(spr);
+                Sprite s = getSprite(sprite, game, e).Value;
+                game.RemoveSprite(s);
             });
         }
         private static Command CreateTimerCommand(Game game, string[] args)
@@ -1979,7 +1599,7 @@ namespace V7
             string script = args.ElementAtOrDefault(1) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Number interval = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable interval = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
                 Script s = game.ScriptFromName(script);
                 if (s is object)
                 {
@@ -2034,7 +1654,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number ec = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable ec = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
                 e.ExitCondition = () => ec.Value != 0;
             });
         }
@@ -2052,9 +1672,9 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number s = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                n.SetValue(s.Value);
+                DecimalVariable n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable s = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                n.Value =  s.Value;
             });
         }
         private static Command DoCommand(Game game, string[] args)
@@ -2068,7 +1688,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number condition = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable condition = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
                 if (condition.Value != 0)
                     e.ReturnToMarker();
                 else
@@ -2086,10 +1706,10 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number rx = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number ry = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
+                DecimalVariable rx = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable ry = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
                 int roomID = (int)(rx.Value + ry.Value * 100);
                 if (game.RoomDatas.ContainsKey(roomID))
                     game.CurrentRoom.AddRoom(game.RoomDatas[roomID], game, (int)x.Value, (int)y.Value);
@@ -2099,10 +1719,10 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number mx = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number my = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable mx = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable my = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
                 game.AutoScrollX = x.Value;
                 game.AutoScrollY = y.Value;
                 game.StopScrollX = mx.Value;
@@ -2127,7 +1747,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Crewman c = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).FirstOrDefault() as Crewman;
+                Crewman c = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value as Crewman;
                 if (c is object)
                     game.SetPlayer(c);
             });
@@ -2152,24 +1772,21 @@ namespace V7
             string property = args.ElementAtOrDefault(3);
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] spr = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite s in spr)
+                Sprite s = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                if (s is object && s.Texture is object)
                 {
-                    if (s is object && s.Texture is object)
+                    Animation anim = getAnimation(args.ElementAtOrDefault(2) ?? "", game, s.Texture, e).Value;
+                    if (anim is object)
                     {
-                        Animation anim = getAnimation(args.ElementAtOrDefault(2) ?? "", game, s.Texture, e);
-                        if (anim is object)
+                        if (!string.IsNullOrEmpty(property))
                         {
-                            if (!string.IsNullOrEmpty(property))
-                            {
-                                s.ResetAnimation();
-                                s.SetProperty(property, anim.Name, game);
-                            }
-                            else
-                            {
-                                s.ResetAnimation();
-                                s.Animation = anim;
-                            }
+                            s.ResetAnimation();
+                            s.SetProperty(property, anim.Name, game);
+                        }
+                        else
+                        {
+                            s.ResetAnimation();
+                            s.Animation = anim;
                         }
                     }
                 }
@@ -2179,14 +1796,14 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                CrewmanTexture t = getTexture(args.ElementAtOrDefault(3) ?? "", game, e) as CrewmanTexture;
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                CrewmanTexture t = getTexture(args.ElementAtOrDefault(3) ?? "", game, e).Value as CrewmanTexture;
                 string name = args.ElementAtOrDefault(4) ?? "";
                 if (name == "") name = t?.Name ?? "crewman";
                 Crewman c = new Crewman(x.Value, y.Value, t, game, name);
-                if (!e.CreatedSprites.ContainsKey(c.Name))
-                    e.CreatedSprites.Add(c.Name, new Sprite[] { c });
+                if (!e.Locals.ContainsKey(c.Name))
+                    e.Locals.Add(c.Name, new SpriteVariable(c.Name, c));
                 game.AddSprite(c, c.X, c.Y);
             });
         }
@@ -2194,8 +1811,8 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
                 game.LoadRoom((int)x.Value, (int)y.Value);
             });
         }
@@ -2218,17 +1835,14 @@ namespace V7
             string spr = (args.ElementAtOrDefault(1) ?? "").ToLower();
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(spr, game, e);
-                foreach (Sprite sprite in s)
+                Sprite sprite = getSprite(spr, game, e).Value;
+                if (sprite is IScriptExecutor)
                 {
-                    if (sprite is IScriptExecutor)
-                    {
-                        (sprite as IScriptExecutor).Activated = false;
-                    }
-                    if (sprite?.ActivityZone is object)
-                    {
-                        sprite.ActivityZone.Activated = false;
-                    }
+                    (sprite as IScriptExecutor).Activated = false;
+                }
+                if (sprite?.ActivityZone is object)
+                {
+                    sprite.ActivityZone.Activated = false;
                 }
             });
         }
@@ -2237,14 +1851,11 @@ namespace V7
             string spr = (args.ElementAtOrDefault(1) ?? "").ToLower();
             return new Command(game, (e, sender, target) =>
             {
-                Number g = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Sprite[] sprites = getSprite(spr, game, e);
-                foreach (Sprite c in sprites)
+                DecimalVariable g = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                Sprite sprite = getSprite(spr, game, e).Value;
+                if (sprite is object)
                 {
-                    if (c is object)
-                    {
-                        c.Gravity = g.Value * 0.6875f;
-                    }
+                    sprite.Gravity = g.Value * 0.6875f;
                 }
             });
         }
@@ -2295,14 +1906,14 @@ namespace V7
                         game.Destroy(t);
                     else
                     {
-                        foreach (Sprite[] sprites in e.CreatedSprites.Values)
+                        foreach (SpriteVariable sprites in e.Locals.Values)
                         {
-                            foreach (var sprite in sprites)
+                            //foreach (var sprite in sprites)
                             {
-                                game.RemoveSprite(sprite);
+                                game.RemoveSprite(sprites.Value);
                             }
                         }
-                        e.CreatedSprites.Clear();
+                        e.Locals.Clear();
                     }
                 }
             });
@@ -2312,45 +1923,42 @@ namespace V7
             string sn = args.ElementAtOrDefault(1) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(sn, game, e);
-                Number w = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number h = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                Sprite sprite = getSprite(sn, game, e).Value;
+                DecimalVariable w = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable h = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
                 Script sc = game.ScriptFromName(args.ElementAtOrDefault(4) ?? "");
                 Color c = game.GetColor(args.ElementAtOrDefault(5) ?? "", sender, target) ?? Color.Gray;
                 string txt = args.ElementAtOrDefault(6) ?? "  Press ENTER to explode  ";
                 Script sc2 = game.ScriptFromName(args.ElementAtOrDefault(7) ?? "");
                 Script sc3 = game.ScriptFromName(args.ElementAtOrDefault(8) ?? "");
-                foreach (Sprite sprite in s)
+                VTextBox tb = new VTextBox(0, 4, game.FontTexture, txt, c) { CenterX = Game.RESOLUTION_WIDTH / 2 };
+                ActivityZone az = new ActivityZone(sprite, 0, 0, w.Value, h.Value, sc, game, tb)
                 {
-                    VTextBox tb = new VTextBox(0, 4, game.FontTexture, txt, c) { CenterX = Game.RESOLUTION_WIDTH / 2 };
-                    ActivityZone az = new ActivityZone(sprite, 0, 0, w.Value, h.Value, sc, game, tb)
-                    {
-                        EnterScript = sc2,
-                        ExitScript = sc3
-                    };
-                    game.ActivityZones.Add(az);
-                    sprite.ActivityZone = az;
-                }
+                    EnterScript = sc2,
+                    ExitScript = sc3
+                };
+                game.ActivityZones.Add(az);
+                sprite.ActivityZone = az;
             });
         }
         private static Command CreateSpriteCommand(Game game, string[] args)
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "", game, e).Value;
                 if (t is object)
                 {
-                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "", game, t, e);
+                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "", game, t, e).Value;
                     if (a is object)
                     {
                         Sprite s = new Sprite(x.Value, y.Value, t, a)
                         {
                             Name = args.ElementAtOrDefault(5) ?? "sprite"
                         };
-                        if (!e.CreatedSprites.ContainsKey(s.Name))
-                            e.CreatedSprites.Add(s.Name, new Sprite[] { s });
+                        if (!e.Locals.ContainsKey(s.Name))
+                            e.Locals.Add(s.Name, new SpriteVariable(s.Name, s));
                         game.AddSprite(s, s.X, s.Y);
                     }
                 }
@@ -2360,14 +1968,11 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                Crewman c = sprite as Crewman;
+                if (c is object)
                 {
-                    Crewman c = sprite as Crewman;
-                    if (c is object)
-                    {
-                        c.FlipOrJump();
-                    }
+                    c.FlipOrJump();
                 }
             });
         }
@@ -2376,7 +1981,7 @@ namespace V7
             Command cm = null;
             cm = new Command(game, (e, sender, target) =>
             {
-                Number c = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable c = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
                 cm.Wait = c.Value == 0;
                 if (cm.Wait)
                     e.Waiting = () => c.Value != 0 || c.GetValue is null;
@@ -2387,18 +1992,18 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number l = GetNumber(args.ElementAtOrDefault(6) ?? "4", game, e);
-                Number xv = GetNumber(args.ElementAtOrDefault(7) ?? "0", game, e);
-                Number yv = GetNumber(args.ElementAtOrDefault(8) ?? "0", game, e);
-                Number c = GetNumber(args.ElementAtOrDefault(9) ?? "0", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable l = GetNumber(args.ElementAtOrDefault(6) ?? "4", game, e);
+                DecimalVariable xv = GetNumber(args.ElementAtOrDefault(7) ?? "0", game, e);
+                DecimalVariable yv = GetNumber(args.ElementAtOrDefault(8) ?? "0", game, e);
+                DecimalVariable c = GetNumber(args.ElementAtOrDefault(9) ?? "0", game, e);
                 bool.TryParse(args.ElementAtOrDefault(10) ?? "false", out bool d);
-                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "platforms", game, e);
+                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "platforms", game, e).Value;
                 if (t is object)
                 {
-                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "platform1", game, t, e);
-                    Animation b = getAnimation(args.ElementAtOrDefault(11) ?? "disappear", game, t, e);
+                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "platform1", game, t, e).Value;
+                    Animation b = getAnimation(args.ElementAtOrDefault(11) ?? "disappear", game, t, e).Value;
                     if (a is object)
                     {
                         Platform p = new Platform(x.Value, y.Value, t, a, xv.Value, yv.Value, c.Value, d, b, (int)l.Value);
@@ -2409,8 +2014,8 @@ namespace V7
                         int g = clr.G + (255 - clr.G) / 2;
                         int bl = clr.B + (255 - clr.B) / 2;
                         p.Color = Color.FromArgb(255, r, g, bl);
-                        if (!e.CreatedSprites.ContainsKey(name))
-                            e.CreatedSprites.Add(name, new Sprite[] { p });
+                        if (!e.Locals.ContainsKey(name))
+                            e.Locals.Add(name, new SpriteVariable(name, p));
                         game.AddSprite(p, p.X, p.Y);
                     }
                 }
@@ -2420,30 +2025,29 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1), game, e);
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1), game, e).Value;
                 Color? c = game.GetColor(args.ElementAtOrDefault(2), sender, target);
                 if (c.HasValue)
-                    foreach (Sprite sprite in s)
-                        sprite.Color = c.Value;
+                    sprite.Color = c.Value;
             });
         }
         private static Command CreateWarpToken(Game game, string[] args)
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "sprites32", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                Texture t = getTexture(args.ElementAtOrDefault(3) ?? "sprites32", game, e).Value;
                 if (t is object)
                 {
-                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "WarpToken", game, t, e);
+                    Animation a = getAnimation(args.ElementAtOrDefault(4) ?? "WarpToken", game, t, e).Value;
                     if (a is object)
                     {
-                        Number rx = GetNumber(args.ElementAtOrDefault(5) ?? "0", game, e);
-                        Number ry = GetNumber(args.ElementAtOrDefault(6) ?? "0", game, e);
-                        Number ox = GetNumber(args.ElementAtOrDefault(7) ?? "0", game, e);
-                        Number oy = GetNumber(args.ElementAtOrDefault(8) ?? "0", game, e);
-                        Number f = GetNumber(args.ElementAtOrDefault(9) ?? "3", game, e);
+                        DecimalVariable rx = GetNumber(args.ElementAtOrDefault(5) ?? "0", game, e);
+                        DecimalVariable ry = GetNumber(args.ElementAtOrDefault(6) ?? "0", game, e);
+                        DecimalVariable ox = GetNumber(args.ElementAtOrDefault(7) ?? "0", game, e);
+                        DecimalVariable oy = GetNumber(args.ElementAtOrDefault(8) ?? "0", game, e);
+                        DecimalVariable f = GetNumber(args.ElementAtOrDefault(9) ?? "3", game, e);
                         string name = args.ElementAtOrDefault(10) ?? "warptoken";
                         int roomX = (int)rx.Value;
                         int roomY = (int)ry.Value;
@@ -2451,9 +2055,9 @@ namespace V7
                         {
                             Name = name
                         };
-                        if (!e.CreatedSprites.ContainsKey(name))
+                        if (!e.Locals.ContainsKey(name))
                         {
-                            e.CreatedSprites.Add(name, new Sprite[] { wt });
+                            e.Locals.Add(name, new SpriteVariable(name, wt));
                         }
                         game.AddSprite(wt, wt.X, wt.Y);
                     }
@@ -2464,10 +2068,10 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number lx = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number ly = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number hx = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number hy = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
+                DecimalVariable lx = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable ly = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable hx = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable hy = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
                 game.MaxScrollX = hx.Value;
                 game.MaxScrollY = hy.Value;
                 game.MinScrollX = lx.Value;
@@ -2478,15 +2082,12 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                Crewman c = sprite as Crewman;
+                if (c is object)
                 {
-                    Crewman c = sprite as Crewman;
-                    if (c is object)
-                    {
-                        Number j = GetNumber(args.ElementAtOrDefault(2) ?? "1", game, e);
-                        c.MaxJumps = (int)j.Value;
-                    }
+                    DecimalVariable j = GetNumber(args.ElementAtOrDefault(2) ?? "1", game, e);
+                    c.MaxJumps = (int)j.Value;
                 }
             });
         }
@@ -2494,21 +2095,18 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e);
-                foreach (Sprite sprite in sprites)
-                {
-                    (sprite as Crewman)?.Die();
-                }
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e).Value;
+                (sprite as Crewman)?.Die();
             });
         }
         private static Command RandomCommand(Game game, string[] args)
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
                 if (n.GetValue is object) return;
-                Number min = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number max = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable min = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable max = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
                 Random r = new Random(DateTime.Now.Millisecond + (int)n.Value);
                 n.SetValue(r.Next((int)min.Value, (int)max.Value + 1));
             });
@@ -2535,8 +2133,8 @@ namespace V7
             {
                 string name = args.ElementAtOrDefault(1) ?? "";
                 string text = args.LastOrDefault() ?? "";
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
                 Color? c = game.GetColor(args.ElementAtOrDefault(4) ?? "White", sender, target);
                 if (!bool.TryParse(args.ElementAtOrDefault(6), out bool box))
                     box = false;
@@ -2548,11 +2146,11 @@ namespace V7
             return new Command(game, (e, sender, target) =>
             {
                 string name = args.ElementAtOrDefault(1) ?? "sprite";
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
                 Color? c = game.GetColor(args.ElementAtOrDefault(4) ?? "", sender, target);
-                Texture t = getTexture(args.ElementAtOrDefault(5) ?? "", game, e);
-                Animation a = getAnimation(args.ElementAtOrDefault(6) ?? "", game, t, e);
+                Texture t = getTexture(args.ElementAtOrDefault(5) ?? "", game, e).Value;
+                Animation a = getAnimation(args.ElementAtOrDefault(6) ?? "", game, t, e).Value;
                 game.HudSprite(name, new PointF(x.Value, y.Value), c, a, t);
             });
         }
@@ -2563,7 +2161,7 @@ namespace V7
             string replace = args.ElementAtOrDefault(2) ?? "";
             return new Command(game, (e, sender, target) =>
             {
-                Number with = GetNumber(args.ElementAtOrDefault(3), game, e);
+                DecimalVariable with = GetNumber(args.ElementAtOrDefault(3), game, e);
                 float w = with.Value;
                 string replaceWith = FormatNumber(with.Value, format);
                 if (replace != null && replace != "")
@@ -2577,7 +2175,7 @@ namespace V7
             return new Command(game, (e, sender, target) =>
             {
                 string name = args.ElementAtOrDefault(1) ?? "";
-                Number size = GetNumber(args.ElementAtOrDefault(2) ?? "1", game, e);
+                DecimalVariable size = GetNumber(args.ElementAtOrDefault(2) ?? "1", game, e);
                 game.HudSize(name, size.Value);
             });
         }
@@ -2593,26 +2191,23 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in s)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                SortedList<string, SpriteProperty> properties = sprite.Properties;
+                if (properties.ContainsKey(args.ElementAtOrDefault(2) ?? ""))
                 {
-                    SortedList<string, SpriteProperty> properties = sprite.Properties;
-                    if (properties.ContainsKey(args.ElementAtOrDefault(2) ?? ""))
+                    SpriteProperty sp = properties[args.ElementAtOrDefault(2) ?? ""];
+                    DecimalVariable n = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                    if (sp.Type == SpriteProperty.Types.Float)
                     {
-                        SpriteProperty sp = properties[args.ElementAtOrDefault(2) ?? ""];
-                        Number n = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                        if (sp.Type == SpriteProperty.Types.Float)
-                        {
-                            sp.SetValue(n.Value, game);
-                        }
-                        else if (sp.Type == SpriteProperty.Types.Int)
-                        {
-                            sp.SetValue((int)n.Value, game);
-                        }
-                        else if (sp.Type == SpriteProperty.Types.String)
-                        {
-                            sp.SetValue(n.Value.ToString(), game);
-                        }
+                        sp.SetValue(n.Value, game);
+                    }
+                    else if (sp.Type == SpriteProperty.Types.Int)
+                    {
+                        sp.SetValue((int)n.Value, game);
+                    }
+                    else if (sp.Type == SpriteProperty.Types.String)
+                    {
+                        sp.SetValue(n.Value.ToString(), game);
                     }
                 }
             });
@@ -2621,22 +2216,19 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in s)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                SortedList<string, SpriteProperty> properties = sprite.Properties;
+                if (properties.ContainsKey(args.ElementAtOrDefault(2) ?? ""))
                 {
-                    SortedList<string, SpriteProperty> properties = sprite.Properties;
-                    if (properties.ContainsKey(args.ElementAtOrDefault(2) ?? ""))
+                    SpriteProperty sp = properties[args.ElementAtOrDefault(2) ?? ""];
+                    bool.TryParse(args.ElementAtOrDefault(3) ?? "", out bool b);
+                    if (sp.Type == SpriteProperty.Types.Bool)
                     {
-                        SpriteProperty sp = properties[args.ElementAtOrDefault(2) ?? ""];
-                        bool.TryParse(args.ElementAtOrDefault(3) ?? "", out bool b);
-                        if (sp.Type == SpriteProperty.Types.Bool)
-                        {
-                            sp.SetValue(b, game);
-                        }
-                        else if (sp.Type == SpriteProperty.Types.String)
-                        {
-                            sp.SetValue(b.ToString(), game);
-                        }
+                        sp.SetValue(b, game);
+                    }
+                    else if (sp.Type == SpriteProperty.Types.String)
+                    {
+                        sp.SetValue(b.ToString(), game);
                     }
                 }
             });
@@ -2645,18 +2237,15 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] s = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                foreach (Sprite sprite in s)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                if (sprite is object)
                 {
-                    if (sprite is object)
-                    {
-                        Number v = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                        string name = args.ElementAtOrDefault(2) ?? "";
-                        if (!sprite.Tags.ContainsKey(name))
-                            sprite.Tags.Add(name, v.Value);
-                        else
-                            sprite.Tags[name] = v.Value;
-                    }
+                    DecimalVariable v = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                    string name = args.ElementAtOrDefault(2) ?? "";
+                    if (!sprite.Tags.ContainsKey(name))
+                        sprite.Tags.Add(name, v.Value);
+                    else
+                        sprite.Tags[name] = v.Value;
                 }
             });
         }
@@ -2664,14 +2253,11 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e);
-                foreach (Sprite sprite in sprites)
+                Sprite sprite = getSprite(args.ElementAtOrDefault(1) ?? "player", game, e).Value;
+                Crewman c = sprite as Crewman;
+                if (c is object)
                 {
-                    Crewman c = sprite as Crewman;
-                    if (c is object)
-                    {
-                        c.Respawn();
-                    }
+                    c.Respawn();
                 }
             });
         }
@@ -2679,28 +2265,25 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Sprite[] sprites = getSprite(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number xSpeed = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                Number ySpeed = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                Sprite spr = getSprite(args.ElementAtOrDefault(1) ?? "", game, e).Value;
+                DecimalVariable xSpeed = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable ySpeed = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
                 float xs = xSpeed.Value;
                 float ys = ySpeed.Value;
                 bool relative = string.IsNullOrEmpty(args.ElementAtOrDefault(3));
-                foreach (Sprite spr in sprites)
+                IBoundSprite sprite = spr as IBoundSprite;
+                if (spr is null) return;
+                if (relative)
                 {
-                    IBoundSprite sprite = spr as IBoundSprite;
-                    if (spr is null) continue;
-                    if (relative)
-                    {
-                        double sp = xs;
-                        double an = Math.Atan2(sprite.YVelocity, sprite.XVelocity);
-                        sprite.XVelocity = (float)(sp * Math.Cos(an));
-                        sprite.YVelocity = (float)(sp * Math.Sin(an));
-                    }
-                    else
-                    {
-                        sprite.XVelocity = xs;
-                        sprite.YVelocity = ys;
-                    }
+                    double sp = xs;
+                    double an = Math.Atan2(sprite.YVelocity, sprite.XVelocity);
+                    sprite.XVelocity = (float)(sp * Math.Cos(an));
+                    sprite.YVelocity = (float)(sp * Math.Sin(an));
+                }
+                else
+                {
+                    sprite.XVelocity = xs;
+                    sprite.YVelocity = ys;
                 }
             });
         }
@@ -2712,7 +2295,7 @@ namespace V7
                 if (!game.CollectedTrinkets.Contains(id))
                 {
                     game.CollectedTrinkets.Add(id);
-                    Crewman c = getSprite(args.ElementAtOrDefault(2) ?? "", game, e).FirstOrDefault() as Crewman;
+                    Crewman c = getSprite(args.ElementAtOrDefault(2) ?? "", game, e).Value as Crewman;
                     if (c is object)
                     {
                         if (game.LoseTrinkets)
@@ -2728,14 +2311,14 @@ namespace V7
             return new Command(game, (e, sender, target) =>
             {
                 bool.TryParse(args.ElementAtOrDefault(1) ?? "true", out bool white);
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
-                Number w = GetNumber(args.ElementAtOrDefault(4) ?? "320", game, e);
-                Number h = GetNumber(args.ElementAtOrDefault(5) ?? "240", game, e);
-                Number mx = GetNumber(args.ElementAtOrDefault(6) ?? "-1", game, e);
-                Number my = GetNumber(args.ElementAtOrDefault(7) ?? "-1", game, e);
-                Number mw = GetNumber(args.ElementAtOrDefault(8) ?? "-1", game, e);
-                Number mh = GetNumber(args.ElementAtOrDefault(9) ?? "-1", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
+                DecimalVariable w = GetNumber(args.ElementAtOrDefault(4) ?? "320", game, e);
+                DecimalVariable h = GetNumber(args.ElementAtOrDefault(5) ?? "240", game, e);
+                DecimalVariable mx = GetNumber(args.ElementAtOrDefault(6) ?? "-1", game, e);
+                DecimalVariable my = GetNumber(args.ElementAtOrDefault(7) ?? "-1", game, e);
+                DecimalVariable mw = GetNumber(args.ElementAtOrDefault(8) ?? "-1", game, e);
+                DecimalVariable mh = GetNumber(args.ElementAtOrDefault(9) ?? "-1", game, e);
                 MapLayer m = game.ShowMap(x.Value, y.Value, w.Value, h.Value, (int)mx.Value, (int)my.Value, (int)mw.Value, (int)mh.Value, white, false);
                 m.EnableSelect = false;
             });
@@ -2751,11 +2334,11 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable n = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
                 if (n.GetValue is null)
                 {
-                    Number x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
-                    Number y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                    DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                    DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
                     int xv = (int)x.Value;
                     int yv = (int)y.Value;
                     var o = game.RoomDatas[xv + yv * 100];
@@ -2773,7 +2356,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Texture t = getTexture(args.ElementAtOrDefault(1), game, e);
+                Texture t = getTexture(args.ElementAtOrDefault(1), game, e).Value;
                 game.MapTexture = t;
             });
         }
@@ -2781,8 +2364,8 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
                 int id = (int)x.Value + (int)y.Value * 100;
                 if (game.RoomGroups.TryGetValue(id, out RoomGroup g))
                 {
@@ -2822,10 +2405,10 @@ namespace V7
                 if (args.Length <= 2) return;
                 string name = args.ElementAtOrDefault(1) ?? "capture";
                 List<Sprite> sprites = new List<Sprite>();
-                if (e.CreatedSprites.TryGetValue(name, out Sprite[] already))
+                if (e.Locals.TryGetValue(name, out Variable already))
                 {
-                    sprites.AddRange(already);
-                    e.CreatedSprites.Remove(name);
+                    sprites.Add(((SpriteVariable)already).Value);
+                    e.Locals.Remove(name);
                 }
                 List<Predicate<Sprite>> conditions = new List<Predicate<Sprite>>();
                 bool single = false;
@@ -2841,25 +2424,22 @@ namespace V7
                     }
                     else if (args[i].ToLower().StartsWith("touching:"))
                     {
-                        string touch = args[i].Substring(9);
-                        Sprite[] sp = getSprite(touch, game, e);
-                        if (sp is object && sp.Length > 0)
-                        {
-                            conditions.Add((s) => (sp is object && sp.Length > 0) ? sp.Any((t) => s.IsOverlapping(t) is object) : false);
-                        }
+                        //string touch = args[i].Substring(9);
+                        //Sprite sp = getSprite(touch, game, e).Value;
+                        //conditions.Add((s) => (sp is object && sp.Length > 0) ? sp.Any((t) => s.IsOverlapping(t) is object) : false);
                     }
                     else if (args[i].ToLower().StartsWith("on:"))
                     {
-                        string on = args[i].Substring(3);
-                        Sprite[] sp = getSprite(on, game, e);
-                        List<Sprite> p = sp is object ? sp.ToList().FindAll((t) => t is Platform) : new List<Sprite>();
-                        if (sp is object & sp.Length > 0)
-                        {
-                            conditions.Add((s) => {
-                                if (p.Count == 0) return false;
-                                return p.Any((t) => t is IPlatform & (t as IPlatform).OnTop.Contains(s));
-                            });
-                        }
+                        //string on = args[i].Substring(3);
+                        //Sprite[] sp = getSprite(on, game, e);
+                        //List<Sprite> p = sp is object ? sp.ToList().FindAll((t) => t is Platform) : new List<Sprite>();
+                        //if (sp is object & sp.Length > 0)
+                        //{
+                        //    conditions.Add((s) => {
+                        //        if (p.Count == 0) return false;
+                        //        return p.Any((t) => t is IPlatform & (t as IPlatform).OnTop.Contains(s));
+                        //    });
+                        //}
                     }
                     else if (args[i].ToLower() == "single")
                     {
@@ -2874,7 +2454,7 @@ namespace V7
                         if (single) break;
                     }
                 }
-                e.CreatedSprites.Add(name, sprites.ToArray());
+                e.Locals.Add(name, new SpriteVariable(name, sprites[0]));
             });
         }
         private static Command CenterTextCommand(Game game, string[] args)
@@ -2894,11 +2474,11 @@ namespace V7
             {
                 string name = args.ElementAtOrDefault(1) ?? "Menu Item";
                 Script s = game.ScriptFromName(args.ElementAtOrDefault(2) ?? "");
-                Number x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(3) ?? "", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(4) ?? "", game, e);
                 VMenuItem mi = new VMenuItem(name, () =>
                 {
-                    game.ExecuteScript(s, sender, target, new Number[] { }, true);
+                    game.ExecuteScript(s, sender, target, new DecimalVariable[] { }, true);
                 });
                 game.MenuItems.Add(mi);
             });
@@ -2931,9 +2511,9 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x1 = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
-                Number y1 = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number x2 = null, y2 = null;
+                DecimalVariable x1 = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
+                DecimalVariable y1 = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable x2 = null, y2 = null;
                 if (args.Length > 4)
                 {
                     x2 = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
@@ -2962,7 +2542,7 @@ namespace V7
                 AutoTileSettings at;
                 char pre;
                 bool lc = (args.ElementAtOrDefault(5) ?? "true").ToLower() == "true";
-                Number layer = GetNumber(args.ElementAtOrDefault(6) ?? "-2", game, e);
+                DecimalVariable layer = GetNumber(args.ElementAtOrDefault(6) ?? "-2", game, e);
                 switch (args[0].ToLower())
                 {
                     case "backgroundtool":
@@ -3001,9 +2581,9 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number r = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable r = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
                 game.AddLight(x.Value + game.CurrentRoom.GetX, y.Value + game.CurrentRoom.GetY, r.Value);
             });
         }
@@ -3011,10 +2591,10 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number i = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
-                Number x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
-                Number r = GetNumber(args.ElementAtOrDefault(4) ?? "0", game, e);
+                DecimalVariable i = GetNumber(args.ElementAtOrDefault(1) ?? "0", game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(2) ?? "0", game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(3) ?? "0", game, e);
+                DecimalVariable r = GetNumber(args.ElementAtOrDefault(4) ?? "0", game, e);
                 game.SetLight((int)i.Value, x.Value + game.CurrentRoom.GetX, y.Value + game.CurrentRoom.GetY, r.Value);
             });
         }
@@ -3022,7 +2602,7 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number l = GetNumber(args.ElementAtOrDefault(1) ?? "100", game, e);
+                DecimalVariable l = GetNumber(args.ElementAtOrDefault(1) ?? "100", game, e);
                 game.MainLight = l.Value / 100f;
             });
         }
@@ -3030,11 +2610,11 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number var1 = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number var2 = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable var1 = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable var2 = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
                 if (var1.GetValue is object || var2.GetValue is object) return;
-                Number x = GetNumber(args.ElementAtOrDefault(3) ?? (args.ElementAtOrDefault(1) ?? ""), game, e);
-                Number y = GetNumber(args.ElementAtOrDefault(4) ?? (args.ElementAtOrDefault(2) ?? ""), game, e);
+                DecimalVariable x = GetNumber(args.ElementAtOrDefault(3) ?? (args.ElementAtOrDefault(1) ?? ""), game, e);
+                DecimalVariable y = GetNumber(args.ElementAtOrDefault(4) ?? (args.ElementAtOrDefault(2) ?? ""), game, e);
                 float xv = x.Value;
                 float yv = y.Value;
                 double direction = Math.Atan2(yv, xv);
@@ -3048,11 +2628,11 @@ namespace V7
         {
             return new Command(game, (e, sender, target) =>
             {
-                Number var1 = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
-                Number var2 = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
+                DecimalVariable var1 = GetNumber(args.ElementAtOrDefault(1) ?? "", game, e);
+                DecimalVariable var2 = GetNumber(args.ElementAtOrDefault(2) ?? "", game, e);
                 if (var1.GetValue is object || var2.GetValue is object) return;
-                Number m = GetNumber(args.ElementAtOrDefault(3) ?? (args.ElementAtOrDefault(1) ?? ""), game, e);
-                Number d = GetNumber(args.ElementAtOrDefault(4) ?? (args.ElementAtOrDefault(2) ?? ""), game, e);
+                DecimalVariable m = GetNumber(args.ElementAtOrDefault(3) ?? (args.ElementAtOrDefault(1) ?? ""), game, e);
+                DecimalVariable d = GetNumber(args.ElementAtOrDefault(4) ?? (args.ElementAtOrDefault(2) ?? ""), game, e);
                 float mv = m.Value;
                 float dv = d.Value;
                 double direction = dv * Math.PI / 180;
@@ -3065,7 +2645,7 @@ namespace V7
             Command command = null;
             command = new Command(game, (e, sender, target) =>
             {
-                Number[] numbers = new Number[args.Length - 1];
+                DecimalVariable[] numbers = new DecimalVariable[args.Length - 1];
                 Texture texture = null;
                 for (int i = 0; i < script.ArgCount; i++)
                 {
@@ -3075,17 +2655,17 @@ namespace V7
                         switch (type)
                         {
                             case ArgTypes.Sprite:
-                                Sprite[] sprite = getSprite(args[i + 1], game, e);
-                                numbers[i] = Number.GetSpritePointer(sprite);
+                                Sprite sprite = getSprite(args[i + 1], game, e).Value;
+                                numbers[i] = 0f;
                                 break;
                             case ArgTypes.Texture:
-                                texture = getTexture(args[i + 1], game, e);
+                                texture = getTexture(args[i + 1], game, e).Value;
                                 numbers[i] = Math.Max(game.Textures.IndexOfKey(texture.Name), 0);
                                 break;
                             case ArgTypes.Animation:
                                 if (texture is object)
                                 {
-                                    Animation a = getAnimation(args[i + 1], game, texture, e);
+                                    Animation a = getAnimation(args[i + 1], game, texture, e).Value;
                                     numbers[i] = Math.Max(texture.Animations.IndexOfKey(a.Name), 0);
                                 }
                                 else

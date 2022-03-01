@@ -12,6 +12,7 @@ namespace V7
         public bool Control { get; }
         public bool Alt { get; }
         public Keys Key { get; }
+        public bool Pass { get; set; }
         public PassedKeyEvent(KeyboardKeyEventArgs e)
         {
             Key = e.Key;

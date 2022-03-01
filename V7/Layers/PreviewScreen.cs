@@ -9,17 +9,23 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace V7
 {
-    class PreviewScreen : SpritesLayer
+    public class PreviewScreen : SpritesLayer
     {
         public SpriteCollection Sprites;
         public Action<Sprite> OnClick;
         public float Scroll;
         public float MaxScroll;
         public Action<Sprite> OnRightClick;
+        public bool FinishOnClick = true;
+
+        private Point cursor;
+
+        public SpriteCollection HudSprites;
 
         public PreviewScreen(IEnumerable<Sprite> sprites, Action<Sprite> onClick, Game owner)
         {
             Sprites = new SpriteCollection(sprites);
+            HudSprites = new SpriteCollection();
             OnClick = onClick;
             Darken = 0.5f;
             Owner = owner;
@@ -29,34 +35,12 @@ namespace V7
         public override void Dispose()
         {
             Sprites.Dispose();
+            HudSprites.Dispose();
         }
 
         public override void HandleClick(MouseButtonEventArgs e)
         {
-            if (e.Button == MouseButton.Left)
-            {
-                while (Sprites.IsSorting)
-                    ;
-                List<Sprite> col = Sprites.GetPotentialColliders(Owner.MouseX, Owner.MouseY + Scroll, 1, 1).FindAll((s) => s.Name is object && s.Name != "" && s.Color == Color.White);
-                if (col.Count > 0)
-                {
-                    Owner.ReleaseLeftMouse();
-                    Action<Sprite> cp = OnClick;
-                    FinishLayer();
-                    cp?.Invoke(col[0]);
-                }
-            }
-            else if (e.Button == MouseButton.Right)
-            {
-                while (Sprites.IsSorting)
-                    ;
-                List<Sprite> col = Sprites.GetPotentialColliders(Owner.MouseX, Owner.MouseY + Scroll, 1, 1).FindAll((s) => s.Name is object && s.Name != "" && s.Color == Color.White);
-                if (col.Count > 0)
-                {
-                    Action<Sprite> cp = OnRightClick;
-                    cp?.Invoke(col[0]);
-                }
-            }
+            // Do nothing
         }
 
         public override void HandleKey(PassedKeyEvent e, bool typing)
@@ -65,22 +49,43 @@ namespace V7
             {
                 FinishLayer();
             }
+            else if (e.Key == Keys.W || e.Key == Keys.Up)
+            {
+
+            }
         }
 
         public override void HandleWheel(int e)
         {
+            int inc = Owner.Shift ? Game.RESOLUTION_HEIGHT : 10;
             if (e > 0)
             {
-                Scroll = Math.Max(Scroll - 10, 0);
+                Scroll = Math.Max(Scroll - inc, 0);
             }
             else if (e < 0)
             {
-                Scroll = Math.Min(Scroll + 10, MaxScroll);
+                Scroll = Math.Min(Scroll + inc, MaxScroll);
             }
         }
 
+        public void Close()
+        {
+            FinishLayer();
+        }
+
+        Point mc;
+        bool lm = true, rm = true;
         public override void Process()
         {
+            Point c = new Point(Owner.MouseX, Owner.MouseY);
+            if (mc != c)
+                cursor = mc = c;
+
+            for (int i = 0; i < HudSprites.Count; i++)
+            {
+                HudSprites[i].Process();
+            }
+
             Sprites.SortForCollisions(); 
             bool foundone = false;
             for (int i = 0; i < Sprites.Count; i++)
@@ -88,7 +93,7 @@ namespace V7
                 Sprite sprite = Sprites[i];
                 if (sprite.Name is object && sprite.Name != "")
                 {
-                    if (sprite.Within(Owner.MouseX, Owner.MouseY + Scroll, 1, 1) && !foundone)
+                    if (sprite.Within(cursor.X, cursor.Y + Scroll, 2, 2) && !foundone)
                     {
                         sprite.AdvanceFrame();
                         sprite.Color = Color.White;
@@ -101,13 +106,43 @@ namespace V7
                     }
                 }
             }
+            if (Owner.LeftMouse && !lm)
+            {
+                lm = true;
+                List<Sprite> col = Sprites.GetPotentialColliders(cursor.X, cursor.Y + Scroll, 2, 2).FindAll((s) => s.Name is object && s.Name != "" && s.Color == Color.White);
+                if (col.Count > 0)
+                {
+                    Owner.ReleaseLeftMouse();
+                    Action<Sprite> cp = OnClick;
+                    if (FinishOnClick)
+                        FinishLayer();
+                    cp?.Invoke(col[0]);
+                }
+            }
+            else if (!Owner.LeftMouse)
+            {
+                lm = false;
+                if (Owner.RightMouse && !rm)
+                {
+                    List<Sprite> col = Sprites.GetPotentialColliders(cursor.X, cursor.Y + Scroll, 2, 2).FindAll((s) => s.Name is object && s.Name != "" && s.Color == Color.White);
+                    if (col.Count > 0)
+                    {
+                        Action<Sprite> cp = OnRightClick;
+                        cp?.Invoke(col[0]);
+                    }
+                }
+                else if (!Owner.RightMouse)
+                    rm = false;
+            }
         }
 
         public override void Render(Matrix4 baseCamera, int viewMatrixLocation)
         {
-            baseCamera = Matrix4.CreateTranslation(0, -Scroll, 0) * baseCamera;
-            GL.UniformMatrix4(viewMatrixLocation, false, ref baseCamera);
+            Matrix4 cam = Matrix4.CreateTranslation(0, -Scroll, 0) * baseCamera;
+            GL.UniformMatrix4(viewMatrixLocation, false, ref cam);
             Sprites.Render(Owner.FrameCount);
+            GL.UniformMatrix4(viewMatrixLocation, false, ref baseCamera);
+            HudSprites.Render(Owner.FrameCount);
         }
     }
 }

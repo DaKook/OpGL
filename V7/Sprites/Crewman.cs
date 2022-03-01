@@ -221,6 +221,7 @@ namespace V7
                         XVelocity += onPlatform.XVelocity + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
                         YVelocity += onPlatform.YVelocity;
                         onPlatform.OnTop.Remove(this);
+                        LeavePlatform();
                         onPlatform = null;
                     }
                 }
@@ -352,7 +353,7 @@ namespace V7
             SetPreviousLoaction();
             if (IsPlayer && Owner.OnPlayerRespawn is object)
             {
-                Owner.ExecuteScript(Owner.OnPlayerRespawn, this, this, new Number[] { });
+                Owner.ExecuteScript(Owner.OnPlayerRespawn, this, this, new DecimalVariable[] { });
             }
         }
 
@@ -391,6 +392,7 @@ namespace V7
             if (onPlatform != null)
             {
                 onPlatform.OnTop.Remove(this);
+                LeavePlatform();
                 onPlatform = null;
             }
             XVelocity = 0;
@@ -403,7 +405,7 @@ namespace V7
             Solid = SolidState.NonSolid;
             if (IsPlayer && Owner.OnPlayerDeath is object)
             {
-                Owner.ExecuteScript(Owner.OnPlayerDeath, this, this, new Number[] { });
+                Owner.ExecuteScript(Owner.OnPlayerDeath, this, this, new DecimalVariable[] { });
             }
         }
 
@@ -447,8 +449,13 @@ namespace V7
                         XVelocity += onPlatform.XVelocity + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
                         YVelocity += onPlatform.YVelocity;
                         onPlatform.OnTop.Remove(this);
+                        LeavePlatform();
                     }
                     onPlatform = collision as IPlatform;
+                    if (onPlatform is Platform && (onPlatform as Platform).BoardEvent is object)
+                    {
+                        Owner.ExecuteScript((onPlatform as Platform).BoardEvent, onPlatform as Platform, this, new DecimalVariable[] { });
+                    }
                     bool xg = XVelocity > 0;
                     //if (XVelocity != 0)
                     {
@@ -466,6 +473,7 @@ namespace V7
                     XVelocity += onPlatform.XVelocity + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
                     YVelocity += onPlatform.YVelocity;
                     onPlatform.OnTop.Remove(this);
+                    LeavePlatform();
                     onPlatform = null;
                 }
                 if (JumpBuffer > 0)
@@ -479,6 +487,14 @@ namespace V7
                 yv = 0;
             }
             return yv;
+        }
+
+        private void LeavePlatform()
+        {
+            if (onPlatform is Platform && (onPlatform as Platform).LeaveEvent is object)
+            {
+                Owner.ExecuteScript((onPlatform as Platform).LeaveEvent, onPlatform as Platform, this, new DecimalVariable[] { });
+            }
         }
 
         public void FlipOrJump()
@@ -496,6 +512,7 @@ namespace V7
                     XVelocity += onPlatform.XVelocity + onPlatform.Conveyor * (Gravity < 0 && !onPlatform.SingleDirection ? -1 : 1);
                     YVelocity += onPlatform.YVelocity;
                     onPlatform.OnTop.Remove(this);
+                    LeavePlatform();
                     onPlatform = null;
                 }
                 if (Sideways)
@@ -540,6 +557,8 @@ namespace V7
                         {
                             case Tile.TileStates.SpikeR:
                                 {
+                                    if (XVelocity > Math.Abs(YVelocity))
+                                        return null;
                                     if (Bottom < testFor.Y + 4)
                                     {
                                         if ((X - testFor.X) * 2 > Bottom - testFor.Y)
@@ -559,16 +578,18 @@ namespace V7
                                 }
                             case Tile.TileStates.SpikeL:
                                 {
-                                    if (Bottom > testFor.Y + 4)
+                                    if (-XVelocity > Math.Abs(YVelocity))
+                                        return null;
+                                    if (Bottom < testFor.Y + 4)
                                     {
-                                        if ((Right - testFor.Right) * 2 > Bottom - testFor.Y)
+                                        if ((testFor.Right - Right) * 2 > Bottom - testFor.Y)
                                             return null;
                                         else
                                             return new CollisionData(true, 0, testFor);
                                     }
-                                    else if (Y < testFor.Y + 4)
+                                    else if (Y > testFor.Y + 4)
                                     {
-                                        if ((Right - testFor.Right) * 2 > testFor.Bottom - Y)
+                                        if ((testFor.Right - Right) * 2 > testFor.Bottom - Y)
                                             return null;
                                         else
                                             return new CollisionData(true, 0, testFor);

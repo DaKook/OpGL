@@ -13,11 +13,12 @@ namespace V7
             private int currentLocation;
             public Script Script { get; private set; }
             public bool IfSatisfied = false;
-            public SortedList<string, Sprite[]> CreatedSprites = new SortedList<string, Sprite[]>();
+            public SortedList<string, Variable> Locals = new SortedList<string, Variable>();
             public Func<bool> ExitCondition;
-            Number[] Args;
+            DecimalVariable[] Args;
+            public Game Game;
 
-            public Number GetArg(int index)
+            public DecimalVariable GetArg(int index)
             {
                 if (index < 0 || index >= Args.Length)
                     return 0;
@@ -25,13 +26,14 @@ namespace V7
                     return Args[index];
             }
 
-            public Executor(Script script, Number[] args = null)
+            public Executor(Script script, Game game, DecimalVariable[] args = null)
             {
                 Script = script;
                 if (args is object)
                 {
                     Args = args;
                 }
+                Game = game;
             }
 
             public delegate void FinishedDelegate(Executor script);
@@ -140,7 +142,7 @@ namespace V7
                 currentLocation = 0;
                 WaitingForAction = null;
                 WaitingFrames = 0;
-                CreatedSprites.Clear();
+                Locals.Clear();
                 foreach (VTextBox tb in TextBoxes)
                 {
                     tb.Disappear();
@@ -263,6 +265,11 @@ namespace V7
             Commands = commands;
             Name = name;
             Contents = contents;
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
 
         public static Script Empty => new Script(new Command[] { }, "", "");

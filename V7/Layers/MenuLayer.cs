@@ -56,7 +56,7 @@ namespace V7
             currentColor %= menuColors.Length;
         }
 
-        private void CreateMenuSprites()
+        public void CreateMenuSprites()
         {
             for (int i = 1; i < Sprites.Count; i++)
             {
@@ -202,13 +202,13 @@ namespace V7
             if (Owner.EnableExtraHud && !ExtraHud.Contains(DescriptionText))
             {
                 ExtraHud.Add(DescriptionText);
-                Sprites.Remove(DescriptionText);
+                ExtraSprites.Remove(DescriptionText);
                 DescriptionText.Y = Game.RESOLUTION_HEIGHT + 4;
             }
             else if (!Owner.EnableExtraHud && !Sprites.Contains(DescriptionText))
             {
                 ExtraHud.Remove(DescriptionText);
-                Sprites.Add(DescriptionText);
+                ExtraSprites.Add(DescriptionText);
                 DescriptionText.Y = Game.RESOLUTION_HEIGHT - 20;
             }
             DescriptionText.Text = MenuItems[SelectedItem - 1].Description ?? "";

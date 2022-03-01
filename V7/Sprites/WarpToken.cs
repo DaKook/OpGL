@@ -14,10 +14,12 @@ namespace V7
     {
         public enum FlipSettings { KeepFlip, ReverseFlip, Flip, Unflip }
         public FlipSettings Settings;
-        public float OutX;
-        public float OutY;
-        public int OutRoomX;
-        public int OutRoomY;
+        public float OutX { get => Data.Out.X; set => Data.Out.X = value; }
+        public float OutY { get => Data.Out.Y; set => Data.Out.Y = value; }
+        public int OutRoomX { get => Data.OutRoom.X; set => Data.OutRoom.X = value; }
+        public int OutRoomY { get => Data.OutRoom.Y; set => Data.OutRoom.Y = value; }
+        public WarpData Data;
+        public int ID;
         public WarpTokenOutput OutputSprite;
         private Game game;
         public static SoundEffect WarpSound;
@@ -28,6 +30,8 @@ namespace V7
             public Point OutRoom;
             public PointF In;
             public PointF Out;
+
+
             public WarpData(WarpToken warp, int roomX, int roomY)
             {
                 InRoom = new Point(roomX, roomY);
@@ -107,6 +111,7 @@ namespace V7
                 ret.Add("OutRoomX", new SpriteProperty("OutRoomX", () => OutRoomX, (t, g) => OutRoomX = (int)t, 0f, SpriteProperty.Types.Float, "The room X the warp token warps to.", false));
                 ret.Add("OutRoomY", new SpriteProperty("OutRoomY", () => OutRoomY, (t, g) => OutRoomY = (int)t, 0f, SpriteProperty.Types.Int, "The room Y the warp token warps to.", false));
                 ret.Add("Flip", new SpriteProperty("Flip", () => (int)Settings, (t, g) => Settings = (FlipSettings)(int)t, 3, SpriteProperty.Types.Int, "0 = Keep flip, 1 = Reverse flip, 2 = Flipped, 3 = Unflipped."));
+                ret.Add("ID", new SpriteProperty("ID", () => ID, (t, g) => ID = (int)t, -1, SpriteProperty.Types.Int, "The ID of the Warp Token. Best not to mess with this.", false));
                 ret["Type"].GetValue = () => "WarpToken";
                 return ret;
             }

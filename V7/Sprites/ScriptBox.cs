@@ -30,7 +30,7 @@ namespace V7
             if (!Activated)
             {
                 Activated = true;
-                game.ExecuteScript(Script, this, crewman, new Number[] { });
+                game.ExecuteScript(Script, this, crewman, new DecimalVariable[] { });
             }
         }
 

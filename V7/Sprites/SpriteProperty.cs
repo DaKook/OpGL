@@ -9,7 +9,7 @@ namespace V7
 {
     public class SpriteProperty
     {
-        public enum Types { Int, Float, String, Bool, Rectangle, Texture, Animation, Sprite, Sound, Color, Point, Script, ColorModifier }
+        public enum Types { Int, Float, String, Bool, Texture, Animation, Sound, Color, Script, ColorModifier }
         public string Name;
         public string Description;
         public Func<JToken> GetValue;

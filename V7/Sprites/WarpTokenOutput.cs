@@ -14,8 +14,9 @@ namespace V7
         public WarpToken.WarpData Parent;
         public int RoomX;
         public int RoomY;
+        public int ID;
         
-        public WarpTokenOutput(float x, float y, Texture texture, Animation animation, WarpToken.WarpData data) : base(x, y, texture, animation)
+        public WarpTokenOutput(float x, float y, Texture texture, Animation animation, WarpToken.WarpData data, int id) : base(x, y, texture, animation)
         {
             Color = Color.FromArgb(127, 255, 255, 255);
             Visible = false;
@@ -24,6 +25,7 @@ namespace V7
             Parent = data;
             RoomX = data.OutRoom.X;
             RoomY = data.OutRoom.Y;
+            ID = id;
         }
 
         public override JObject Save(Game game, bool isUniversal = false)

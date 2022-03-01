@@ -81,7 +81,7 @@ namespace V7
                     crewman.YVelocity = 0;
                 Color = Color.Gray;
                 if (UsedEvent is object)
-                    crewman.Owner.ExecuteScript(UsedEvent, this, crewman, new Number[] { });
+                    crewman.Owner.ExecuteScript(UsedEvent, this, crewman, new DecimalVariable[] { });
             }
         }
 

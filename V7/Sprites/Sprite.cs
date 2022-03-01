@@ -534,6 +534,7 @@ namespace V7
                 }
                 else
                     direction -= 5;
+
                 if (direction % 2 == 0)
                 {
                     direction += 1;
@@ -751,7 +752,7 @@ namespace V7
                 float x = (float)(loadFrom["X"] ?? 0f);
                 float y = (float)(loadFrom["Y"] ?? 0f);
                 s = game.SpriteFromName(spriteName);
-                if (s != game.ActivePlayer || game.CurrentState != Game.GameStates.Playing)
+                if (s is object && (s != game.ActivePlayer || game.CurrentState != Game.GameStates.Playing))
                 {
                     s.ResetAnimation();
                     s.InitialX = x;
@@ -810,7 +811,7 @@ namespace V7
                     float acceleration = (float)(loadFrom["Acceleration"] ?? 0.475f);
                     float xVel = (float)(loadFrom["XVelocity"] ?? 0f);
                     float yVel = (float)(loadFrom["YVelocity"] ?? 0f);
-                    System.Drawing.Color tbc = System.Drawing.Color.FromArgb(textBoxColor);
+                    Color tbc = Color.FromArgb(textBoxColor);
                     s = new Crewman(x, y, texture as CrewmanTexture, game, name ?? "", texture.AnimationFromName(standName), texture.AnimationFromName(walkName), texture.AnimationFromName(fallName), texture.AnimationFromName(jumpName), texture.AnimationFromName(dieName), Color.FromArgb(tbc.A, tbc.R, tbc.G, tbc.B));
                     (s as Crewman).Sad = sad;
                     (s as Crewman).Squeak = game.GetSound(squeakName);
@@ -845,11 +846,17 @@ namespace V7
                     int boundW = (int)(loadFrom["BoundsWidth"] ?? 0);
                     int boundH = (int)(loadFrom["BoundsHeight"] ?? 0);
                     int length = (int)(loadFrom["Length"] ?? 4);
+                    int height = (int)(loadFrom["Height"] ?? 1);
                     int state = (int)(loadFrom["SolidSide"] ?? 0);
+                    string boardName = (string)loadFrom["BoardEvent"];
+                    string leaveName = (string)loadFrom["LeaveEvent"];
                     s = new Platform(x, y, texture, texture.AnimationFromName(animationName), xSpeed, ySpeed, conveyor, disappear, texture.AnimationFromName(disappearName)) { Sticky = sticky, State = (Tile.TileStates)state };
                     (s as Platform).Bounds = new Rectangle(boundX, boundY, boundW, boundH);
                     (s as Platform).Length = length;
+                    (s as Platform).VLength = height;
                     (s as Platform).SingleDirection = singleDirection;
+                    (s as Platform).BoardEvent = game.ScriptFromName(boardName);
+                    (s as Platform).LeaveEvent = game.ScriptFromName(leaveName);
                 }
                 else if (type == "Terminal")
                 {
@@ -896,7 +903,15 @@ namespace V7
                     int outRoomX = (int)(loadFrom["OutRoomX"] ?? 0);
                     int outRoomY = (int)(loadFrom["OutRoomY"] ?? 0);
                     int settings = (int)(loadFrom["Flip"] ?? 3);
+                    int id = (int)(loadFrom["ID"] ?? -1);
                     s = new WarpToken(x, y, texture, animation, outX, outY, outRoomX, outRoomY, game, (WarpToken.FlipSettings)settings);
+                    if (id >= 0)
+                    {
+                        (s as WarpToken).ID = id;
+                        (s as WarpToken).Data = game.Warps[id];
+                    }
+                    else
+                        return null;
                 }
                 else if (type == "ScriptBox")
                 {
@@ -937,7 +952,7 @@ namespace V7
                     string scriptName = (string)loadFrom["Script"] ?? "";
                     Lever l = new Lever(x, y, texture, texture.AnimationFromName(offName), texture.AnimationFromName(onName), game.ScriptFromName(scriptName), false, false, game);
                     string checkName = (string)loadFrom["LoadCheck"] ?? "";
-                    Number n = Command.GetNumber(checkName, game, new Script.Executor(Script.Empty, null) { Sender =  l, Target = null }, null);
+                    DecimalVariable n = Command.GetNumber(checkName, game, new Script.Executor(Script.Empty, null) { Sender =  l, Target = null }, null);
                     if (n is object && !string.IsNullOrEmpty(n.Name))
                     {
                         l.LoadCheck = n;

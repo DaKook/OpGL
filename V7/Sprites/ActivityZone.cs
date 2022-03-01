@@ -65,7 +65,7 @@ namespace V7
             if (IsOverlapping(Owner.ActivePlayer) is object && !IsOverPlayer && !Activated)
             {
                 IsOverPlayer = true;
-                Owner.ExecuteScript(EnterScript, Sprite, Owner.ActivePlayer, new Number[] { });
+                Owner.ExecuteScript(EnterScript, Sprite, Owner.ActivePlayer, new DecimalVariable[] { });
                 Owner.SetActivityZone(this);
                 TextBox.Appear();
                 if (!Owner.hudSprites.Contains(TextBox))
@@ -74,7 +74,7 @@ namespace V7
             else if (IsOverlapping(Owner.ActivePlayer) is null && IsOverPlayer)
             {
                 IsOverPlayer = false;
-                Owner.ExecuteScript(ExitScript, Sprite, Owner.ActivePlayer, new Number[] { });
+                Owner.ExecuteScript(ExitScript, Sprite, Owner.ActivePlayer, new DecimalVariable[] { });
                 TextBox.Disappear();
                 Owner.SetActivityZone(null);
             }

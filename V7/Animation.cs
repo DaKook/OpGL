@@ -15,7 +15,7 @@ namespace V7
         public string Name;
         // texture location, in pixels
         private Point[] frames;
-        private Texture texture;
+        public Texture Texture { get; private set; }
         public Rectangle Hitbox { get; set; }
         public Rectangle[] CurrentHitboxes(int frame)
         {
@@ -46,7 +46,7 @@ namespace V7
             for (int i = 0; i < frames.Length; i++)
                 this.frames[i] = new Point(frames[i].X, frames[i].Y);
 
-            this.texture = texture;
+            this.Texture = texture;
             Hitbox = hitbox;
         }
         public static Animation EmptyAnimation
@@ -90,7 +90,7 @@ namespace V7
 
         public Animation Clone(Texture tex = null)
         {
-            if (tex is null) tex = texture;
+            if (tex is null) tex = Texture;
             Point[] fr = new Point[frames.Length];
             frames.CopyTo(fr, 0);
             return new Animation(fr, Hitbox, tex) { Name = Name };

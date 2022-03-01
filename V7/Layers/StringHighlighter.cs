@@ -14,7 +14,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace V7
 {
-    class StringHighlighter : SpritesLayer
+    public class StringHighlighter : SpritesLayer
     {
         StringDrawable white;
         StringDrawable command;
@@ -39,6 +39,8 @@ namespace V7
         private string argText;
         private StringDrawable whText;
 
+        private Script s;
+
         public float ScrollX, ScrollY, Zoom = 1;
 
         int xPosition, yPosition;
@@ -48,7 +50,7 @@ namespace V7
         int end = 0;
         float size;
 
-        public StringHighlighter(int xPos, int yPos, FontTexture texture, Game game, float size = 1)
+        public StringHighlighter(int xPos, int yPos, FontTexture texture, Game game, Script script, float size = 1)
         {
             Darken = 1f;
             FreezeBelow = true;
@@ -93,6 +95,7 @@ namespace V7
             AllTogether.Add(descriptionBG);
             AllTogether.Add(description);
             AllTogether.Add(whText);
+            s = script;
         }
 
         public void SetSize(float size)
@@ -761,7 +764,7 @@ namespace V7
                                         }
                                         else if (float.TryParse(toAdd, out float f))
                                             addTo = number;
-                                        else if (Owner.Vars.TryGetValue(toAdd, out Number n))
+                                        else if (Owner.Vars.TryGetValue(toAdd, out Variable n))
                                             addTo = keyword2;
                                         else
                                             addTo = white;
@@ -943,7 +946,7 @@ namespace V7
             }
             else if (arg == Command.ArgTypes.Number && !Owner.Vars.ContainsKey(argText))
             {
-                Number v = new Number(argText, 0);
+                DecimalVariable v = new DecimalVariable(argText, 0);
                 Owner.Vars.Add(argText, v);
                 SetBuffers2(selection.Text);
             }
@@ -1010,6 +1013,22 @@ namespace V7
         public override void Process()
         {
             if (YieldInput) return;
+            if (Owner.TypingTo != selection)
+            {
+                Owner.StartTyping(selection, (str) =>
+                {
+                    SetBuffers2(str);
+                    CheckScroll();
+                    ShowChoices(ScrollX, ScrollY);
+                }, (r, st) =>
+                {
+                    s.Contents = selection.Text;
+                    s.ClearMarkers();
+                    s.Commands = Command.ParseScript(Owner, selection.Text, s);
+                    Owner.RemoveLayer(this);
+                    Owner.ScriptEditor = null;
+                });
+            }
             float x = (Owner.MouseX + ScrollX) * Zoom;
             float y = (Owner.MouseY + ScrollY) * Zoom;
             int sel = selection.GetIndexFromPoint(x, y, Zoom);

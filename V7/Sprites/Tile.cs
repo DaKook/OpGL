@@ -61,11 +61,11 @@ namespace V7
                         break;
                     case 8:
                         Solid = SolidState.Ground;
-                        State = TileStates.OneWayR;
+                        State = TileStates.OneWayL;
                         break;
                     case 9:
                         Solid = SolidState.Ground;
-                        State = TileStates.OneWayL;
+                        State = TileStates.OneWayR;
                         break;
                     case 10:
                         Solid = SolidState.Entity;

@@ -274,7 +274,7 @@ namespace V7
             ret.X = (int)loadFrom["X"];
             ret.Y = (int)loadFrom["Y"];
             ret.Name = (string)loadFrom["Name"] ?? "";
-            System.Drawing.Color c = System.Drawing.Color.FromArgb((int)(loadFrom["Color"] ?? -1));
+            Color c = Color.FromArgb((int)(loadFrom["Color"] ?? -1));
             ret.Color = Color.FromArgb(c.A, c.R, c.G, c.B);
             ret.GroupName = (string)loadFrom["GroupName"];
             ret.BG = loadFrom["BG"];

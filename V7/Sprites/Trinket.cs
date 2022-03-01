@@ -57,7 +57,7 @@ namespace V7
                 else
                     crewman.HeldTrinkets.Add(ID);
                 owner.CollectedTrinkets.Add(ID);
-                owner.ExecuteScript(Script, this, crewman, new Number[] { });
+                owner.ExecuteScript(Script, this, crewman, new DecimalVariable[] { });
                 Visible = false;
             }
         }

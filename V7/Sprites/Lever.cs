@@ -7,7 +7,7 @@ namespace V7
     public class Lever : Sprite, IActivityZone
     {
         public bool On;
-        public Number LoadCheck;
+        public DecimalVariable LoadCheck;
         public Script Script { get; set; }
         public Animation OnAnimation;
         public Animation OffAnimation;

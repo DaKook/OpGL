@@ -5,6 +5,7 @@ using OpenTK;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace V7
 {
@@ -82,6 +83,24 @@ namespace V7
         public static implicit operator Color(AnimatedColor c)
         {
             return c.BaseColors.FirstOrDefault();
+        }
+
+        public JObject Save()
+        {
+            JObject ret = new JObject();
+            ret.Add("Dark", Darkness);
+            ret.Add("Light", Lightness);
+            ret.Add("Variance", Randomness);
+            ret.Add("Length", Length);
+            ret.Add("Random", RandomFrames);
+            JArray clrs = new JArray();
+            for (int i = 0; i < BaseColors.Count; i++)
+            {
+                Color c = BaseColors[i];
+                clrs.Add(c);
+            }
+            ret.Add("Colors", clrs);
+            return ret;
         }
     }
 }

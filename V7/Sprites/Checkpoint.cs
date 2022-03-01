@@ -105,7 +105,7 @@ namespace V7
                     animFrame = Animation.LoopStart;
                 }
                 if (ActivatedEvent is object && activator is object)
-                    game.ExecuteScript(ActivatedEvent, this, activator, new Number[] { });
+                    game.ExecuteScript(ActivatedEvent, this, activator, new DecimalVariable[] { });
             }
         }
 

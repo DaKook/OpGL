@@ -152,7 +152,7 @@ namespace V7
         public List<Script.Executor> PauseScripts = new List<Script.Executor>();
         public List<VTextBox> TextBoxes = new List<VTextBox>();
         private static Random r = new Random();
-        public SortedList<string, Number> Vars = new SortedList<string, Number>();
+        public SortedList<string, Variable> Vars = new SortedList<string, Variable>();
         public Script PauseScript;
 
         public JObject ScriptInfo;
@@ -228,7 +228,7 @@ namespace V7
         // Textures/Animations
         #region EditorTexAnim
         #endregion
-        private StringHighlighter scriptEditor;
+        public StringHighlighter ScriptEditor;
 
         // Dialog
         public static SortedDictionary<string, Color> colors = new SortedDictionary<string, Color>()
@@ -291,15 +291,26 @@ namespace V7
         public float StopScrollX;
         public float StopScrollY;
         public bool AutoScroll;
+        public float MaxScrollX;
+        public float MaxScrollY;
+        public float MinScrollX;
+        public float MinScrollY;
+
+        // Screen Effects
         private int flashFrames;
         private bool isFlashing = false;
         private Color flashColour = Color.White;
         private int shakeFrames;
         private int shakeIntensity;
+        public bool DoScreenEffects = false;
+
+        // Const Sizes
         public const int RESOLUTION_WIDTH = 320;
         public const int RESOLUTION_HEIGHT = 240;
         public const int HUD_LEFT = 48;
         public const int HUD_TOP = 24;
+
+        // Extra HUD
         int hudLeft = HUD_LEFT;
         int hudTop = HUD_TOP;
         public bool EnableExtraHud
@@ -311,17 +322,18 @@ namespace V7
                 {
                     hudLeft = HUD_LEFT;
                     hudTop = HUD_TOP;
+                    GL.Enable(EnableCap.ScissorTest);
                 }
                 else
                 {
                     hudLeft = hudTop = 0;
+                    GL.Disable(EnableCap.ScissorTest);
                 }
+                SetCamera();
             }
         }
-        public float MaxScrollX;
-        public float MaxScrollY;
-        public float MinScrollX;
-        public float MinScrollY;
+
+        // Lights
         public float MainLight = 1.0f;
         public float[] Lights = new float[60];
         public int LightCount;
@@ -370,14 +382,15 @@ namespace V7
             LightCount -= 1;
         }
 
-        // Sprites
-        public SpriteCollection hudSprites;
+        // Sprite Collections
         public SpriteCollection sprites => CurrentRoom?.Objects;
+        public SpriteCollection hudSprites;
         public SortedList<string, StringDrawable> hudText = new SortedList<string, StringDrawable>();
-        public SortedList<string, Sprite> hudSp = new SortedList<string, Sprite>();
+        public SortedList<string, Sprite> hudSpritesUser = new SortedList<string, Sprite>();
         public BGSpriteCollection BGSprites;
-        private JObject menuBG;
         public SortedList<string, Sprite> UserAccessSprites = new SortedList<string, Sprite>();
+
+        private JObject menuBG;
         public Sprite SpriteFromName(string name)
         {
             UserAccessSprites.TryGetValue(name, out Sprite sprite);
@@ -440,11 +453,19 @@ namespace V7
             else
                 return null;
         }
-        public List<WarpToken.WarpData> Warps = new List<WarpToken.WarpData>();
         public Script OnPlayerDeath;
         public Script OnPlayerRespawn;
         public List<ActivityZone> ActivityZones = new List<ActivityZone>();
         private IActivityZone CurrentActivityZone;
+
+        public SortedList<int, WarpToken.WarpData> Warps;
+        public int GetNextWarpID()
+        {
+            int ret = 0;
+            while (Warps.Count > ret && Warps.Keys[ret] == ret)
+                ret++;
+            return ret;
+        }
 
 
         public int FadeSpeed;
@@ -595,6 +616,7 @@ namespace V7
             loadingSprite = new StringDrawable(4, 4, FontTexture, "Loading...");
             hudSprites = new SpriteCollection();
             hudSprites.Add(loadingSprite);
+            Warps = new SortedList<int, WarpToken.WarpData>();
 
             if (System.IO.File.Exists("scripts.txt"))
                 ScriptInfo = JObject.Parse(System.IO.File.ReadAllText("scripts.txt"));
@@ -640,17 +662,21 @@ namespace V7
 
         private void GameWindow_UpdateFrame(FrameEventArgs e)
         {
+            // Start frame timer
             Stopwatch t = new Stopwatch();
             t.Start();
 
+            // Get tick time
             tickTime = e.Time;
             frameTimer.Restart();
 
+            // Handle key presses
             while (bufferKeys.Count > 0)
             {
                 HandleKey(bufferKeys[0]);
                 bufferKeys.RemoveAt(0);
             }
+            // Handle typing
             if (keys.Length > 0)
             {
                 for (int i = 0; i < keys.Length; i++)
@@ -659,6 +685,7 @@ namespace V7
                 }
                 keys = "";
             }
+            // Handle input values
             for (int i = 0; i < bufferInputs.Count; i++)
             {
                 inputs[(int)bufferInputs[i]]++;
@@ -669,6 +696,7 @@ namespace V7
             if (bufferMove) JustMoved = true;
             bufferMove = false;
 
+            // Handle mouse wheel
             float delta = (int)gameWindow.MouseState.Scroll.Y - (int)mwo;
             mwo = gameWindow.MouseState.Scroll.Y;
             if (delta != 0 && Layers.Count > 0 && GiveInput > -1 && GiveInput < Layers.Count)
@@ -743,22 +771,6 @@ namespace V7
                                 }
                             }
                         }
-                        //else if (CurrentState != GameStates.Editing)
-                        //{
-                        //    if (Freeze == FreezeOptions.Paused)
-                        //    {
-                        //        foreach (Script.Executor script in PauseScripts)
-                        //        {
-                        //            script.Process();
-                        //        }
-                        //        if (PauseScripts.Count == 0 && (IsInputNew(Inputs.Pause) || IsInputNew(Inputs.Escape)))
-                        //        {
-                        //            Freeze = FreezeOptions.Unfrozen;
-                        //        }
-                        //    }
-                        //    else
-                        //        BGSprites.Process();
-                        //}
                     }
                     if (Layers.Count > 0)
                     {
@@ -778,7 +790,7 @@ namespace V7
                         MusicFaded = null;
                         m();
                     }
-                    if (StartProcessing == -1 || Layers.Count == 0)
+                    //if (StartProcessing == -1 || Layers.Count == 0)
                     {
                         for (int i = hudSprites.Count - 1; i >= 0; i--)
                         {
@@ -995,7 +1007,7 @@ namespace V7
             }
         }
 
-        private void EscapeTyping()
+        public void EscapeTyping()
         {
             TypingTo.SelectionStart = -1;
             TypingTo.SelectionLength = 0;
@@ -1035,8 +1047,8 @@ namespace V7
             {
                 if (int.TryParse(s, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int val))
                 {
-                    System.Drawing.Color cl = System.Drawing.Color.FromArgb(val);
-                    ret = Color.FromArgb(cl.A, cl.R, cl.G, cl.B);
+                    Color cl = Color.FromArgb(val);
+                    ret = cl;
                 }
             }
             return ret;
@@ -1130,10 +1142,6 @@ namespace V7
                         }
                     }
                 }
-                else if (CurrentState == GameStates.Editing)
-                {
-                    
-                }
             }
         }
 
@@ -1149,9 +1157,9 @@ namespace V7
         //    previewReason = "";
         //}
 
-        public MapLayer ShowMap(float x, float y, float width, float height, int mapX = -1, int mapY = -1, int mapW = -1, int mapH = -1, bool white = false, bool freeze = true)
+        public MapLayer ShowMap(float x, float y, float width, float height, int mapX = -1, int mapY = -1, int mapW = -1, int mapH = -1, bool white = false, bool freeze = true, bool showAll = false)
         {
-            MapLayer ret = new MapLayer(this, MapAnimation, x, y, width, height, mapX, mapY, mapW, mapH, white, false, MapTexture);
+            MapLayer ret = new MapLayer(this, MapAnimation, x, y, width, height, mapX, mapY, mapW, mapH, white, showAll, MapTexture);
             ret.FreezeBelow = freeze;
             //ret.Finish += (m) => RemoveLayer(m);
             AddLayer(ret);
@@ -1176,30 +1184,31 @@ namespace V7
 
         public void OpenScript(Script s)
         {
+            if (s is null) return;
             float size = 1;
-            scriptEditor = new StringHighlighter(8, 8, FontTexture, this, size);
-            scriptEditor.SetBuffers2(s.Contents);
+            ScriptEditor = new StringHighlighter(8, 8, FontTexture, this, s, size);
+            ScriptEditor.SetBuffers2(s.Contents);
             StringDrawable sd = new StringDrawable(8, 8, FontTexture, s.Contents);
             sd.Size = size;
-            scriptEditor.SetSelectionSprite(sd);
+            ScriptEditor.SetSelectionSprite(sd);
             singleLine = false;
             StartTyping(sd);
             textChanged = (str) =>
             {
-                scriptEditor.SetBuffers2(str);
-                scriptEditor.CheckScroll();
-                scriptEditor.ShowChoices(scriptEditor.ScrollX, scriptEditor.ScrollY);
+                ScriptEditor.SetBuffers2(str);
+                ScriptEditor.CheckScroll();
+                ScriptEditor.ShowChoices(ScriptEditor.ScrollX, ScriptEditor.ScrollY);
             };
             FinishTyping = (r, st) =>
             {
                 s.Contents = sd.Text;
                 s.ClearMarkers();
                 s.Commands = Command.ParseScript(this, sd.Text, s);
-                RemoveLayer(scriptEditor);
-                scriptEditor = null;
+                RemoveLayer(ScriptEditor);
+                ScriptEditor = null;
             };
-            scriptEditor.CheckScroll();
-            AddLayer(scriptEditor);
+            ScriptEditor.CheckScroll();
+            AddLayer(ScriptEditor);
         }
 
         private void OpenContextMenu(int x, int y)
@@ -1301,18 +1310,19 @@ namespace V7
             int modelMatrixLoc = GL.GetUniformLocation(ProgramID.ID, "model");
             Matrix4 identity = Matrix4.Identity;
             GL.UniformMatrix4(modelMatrixLoc, false, ref identity);
+            SetCamera();
+            GL.Uniform1(ProgramID.MainLightLocation, 1.0f);
+        }
 
+        private void SetCamera()
+        {
             // origin at top-left
             Camera = Matrix4.CreateScale(2f / (RESOLUTION_WIDTH + hudLeft), -2f / (RESOLUTION_HEIGHT + hudTop), 0.005f);
             Camera *= Matrix4.CreateTranslation(-1, 1, 0f);
             Camera = Matrix4.CreateTranslation(hudLeft, 0f, 0f) * Camera;
             hudView = Camera;
             GL.UniformMatrix4(ProgramID.ViewMatrixLocation, false, ref hudView);
-
-            GL.Uniform1(ProgramID.MainLightLocation, 1.0f);
         }
-
-        
 
         private void InitOpenGLSettings()
         {
@@ -1368,7 +1378,6 @@ namespace V7
             {
                 if (!file.EndsWith(".wav")) continue;
                 SoundEffect se = new SoundEffect(file);
-                se.Initialize();
                 Sounds.Add(se.Name, se);
                 i++;
                 percent = 50d / files.Count * i;
@@ -1484,8 +1493,8 @@ namespace V7
                 PlayerLevelsMenu();
             }, "Play or create a custom level.");
             mlb.AddItem("Options", () => {
-                GetSound("hurt")?.Play();
-                mlb.ShowTextBox("This option is not\n  yet available!  ", FontTexture, RESOLUTION_WIDTH / 2, 20, Color.Gray);
+                GetSound("crew1")?.Play();
+                OptionsMenu();
             }, "Set options to customize your experience!");
             mlb.AddItem("Credits", () => {
                 GetSound("crew1")?.Play();
@@ -1503,6 +1512,43 @@ namespace V7
             }, "I guess you can't just keep playing forever...");
             MenuLayer ml = mlb.Build();
             ml.EscapeItem = -1;
+            ml.Background = BGSprites;
+        }
+
+        private void OptionsMenu()
+        {
+            if (Layers.LastOrDefault() is MenuLayer)
+            {
+                SpritesLayer mle = Layers.Last();
+                RemoveLayer(mle);
+                mle.Dispose();
+            }
+            SelectedItem = 0;
+            MenuLayer.Builder mlb = new MenuLayer.Builder(this);
+            mlb.AddItem("Use Extra HUD Space: " + (EnableExtraHud ? "(x) ON " : "( ) OFF"), () =>
+            {
+                GetSound("crew1")?.Play();
+                EnableExtraHud = !EnableExtraHud;
+                mlb.Result.MenuItems[0].Text = "Use Extra HUD Space: " + (EnableExtraHud ? "(x) ON " : "( ) OFF");
+                mlb.Result.CreateMenuSprites();
+                if (gameWindow.WindowState == WindowState.Normal)
+                {
+                    Vector2i s = gameWindow.Size;
+                    if (!EnableExtraHud)
+                        gameWindow.Size = new Vector2i(s.X - (int)(HUD_LEFT * scaleSize), s.Y - (int)(HUD_TOP * scaleSize));
+                    else
+                        gameWindow.Size = new Vector2i(s.X + (int)(HUD_LEFT * scaleSize), s.Y + (int)(HUD_TOP * scaleSize));
+                }
+                glControl_Resize(new ResizeEventArgs(gameWindow.Size));
+            }, "Toggle the HUD spaces on the left and bottom of the screen.\nSome displays will move to the main screen when this is off.");
+            mlb.AddItem("Back", () =>
+            {
+                GetSound("crew1")?.Play();
+                MainMenu();
+                SelectedItem = 2;
+            }, "Return to the main menu.");
+            MenuLayer ml = mlb.Build();
+            ml.EscapeItem = ml.MenuItems.Count - 1;
             ml.Background = BGSprites;
         }
 
@@ -1549,95 +1595,7 @@ namespace V7
 
         private void PlayLevelMenu()
         {
-            if (levelName is null)
-            {
-                levelName = new StringDrawable(0, 8, FontTexture, "Name", Color.White) { Size = 2, Layer = int.MaxValue };
-                levelAuthor = new StringDrawable(0, 24, FontTexture, "Author", Color.White);
-                levelSubtitle = new StringDrawable(0, 36, FontTexture, "Subtitle", Color.White) { Layer = int.MaxValue };
-                levelDesc = new StringDrawable(0, 48, FontTexture, "Description", Color.White) { MaxWidth = RESOLUTION_WIDTH - 8 };
-            }
-            hudSprites.Add(levelName);
-            hudSprites.Add(levelSubtitle);
-            hudSprites.Add(levelAuthor);
-            hudSprites.Add(levelDesc);
-            isPlayerLevels = true;
-            SelectedItem = 0;
-            page = 0;
-            List<string> names = new List<string>();
-            IEnumerable<string> files = System.IO.Directory.EnumerateDirectories("levels");
-            foreach (string file in files)
-            {
-                string name = file.Split('/', '\\').Last();
-                if (System.IO.File.Exists(file + "/" + name + ".lv7"))
-                {
-                    names.Add(name);
-                }
-            }
-            files = System.IO.Directory.EnumerateFiles("levels");
-            foreach (string file in files)
-            {
-                if (file.EndsWith(".lv7"))
-                {
-                    string name = file.Split('/', '\\').Last();
-                    name = name.Substring(0, name.Length - 4);
-                    names.Add(name + "?");
-                }
-            }
-            names.Sort();
-            playerLevels = names.ToArray();
-            DisplayLevels(false);
-        }
-
-        private void DisplayLevels(bool updateSelection = true)
-        {
-            int mi = MenuItems.Count;
-            MenuItems.Clear();
-            int y = 0;
-            for (int i = page * 8; i < (page + 1) * 8 && i < playerLevels.Length; i++)
-            {
-                y++;
-                string name = playerLevels[i];
-                MenuItems.Add(new VMenuItem(name, () =>
-                {
-                    PlayLevel(name);
-                }, "Play " + name + "."));
-            }
-            MenuItems[0].Offset.Y = RESOLUTION_HEIGHT - 126;
-            MenuItems.Add(new VMenuItem("Prev Page", () =>
-            {
-                GetSound("crew1")?.Play();
-                if (page <= 0)
-                    page = playerLevels.Length / 8;
-                else
-                    page -= 1;
-                DisplayLevels();
-            }, "See the previous page of levels.") { Offset = new PointF(-80, 4 + (8 - y) * 12) });
-            MenuItems.Add(new VMenuItem("Next Page", () =>
-            {
-                GetSound("crew1")?.Play();
-                if ((page + 1) * 8 > playerLevels.Length)
-                    page = 0;
-                else
-                    page += 1;
-                DisplayLevels();
-            }, "See the next page of levels.") { Offset = new PointF(80, -12) });
-            escapeItem = MenuItems.Count;
-            MenuItems.Add(new VMenuItem("Go Back", () =>
-            {
-                isPlayerLevels = false;
-                hudSprites.Remove(levelName);
-                hudSprites.Remove(levelSubtitle);
-                hudSprites.Remove(levelAuthor);
-                hudSprites.Remove(levelDesc);
-                GetSound("crew1")?.Play();
-                PlayerLevelsMenu();
-            }, "Return to the player levels menu."));
-            if (MenuItems.Count != mi && updateSelection)
-            {
-                SelectedItem += MenuItems.Count - mi;
-            }
-            UpdateMenu();
-            UpdateMenuSelection();
+            
         }
 
         public void ClearMenu()
@@ -1692,7 +1650,7 @@ namespace V7
             }
             else if (key == Keys.Escape && typing)
             {
-                if (!(scriptEditor is object && scriptEditor.ChoicesVisible))
+                if (!(ScriptEditor is object && ScriptEditor.ChoicesVisible))
                     keys += (char)27;
             }
             else if (key == Keys.Backspace && typing)
@@ -1885,7 +1843,7 @@ namespace V7
                     }
                     TypingTo.Text = TypingTo.Text;
                 }
-                if (!singleLine && !(scriptEditor is object && scriptEditor.ChoicesVisible && scriptEditor.Choices.Count > 1))
+                if (!singleLine && !(ScriptEditor is object && ScriptEditor.ChoicesVisible && ScriptEditor.Choices.Count > 1))
                 {
                     if (e.Key == Keys.Up)
                     {
@@ -1983,8 +1941,8 @@ namespace V7
                         if (r)
                         {
                             Script s = new Script(null, "customScript", "");
-                            s.Commands = Command.ParseScript(this, sd.Text, s);
-                            ExecuteScript(s, ActivePlayer, ActivePlayer, new Number[] { });
+                            s.Commands = Command.ParseScript2(this, sd.Text, s);
+                            ExecuteScript(s, ActivePlayer, ActivePlayer, new DecimalVariable[] { });
                         }
                         hudSprites.Remove(sd);
                         hudSprites.Remove(rs);
@@ -2070,6 +2028,14 @@ namespace V7
         }
 
         public void OpenScripts()
+        {
+            OpenScripts((s) =>
+            {
+                OpenScript(ScriptFromName(s));
+            });
+        }
+
+        public void OpenScripts(Action<string> select)
         {
             PreviewScreen ps = new PreviewScreen(new Sprite[] { }, null, this);
             ps.OnRightClick = (s) =>
@@ -2159,9 +2125,13 @@ namespace V7
                     }
                 }));
             };
+            RectangleSprite rs = new RectangleSprite(0, 0, RESOLUTION_WIDTH, 32);
+            rs.Color = Color.Black;
+            rs.Layer = -1;
+            ps.HudSprites.Add(rs);
             StringDrawable search = new StringDrawable(0, 20, FontTexture, "", Color.LightGray);
             search.CenterX = RESOLUTION_WIDTH / 2;
-            ps.Sprites.Add(search);
+            ps.HudSprites.Add(search);
             StartTyping(search);
             singleLine = true;
             textChanged = (s) =>
@@ -2171,7 +2141,8 @@ namespace V7
             };
             ps.OnClick = (p) =>
             {
-                OpenScript(ScriptFromName(p.Name));
+                EscapeTyping();
+                select(p.Name);
             };
             FinishTyping = (r, st) =>
             {
@@ -2180,11 +2151,11 @@ namespace V7
                 {
                     if (ScriptFromName(search.Text) is null)
                         Scripts.Add(search.Text, new Script(new Command[] { }, search.Text, ""));
-                    OpenScript(ScriptFromName(search.Text));
+                    select(search.Text);
                 }
                 else
                 {
-
+                    select(null);
                 }
             };
             AddLayer(ps);
@@ -2202,8 +2173,7 @@ namespace V7
                     previews[i].Dispose();
             }
             previews.Clear();
-            previews.Add(TypingTo);
-            int y = 32;
+            int y = 36;
             foreach (Script script in Scripts.Values)
             {
                 if (script.Name.Contains(searchFor) || searchFor == "")
@@ -2274,15 +2244,15 @@ namespace V7
             heldKeys.Remove(key);
         }
 
-        public Script.Executor ExecuteScript(Script script, Sprite sender, Sprite target, Number[] args, bool pause = false, SortedList<string, Sprite[]> createdSprites = null)
+        public Script.Executor ExecuteScript(Script script, Sprite sender, Sprite target, DecimalVariable[] args, bool pause = false, SortedList<string, Variable> createdSprites = null)
         {
             if (script is null) return null;
-            Script.Executor scr = new Script.Executor(script, args);
+            Script.Executor scr = new Script.Executor(script, this, args);
             if (createdSprites is object)
             {
                 for (int i = 0; i < createdSprites.Count; i++)
                 {
-                    scr.CreatedSprites.Add(createdSprites.Keys[i], createdSprites.Values[i]);
+                    scr.Locals.Add(createdSprites.Keys[i], createdSprites.Values[i]);
                 }
             }
             if (pause)
@@ -2449,26 +2419,33 @@ namespace V7
                 case "WarpToken":
                     {
                         WarpToken w = s as WarpToken;
-                        if (w.OutputSprite is object)
-                            sprites.Remove(w.OutputSprite);
-                        foreach (WarpToken.WarpData data in Warps)
+                        if (w.Data.OutRoom == new Point(CurrentRoom.X, CurrentRoom.Y))
                         {
-                            WarpToken.WarpData other = new WarpToken.WarpData(w, CurrentRoom.X, CurrentRoom.Y);
-                            if (data.Equals(other))
+                            PointF o = w.Data.Out;
+                            List<Sprite> sprs = sprites.GetPotentialColliders(o.X, o.Y, 1, 1);
+                            for (int i = 0; i < sprs.Count; i++)
                             {
-                                Warps.Remove(data);
-                                break;
+                                if (sprs[i] is WarpTokenOutput && (sprs[i] as WarpTokenOutput).ID == w.ID)
+                                {
+                                    sprites.RemoveFromCollisions(sprs[i]);
+                                    break;
+                                }
                             }
                         }
+                        Warps.Remove(w.ID);
                         UserAccessSprites.Remove(w.Name);
                     }
                     break;
+            }
+            if (s.Name is null || !UserAccessSprites.ContainsKey(s.Name))
+            {
+                s.Dispose();
             }
         }
 
         public void TileFillTool(float x, float y, bool leftClick, LevelEditor.Tools tool, AutoTileSettings autoTiles, Point currentTile, int tileLayer, TileTexture currentTexture, char prefix, List<PointF> alreadyFilled = null, int tileX = -1, int tileY = -1, string tag = null, bool lr = true, bool ud = true)
         {
-            bool isAuto = tool == LevelEditor.Tools.Ground || tool == LevelEditor.Tools.Background || tool == LevelEditor.Tools.Spikes;
+            bool isAuto = tool != LevelEditor.Tools.Tiles;
             List<PointF> toFill = new List<PointF>();
             bool initial = false;
             if (alreadyFilled == null)
@@ -2513,7 +2490,7 @@ namespace V7
             }
             if (initial && toFill.Count > 0)
             {
-                AutoTilesToolMulti(alreadyFilled, leftClick, tool, autoTiles, tileLayer, currentTexture, prefix);
+                AutoTilesToolMulti(alreadyFilled, leftClick, LevelEditor.Tools.Tiles, autoTiles, tileLayer, currentTexture, prefix);
             }
         }
 
@@ -2551,7 +2528,7 @@ namespace V7
                     Tile tile = GetTile(currentLocation.X, currentLocation.Y, tileLayer);
                     if (tile is object)
                     {
-                        if (tile.Solid == Sprite.SolidState.Ground)
+                        //if (tile.Solid == Sprite.SolidState.Ground)
                         {
                             if (increment == 8)
                                 break;
@@ -2565,9 +2542,9 @@ namespace V7
                                 continue;
                             }
                         }
-                        sprites.RemoveFromCollisions(tile);
                     }
                     tile = new Tile(currentLocation.X, currentLocation.Y, currentTexture, tilePoint.X, tilePoint.Y);
+                    tile.Tag = "s" + autoTiles.Name;
                     sprites.AddForCollisions(tile);
                     if (dir == 0 || dir == 2)
                     {
@@ -2621,7 +2598,7 @@ namespace V7
         public void TileTool(float x, float y, bool leftClick, TileTexture currentTexture, Point currentTile, int tileLayer)
         {
             if (IsOutsideRoom(x, y)) return;
-            Tile tile = GetTile((int)x, (int)y);
+            Tile tile = GetTile((int)x, (int)y, tileLayer);
             if (tile != null)
             {
                 sprites.RemoveFromCollisions(tile);
@@ -2648,7 +2625,7 @@ namespace V7
             foreach (PointF point in pts)
             {
                 if (IsOutsideRoom(point.X, point.Y)) continue;
-                Tile tile = GetTile((int)point.X, (int)point.Y);
+                Tile tile = GetTile((int)point.X, (int)point.Y, tileLayer);
                 if (tile is object)
                 {
                     if (leftClick && (tool == LevelEditor.Tools.Background || tool == LevelEditor.Tools.Spikes) && tile.Solid == Sprite.SolidState.Ground)
@@ -2657,7 +2634,7 @@ namespace V7
                 }
                 if (leftClick)
                 {
-                    Point p = autoTiles.GetTile(AutoTilesPredicate((int)point.X, (int)point.Y, leftClick, tool, autoTiles, prefix, pts, separate));
+                    Point p = autoTiles.GetTile(AutoTilesPredicate((int)point.X, (int)point.Y, leftClick, tool, autoTiles, prefix, pts, separate, tileLayer));
                     if (autoTiles.Size2 != new Point(1, 1))
                     {
                         int xAdd = (int)point.X / 8 % autoTiles.Size2.X * 8;
@@ -2683,15 +2660,15 @@ namespace V7
                                 if (pts.Contains(new PointF(xx, yy)) || alreadyFilled.Contains(new PointF(xx, yy))) continue;
                                 alreadyFilled.Add(new PointF(xx, yy));
                                 if (IsOutsideRoom(xx, yy)) continue;
-                                if (GetTile(xx, yy)?.Tag == prefix + autoTiles.Name)
+                                if (GetTile(xx, yy, tileLayer)?.Tag == prefix + autoTiles.Name)
                                 {
-                                    tile = GetTile(xx, yy);
+                                    tile = GetTile(xx, yy, tileLayer);
                                     int l = tile.Layer;
                                     if (tile != null)
                                     {
                                         sprites.RemoveFromCollisions(tile);
                                     }
-                                    Point p = autoTiles.GetTile(AutoTilesPredicate(xx, yy, leftClick, tool, autoTiles, prefix, pts));
+                                    Point p = autoTiles.GetTile(AutoTilesPredicate(xx, yy, leftClick, tool, autoTiles, prefix, pts, false, tileLayer));
                                     if (autoTiles.Size2 != new Point(1, 1))
                                     {
                                         int xAdd = xx / 8 % autoTiles.Size2.X * 8;
@@ -2711,7 +2688,7 @@ namespace V7
             }
         }
 
-        private Predicate<Point> AutoTilesPredicate(int x, int y, bool leftClick, LevelEditor.Tools tool, AutoTileSettings autoTiles, char prefix, SortedSet<PointF> accountFor = null, bool separate = false)
+        private Predicate<Point> AutoTilesPredicate(int x, int y, bool leftClick, LevelEditor.Tools tool, AutoTileSettings autoTiles, char prefix, SortedSet<PointF> accountFor = null, bool separate = false, int layer = -2)
         {
             bool bg = tool != LevelEditor.Tools.Ground;
             bool sp = tool == LevelEditor.Tools.Spikes;
@@ -2731,7 +2708,7 @@ namespace V7
                     if (p.X != 0 && heldKeys.Contains(Keys.RightBracket)) return false;
                     if (p.Y != 0 && heldKeys.Contains(Keys.LeftBracket)) return false;
                 }
-                return (gt = GetTile(p.X + x, p.Y + y)) != null && ((!sp && gt.Tag == prefix + autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) ||
+                return (gt = GetTile(p.X + x, p.Y + y, layer)) != null && ((!sp && gt.Tag == prefix + autoTiles.Name) || (bg && gt.Solid == Sprite.SolidState.Ground)) ||
                      (p.X < 0 && x == CurrentRoom.GetX) ||
                      (p.X > 0 && x == CurrentRoom.Right - 8) ||
                      (p.Y < 0 && y == CurrentRoom.GetY) ||
@@ -2785,7 +2762,7 @@ namespace V7
             {
                 Freeze = FreezeOptions.Paused;
                 if (PauseScript is object)
-                    ExecuteScript(PauseScript, ActivePlayer, ActivePlayer, new Number[] { }, true);
+                    ExecuteScript(PauseScript, ActivePlayer, ActivePlayer, new DecimalVariable[] { }, true);
                 else
                 {
                     MapLayer ml = new MapLayer(this, MapAnimations.Up, 0, 0, RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
@@ -2831,7 +2808,7 @@ namespace V7
                 {
                     Script s = ActivePlayer.Script;
                     ActivePlayer.Script = null;
-                    ExecuteScript(s, ActivePlayer, ActivePlayer, new Number[] { });
+                    ExecuteScript(s, ActivePlayer, ActivePlayer, new DecimalVariable[] { });
                 }
                 if (CurrentActivityZone is object && IsInputNew(Inputs.Pause))
                 {
@@ -2847,7 +2824,7 @@ namespace V7
                     }
                     else
                         CurrentActivityZone.Activated = true;
-                    ExecuteScript(CurrentActivityZone.Script, CurrentActivityZone.Sprite, ActivePlayer, new Number[] { });
+                    ExecuteScript(CurrentActivityZone.Script, CurrentActivityZone.Sprite, ActivePlayer, new DecimalVariable[] { });
                 }
             }
 
@@ -2885,11 +2862,11 @@ namespace V7
             WhenFaded = () =>
             {
                 //Reset everything
-                foreach (Sprite sprite in hudSp.Values)
+                foreach (Sprite sprite in hudSpritesUser.Values)
                 {
                     hudSprites.Remove(sprite);
                 }
-                hudSp.Clear();
+                hudSpritesUser.Clear();
                 foreach (StringDrawable sd in hudText.Values)
                 {
                     hudSprites.Remove(sd);
@@ -2966,11 +2943,11 @@ namespace V7
             {
                 hudSprites.Remove(sd);
             }
-            foreach (Sprite sp in hudSp.Values)
+            foreach (Sprite sp in hudSpritesUser.Values)
             {
                 hudSprites.Remove(sp);
             }
-            hudSp.Clear();
+            hudSpritesUser.Clear();
             hudText.Clear();
             CurrentScripts.Clear();
             CurrentState = GameStates.Editing;
@@ -3048,7 +3025,7 @@ namespace V7
                     }
                 }
             }
-            else
+            else if (CurrentRoom is object)
             {
                 JObject r = CurrentRoom.Save(this);
                 RoomDatas[FocusedRoom] = r;
@@ -3078,7 +3055,7 @@ namespace V7
             ActivityZones.Clear();
             if (CurrentState == GameStates.Playing && CurrentRoom?.ExitScript is object)
             {
-                ExecuteScript(CurrentRoom.ExitScript, ActivePlayer, ActivePlayer, new Number[] { });
+                ExecuteScript(CurrentRoom.ExitScript, ActivePlayer, ActivePlayer, new DecimalVariable[] { });
             }
             if (Editor is object && CurrentState == GameStates.Editing)
             {
@@ -3187,12 +3164,13 @@ namespace V7
                 if (CurrentState == GameStates.Editing)
                 {
                     Editor.ShowTileIndicators();
-                    foreach (WarpToken.WarpData data in Warps)
+                    for (int i = 0; i < Warps.Values.Count; i++)
                     {
+                        WarpToken.WarpData data = Warps.Values[i];
                         if (data.OutRoom == new Point(x, y))
                         {
                             Texture sp32 = TextureFromName("sprites32");
-                            WarpTokenOutput wto = new WarpTokenOutput(data.Out.X, data.Out.Y, sp32, sp32.AnimationFromName("WarpToken"), data);
+                            WarpTokenOutput wto = new WarpTokenOutput(data.Out.X, data.Out.Y, sp32, sp32.AnimationFromName("WarpToken"), data, Warps.Keys[i]);
                             sprites.Add(wto);
                         }
                     }
@@ -3210,7 +3188,7 @@ namespace V7
             MinScrollY = CurrentRoom.GetY;
             if (CurrentState == GameStates.Playing && CurrentRoom.EnterScript is object)
             {
-                ExecuteScript(CurrentRoom.EnterScript, ActivePlayer, ActivePlayer, new Number[] { });
+                ExecuteScript(CurrentRoom.EnterScript, ActivePlayer, ActivePlayer, new DecimalVariable[] { });
             }
         }
 
@@ -3555,11 +3533,13 @@ namespace V7
 
         public void Flash(int frames, int r = 255, int g = 255, int b = 255)
         {
+            if (!DoScreenEffects) return;
             flashFrames = frames;
             flashColour = Color.FromArgb(255, r, g, b);
         }
         public void Shake(int frames, int intensity = 2)
         {
+            if (!DoScreenEffects) return;
             shakeFrames = frames;
             shakeIntensity = intensity;
         }
@@ -3694,25 +3674,25 @@ namespace V7
                 }
                 hudSprites.Remove(sd);
             }
-            else if (hudSp.ContainsKey(name))
+            else if (hudSpritesUser.ContainsKey(name))
             {
                 if (Layers.Count > 0 && Layers.Last() is MapLayer)
                 {
                     MapLayer ml = Layers.Last() as MapLayer;
-                    ml.RemoveSprite(hudSp[name]);
+                    ml.RemoveSprite(hudSpritesUser[name]);
                 }
-                hudSprites.Remove(hudSp[name]);
+                hudSprites.Remove(hudSpritesUser[name]);
             }
             int i = 0;
-            while (hudSp.ContainsKey("," + name + i.ToString()))
+            while (hudSpritesUser.ContainsKey("," + name + i.ToString()))
             {
                 if (Layers.Count > 0 && Layers.Last() is MapLayer)
                 {
                     MapLayer ml = Layers.Last() as MapLayer;
-                    ml.RemoveSprite(hudSp["," + name + i.ToString()]);
+                    ml.RemoveSprite(hudSpritesUser["," + name + i.ToString()]);
                 }
-                hudSprites.Remove(hudSp["," + name + i.ToString()]);
-                hudSp.Remove("," + name + i.ToString());
+                hudSprites.Remove(hudSpritesUser["," + name + i.ToString()]);
+                hudSpritesUser.Remove("," + name + i.ToString());
                 i++;
             }
         }
@@ -3733,9 +3713,9 @@ namespace V7
                 StringDrawable sd = hudText[name];
                 sd.Size = size;
             }
-            else if (hudSp.ContainsKey(name))
+            else if (hudSpritesUser.ContainsKey(name))
             {
-                hudSp[name].Size = size;
+                hudSpritesUser[name].Size = size;
             }
         }
 
@@ -3747,19 +3727,19 @@ namespace V7
             {
                 name = "," + name.Substring(1);
                 int i = 0;
-                while (hudSp.ContainsKey(name + i.ToString()))
+                while (hudSpritesUser.ContainsKey(name + i.ToString()))
                 {
                     i++;
                 }
                 name += i.ToString();
             }
-            if (!hudSp.TryGetValue(name, out Sprite s) || (texture is object && s?.Texture != texture))
+            if (!hudSpritesUser.TryGetValue(name, out Sprite s) || (texture is object && s?.Texture != texture))
             {
                 if (texture is null || animation is null) return;
                 s = new Sprite(position.X, position.Y, texture, animation);
-                s.Layer = 100 + hudSp.Count;
-                hudSp.Remove(name);
-                hudSp.Add(name, s);
+                s.Layer = 100 + hudSpritesUser.Count;
+                hudSpritesUser.Remove(name);
+                hudSpritesUser.Add(name, s);
             }
             if (animation is object)
             {
@@ -3796,15 +3776,22 @@ namespace V7
             // If tick rate == render rate, no need
             if (gameWindow.UpdateFrequency == gameWindow.RenderFrequency) progress = 1;
             // clear the color buffer
-            GL.Scissor(0, 0, gameWindow.ClientSize.X, gameWindow.ClientSize.Y);
-            GL.ClearColor(Color.Black);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            SpritesLayer ehLayer = Layers.LastOrDefault();
-            if (ehLayer is object && ehLayer.UsesExtraHud)
+            if (EnableExtraHud)
             {
-                ehLayer.DrawExtraHud(Camera, ProgramID.ViewMatrixLocation);
+                GL.Scissor(0, 0, gameWindow.ClientSize.X, gameWindow.ClientSize.Y);
+                GL.ClearColor(Color.Black);
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+                SpritesLayer ehLayer = Layers.LastOrDefault();
+                if (ehLayer is object && ehLayer.UsesExtraHud)
+                {
+                    ehLayer.DrawExtraHud(Camera, ProgramID.ViewMatrixLocation);
+                }
+                else if (ehLayer is null)
+                {
+
+                }
+                GL.Scissor((int)(hudLeft * scaleSize + xOffset), (int)(hudTop * scaleSize + yOffset), (int)(RESOLUTION_WIDTH * scaleSize), (int)(RESOLUTION_HEIGHT * scaleSize));
             }
-            GL.Scissor((int)(hudLeft * scaleSize + xOffset), (int)(hudTop * scaleSize + yOffset), (int)(RESOLUTION_WIDTH * scaleSize), (int)(RESOLUTION_HEIGHT * scaleSize));
             Color c = Color.Black;
             if (flashFrames > 0)
             {
@@ -3819,7 +3806,7 @@ namespace V7
                     c = BGSprites.BackgroundColor;
                 }
             }
-            if (c != currentColor)
+            //if (c != currentColor)
             {
                 currentColor = c;
                 GL.ClearColor((float)c.R / 255, (float)c.G / 255, (float)c.B / 255, 1);
@@ -3955,9 +3942,9 @@ namespace V7
             //Numbers
             {
                 JObject jo = new JObject();
-                foreach (Number number in Vars.Values)
+                foreach (DecimalVariable number in Vars.Values)
                 {
-                    jo.Add(number.Name, number.AssignedValue);
+                    jo.Add(number.Name, (float)number.AssignedValue);
                 }
                 ret.Add("Vars", jo);
             }
@@ -3995,7 +3982,11 @@ namespace V7
             foreach (JProperty num in nums)
             {
                 if (Vars.ContainsKey(num.Name))
-                    Vars[num.Name].SetValue((float)num.Value);
+                {
+                    DecimalVariable v = Vars[num.Name] as DecimalVariable;
+                    if (v is object)
+                        v.Value = (float)num.Value;
+                }
             }
             CollectedTrinkets.Clear();
             JArray trs = (JArray)loadFrom["Trinkets"];
@@ -4098,7 +4089,7 @@ namespace V7
                 "showtext\n" +
                 "text(terminal,0,132,1)\n" +
                 "{c} out of {t}\n" +
-                "replace({c},?target:trinkets,true)\n" +
+                "replace({c},target:trinkets,true)\n" +
                 "replace({t},?totaltrinkets,true)\n" +
                 "position(centerx)\n" +
                 "speak\n" +
@@ -4287,7 +4278,12 @@ namespace V7
                             else if (type == "WarpToken")
                             {
                                 WarpToken.WarpData data = new WarpToken.WarpData(sprite, x, y);
-                                Warps.Add(data);
+                                int? wid = (int?)sprite["ID"];
+                                if (!wid.HasValue)
+                                {
+                                    sprite["ID"] = wid = GetNextWarpID();
+                                }
+                                Warps.Add(wid.Value, data);
                             }
                         }
                     }

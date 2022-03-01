@@ -14,34 +14,34 @@ namespace V7
     public class LevelEditor : SpritesLayer
     {
         public SpriteCollection hudSprites;
-        private SpriteCollection sprites
+        public SpriteCollection Sprites
         {
             get => Owner.CurrentRoom?.Objects;
         }
 
         public enum Tools { Ground, Background, Spikes, Trinket, Checkpoint, Disappear, Conveyor, Platform, Enemy, GravityLine, Start, Crewman, WarpLine, WarpToken, ScriptBox, Terminal, RoomText, Lever, Tiles, Select, CustomSprite, Point, Attach }
         private EditorTool[] EditorTools = new EditorTool[] {
-            new EditorTool('1', "Ground", "Auto Tiles connect only to the same ground tiles in the same layer.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis.)"),
-            new EditorTool('2', "Background", "Auto Tiles connect to the same tiles in the same layer, and also to solid tiles.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis, as well as preventing tiles from connecting to solid tiles outside the axis.)"),
-            new EditorTool('3', "Spikes", "Auto Tiles only connect to solid tiles.\nHold F to fill a surface with spikes.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis.)"),
-            new EditorTool('4', "Trinket", "Trinkets are collectibles and are not necessarily required. The number of collected trinkets can be accessed in scripting using \"?trinkets\", and the total amout of trinkets in the level can be accessed with \"?totaltrinkets\"."),
-            new EditorTool('5', "Checkpoint", "When touched by a crewman, the crewman's respawn point is set to the checkpoint's position.\n     Z: Flip the checkpoint upside-down\n     X: Flip the checkpoint to face left"),
-            new EditorTool('6', "Disappear", "Platforms that disappear when a crewman stands on them.\n     To specify length, hold shift and click-and-drag."),
-            new EditorTool('7', "Conveyor", "Conveyors push any crewman standing on them in a certain direction. After placing one, press either left or right to specify the direction of the conveyor.\n     To specify length, hold shift and click-and-drag."),
-            new EditorTool('8', "Platform", "Platforms that move in a certain direction. After placing one, press any direction to specify which way the platform should move.\n     To specify length, hold shift and click-and-drag.\n     Middle-click for a shortcut to set a platform's bounds."),
-            new EditorTool('9', "Enemy", "Crewmen die upon touching an enemy. Enemies move in a certain direction. After placing one, press any direction to specify which way the enemy should move.\n     Middle-click for a shortcut to set an enemy's bounds."),
-            new EditorTool('0', "Grav Line", "Gravity lines flip the gravity of any crewman who touches them. Click-and-drag to specify the length and orientation of a Gravity Line."),
-            new EditorTool('P', "Start", "Left-click to set the start position. Right-click to go to the start room.\n     Z: Flip the player upside-down\n     X: Flip the player to face left"),
-            new EditorTool('O', "Crewman", "Place any crewman. A crewman's texture must contain at least the following animations: Standing, Walking, and Dying.\n     Z: Flip the crewman upside-down\n     X: Flip the crewman to face left"),
-            new EditorTool('I', "Warp Line", "When placed on the edge of the room, Warp Lines will warp any moving object, including crewmen, to the opposite side of the room. Click-and-drag to set the length and orientation of a Warp Line."),
-            new EditorTool('U', "Warp Token", "Warp Tokens teleport crewmen to a specified location. After placing a Warp Token, you must set the output. This is done just like placing a Warp Token.\nMiddle-click a Warp Token to go to its output, or an output to go to its input."),
-            new EditorTool('Y', "Script Box", "Script Boxes run a script when touched by the player, then are deactivated until the room is reloaded. Click-and-drag to set the size of a Script Box. After placing one, type the name of the script for it to run. To move/resize a Script Box, click on it while holding Shift. Middle-click a Script Box to edit its script."),
-            new EditorTool('T', "Terminal", "Terminals can be activated by the player by pressing Enter. After placing one, type the name of the script for it to run.\n     Z: Flip the terminal upside-down\n     X: Flip the terminal to face left\nMiddle-click a Terminal to edit its script."),
-            new EditorTool('R', "Roomtext", "Roomtext has no hitbox, and is only used to display text to the player. It can be used as warnings and guides. Click anywhere and start typing. Press Enter to confirm, or press Escape to cancel."),
-            new EditorTool(';', "Lever", "Levers can be interacted with exactly as terminals; press enter to activate them. A script executed by the lever can check if it is on with \"?this:on\".\n     Z: Flip the lever upside-down\n     X: Rotate the lever onto a wall"),
-            new EditorTool('-', "Tiles", "Tiles placed individually. Press Tab to open/close the tileset to select a tile. Middle-click on a tile in the room to instantly select it.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\nUse WASD to move the selected tile.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis.)"),
-            new EditorTool('=', "Select", "Select multiple objects at once. Middle-click to edit a property of the selected object(s), and right-click for more options.\n     Use the Arrow Keys to move selected objects. Hold Alt to move them one pixel at a time.\n     Press Delete to delete the selected object(s).\n     Hold Control while selecting to select Tiles and Script Boxes.\n     Hold Shift while selecting to select more objects.\n     Press escape to deselect everything.\n     Use Control+A to select everything in the room."),
-            new EditorTool('`', "Custom Sprite", "Places a sprite with no hitbox with any texture or animation.\n     Z: Flip the sprite upside-down\n     X: Flip the sprite to face left")
+            //new EditorTool('1', "Ground", "Auto Tiles connect only to the same ground tiles in the same layer.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis.)"),
+            //new EditorTool('2', "Background", "Auto Tiles connect to the same tiles in the same layer, and also to solid tiles.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis, as well as preventing tiles from connecting to solid tiles outside the axis.)"),
+            //new EditorTool('3', "Spikes", "Auto Tiles only connect to solid tiles.\nHold F to fill a surface with spikes.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis.)"),
+            //new EditorTool('4', "Trinket", "Trinkets are collectibles and are not necessarily required. The number of collected trinkets can be accessed in scripting using \"?trinkets\", and the total amout of trinkets in the level can be accessed with \"?totaltrinkets\"."),
+            //new EditorTool('5', "Checkpoint", "When touched by a crewman, the crewman's respawn point is set to the checkpoint's position.\n     Z: Flip the checkpoint upside-down\n     X: Flip the checkpoint to face left"),
+            //new EditorTool('6', "Disappear", "Platforms that disappear when a crewman stands on them.\n     To specify length, hold shift and click-and-drag."),
+            //new EditorTool('7', "Conveyor", "Conveyors push any crewman standing on them in a certain direction. After placing one, press either left or right to specify the direction of the conveyor.\n     To specify length, hold shift and click-and-drag."),
+            //new EditorTool('8', "Platform", "Platforms that move in a certain direction. After placing one, press any direction to specify which way the platform should move.\n     To specify length, hold shift and click-and-drag.\n     Middle-click for a shortcut to set a platform's bounds."),
+            //new EditorTool('9', "Enemy", "Crewmen die upon touching an enemy. Enemies move in a certain direction. After placing one, press any direction to specify which way the enemy should move.\n     Middle-click for a shortcut to set an enemy's bounds."),
+            //new EditorTool('0', "Grav Line", "Gravity lines flip the gravity of any crewman who touches them. Click-and-drag to specify the length and orientation of a Gravity Line."),
+            //new EditorTool('P', "Start", "Left-click to set the start position. Right-click to go to the start room.\n     Z: Flip the player upside-down\n     X: Flip the player to face left"),
+            //new EditorTool('O', "Crewman", "Place any crewman. A crewman's texture must contain at least the following animations: Standing, Walking, and Dying.\n     Z: Flip the crewman upside-down\n     X: Flip the crewman to face left"),
+            //new EditorTool('I', "Warp Line", "When placed on the edge of the room, Warp Lines will warp any moving object, including crewmen, to the opposite side of the room. Click-and-drag to set the length and orientation of a Warp Line."),
+            //new EditorTool('U', "Warp Token", "Warp Tokens teleport crewmen to a specified location. After placing a Warp Token, you must set the output. This is done just like placing a Warp Token.\nMiddle-click a Warp Token to go to its output, or an output to go to its input."),
+            //new EditorTool('Y', "Script Box", "Script Boxes run a script when touched by the player, then are deactivated until the room is reloaded. Click-and-drag to set the size of a Script Box. After placing one, type the name of the script for it to run. To move/resize a Script Box, click on it while holding Shift. Middle-click a Script Box to edit its script."),
+            //new EditorTool('T', "Terminal", "Terminals can be activated by the player by pressing Enter. After placing one, type the name of the script for it to run.\n     Z: Flip the terminal upside-down\n     X: Flip the terminal to face left\nMiddle-click a Terminal to edit its script."),
+            //new EditorTool('R', "Roomtext", "Roomtext has no hitbox, and is only used to display text to the player. It can be used as warnings and guides. Click anywhere and start typing. Press Enter to confirm, or press Escape to cancel."),
+            //new EditorTool(';', "Lever", "Levers can be interacted with exactly as terminals; press enter to activate them. A script executed by the lever can check if it is on with \"?this:on\".\n     Z: Flip the lever upside-down\n     X: Rotate the lever onto a wall"),
+            //new EditorTool('-', "Tiles", "Tiles placed individually. Press Tab to open/close the tileset to select a tile. Middle-click on a tile in the room to instantly select it.\n     Z: 3x3 brush\n     X: 5x5 brush\n     F: Fill\nHold shift to toggle brush/fill lock. Shift+C lets you set your own brush size.\nUse WASD to move the selected tile.\n(Tip: Hold [ to lock Y-axis, and ] to lock X-axis. These also restrict the fill tool to the opposite axis.)"),
+            //new EditorTool('=', "Select", "Select multiple objects at once. Middle-click to edit a property of the selected object(s), and right-click for more options.\n     Use the Arrow Keys to move selected objects. Hold Alt to move them one pixel at a time.\n     Press Delete to delete the selected object(s).\n     Hold Control while selecting to select Tiles and Script Boxes.\n     Hold Shift while selecting to select more objects.\n     Press escape to deselect everything.\n     Use Control+A to select everything in the room."),
+            //new EditorTool('`', "Custom Sprite", "Places a sprite with no hitbox with any texture or animation.\n     Z: Flip the sprite upside-down\n     X: Flip the sprite to face left")
         };
         private RectangleSprite descBack;
         private StringDrawable descText;
@@ -51,8 +51,8 @@ namespace V7
         private int tileToolDefH = 1;
         private Tools tool = Tools.Ground;
         private Tools prTool = Tools.Ground;
-        private enum FocusOptions { Level, Tileset, Previews, TileEditor }
-        private FocusOptions CurrentEditingFocus = FocusOptions.Level;
+        public enum FocusOptions { Level, Tileset }
+        public FocusOptions CurrentEditingFocus = FocusOptions.Level;
         private BoxSprite selection;
         private Point currentTile = new Point(0, 0);
         private TileTexture currentTexture
@@ -136,6 +136,8 @@ namespace V7
         private Texture trinketTexture;
         private string trinketAnimation = "Trinket";
 
+        private EditorTool currentTool;
+
         public SortedList<int, RoomGroup> RoomGroups => Owner.RoomGroups;
         public int FocusedRoom => Owner.FocusedRoom;
         public int MouseX => Owner.MouseX;
@@ -151,6 +153,9 @@ namespace V7
         public int HeightRooms { get => Owner.HeightRooms; set => Owner.HeightRooms = value; }
         public Crewman Player { get => Owner.ActivePlayer; set => Owner.ActivePlayer = value; }
 
+        public SpriteCollection BoundsSprites;
+        public bool ShowBoundsBoxes;
+
         public SpriteCollection ExtraHud;
         public StringDrawable TrinketCount;
         public override bool UsesExtraHud => true;
@@ -159,6 +164,7 @@ namespace V7
         {
             Owner = game;
             hudSprites = new SpriteCollection();
+            BoundsSprites = new SpriteCollection();
             ExtraHud = new SpriteCollection();
             Texture toolTexture = Owner.TextureFromName("tools");
             Sprite trinket = new Sprite(-Game.HUD_LEFT + 8, 8, toolTexture, 0, 3, Color.FromArgb(255, 255, 255, 255));
@@ -197,6 +203,29 @@ namespace V7
             trinketTexture = sprites32;
             terminalTexture = sprites32;
             warpTokenTexture = sprites32;
+            Texture lines = Owner.TextureFromName("lines");
+            EditorTools = new EditorTool[]
+            {
+                new GroundTool(this, tiles),
+                new BackgroundTool(this, tiles),
+                new SpikesTool(this, tiles),
+                new TrinketTool(this, sprites32),
+                new CheckpointTool(this, sprites32),
+                new PlatformTool(this, platformTexture, 0),
+                new PlatformTool(this, platformTexture, 1),
+                new PlatformTool(this, platformTexture, 2),
+                new EnemyTool(this, enemyTexture),
+                new GravityLineTool(this, lines),
+                new StartTool(this),
+                new CrewmanTool(this),
+                new WarpLineTool(this),
+                new WarpTokenTool(this, sprites32),
+                new ScriptBoxTool(this),
+                new TerminalTool(this, sprites32),
+                new RoomTextTool(this),
+                new TilesTool(this, tiles)
+            };
+            currentTool = EditorTools[0];
             Darken = 0;
         }
 
@@ -213,6 +242,12 @@ namespace V7
         public override void HandleKey(PassedKeyEvent e, bool typing)
         {
             if (typing) return;
+            if (currentTool.TakeInput)
+            {
+                currentTool.HandleKey(e);
+                if (!e.Pass)
+                    return;
+            }
             if (CurrentEditingFocus == FocusOptions.Level)
             {
                 if (tool == Tools.Point)
@@ -221,7 +256,7 @@ namespace V7
                     {
                         tool = prTool;
                         EditorTool t = EditorTools[(int)prTool];
-                        editorTool.Text = t.Hotkey.ToString() + " - " + t.Name;
+                        editorTool.Text = t.DefaultKey + " - " + t.DefaultName;
                         typing = true;
                     }
                     return;
@@ -385,7 +420,7 @@ namespace V7
                             TileTexture t = p.Texture;
                             if (t != null && CurrentRoom.TileTexture != t)
                             {
-                                foreach (Sprite tile in sprites)
+                                foreach (Sprite tile in Sprites)
                                 {
                                     if (tile is Tile)
                                     {
@@ -460,6 +495,11 @@ namespace V7
                     tb.Disappeared += (t) => hudSprites.Remove(t);
                     hudSprites.Add(tb);
                     tb.Appear();
+                }
+                else if (e.Key == Keys.F4)
+                {
+                    ShowBoundsBoxes = !ShowBoundsBoxes;
+                    UpdateBoundsBoxes();
                 }
                 else if (e.Key == Keys.F5)
                 {
@@ -654,7 +694,7 @@ namespace V7
                         for (int i = 0; i < selectedSprites.Count; i++)
                         {
                             Owner.DeleteSprite(selectedSprites[i]);
-                            sprites.Remove(selectBoxes[i]);
+                            Sprites.Remove(selectBoxes[i]);
                         }
                         selectedSprites.Clear();
                         selectBoxes.Clear();
@@ -667,150 +707,26 @@ namespace V7
                         LevelEditorMenu();
                     }
                     // TOOLS
-                    if (e.Key == Keys.D1)
+                    for (int i = 0; i < EditorTools.Length; i++)
                     {
-                        tool = Tools.Ground;
-                        editorTool.Text = "1 - Ground";
-                        prefix = 'g';
-                        ClearSelection();
-                    } // Ground
-                    else if (e.Key == Keys.D2)
-                    {
-                        tool = Tools.Background;
-                        editorTool.Text = "2 - Background";
-                        prefix = 'b';
-                        ClearSelection();
-                    } // Background
-                    else if (e.Key == Keys.D3)
-                    {
-                        tool = Tools.Spikes;
-                        editorTool.Text = "3 - Spikes";
-                        prefix = 's';
-                        ClearSelection();
-                    } // Spikes
-                    else if (e.Key == Keys.D4)
-                    {
-                        tool = Tools.Trinket;
-                        editorTool.Text = "4 - Trinket";
-                        ClearSelection();
-                    } // Trinkets
-                    else if (e.Key == Keys.D5)
-                    {
-                        tool = Tools.Checkpoint;
-                        editorTool.Text = "5 - Checkpoint";
-                        ClearSelection();
-                    } // Checkpoints
-                    else if (e.Key == Keys.D6)
-                    {
-                        tool = Tools.Disappear;
-                        editorTool.Text = "6 - Disappear";
-                        ClearSelection();
-                    } // Disappear
-                    else if (e.Key == Keys.D7)
-                    {
-                        tool = Tools.Conveyor;
-                        editorTool.Text = "7 - Conveyor";
-                        ClearSelection();
-                    } // Moving Platforms
-                    else if (e.Key == Keys.D8)
-                    {
-                        tool = Tools.Platform;
-                        editorTool.Text = "8 - Platform";
-                        ClearSelection();
-                    } // Conveyors
-                    else if (e.Key == Keys.D9)
-                    {
-                        tool = Tools.Enemy;
-                        editorTool.Text = "9 - Enemy";
-                        ClearSelection();
-                    } // Enemies
-                    else if (e.Key == Keys.D0)
-                    {
-                        tool = Tools.GravityLine;
-                        editorTool.Text = "0 - Grav Line";
-                        ClearSelection();
-                    } // Grav Lines
-                    else if (e.Key == Keys.P)
-                    {
-                        tool = Tools.Start;
-                        editorTool.Text = "P - Start";
-                        ClearSelection();
-                    } // Start Point
-                    else if (e.Key == Keys.O)
-                    {
-                        tool = Tools.Crewman;
-                        editorTool.Text = "O - Crewmate";
-                        ClearSelection();
-                    } // Crewmates
-                    else if (e.Key == Keys.I)
-                    {
-                        tool = Tools.WarpLine;
-                        editorTool.Text = "I - Warp Line";
-                        ClearSelection();
-                    } // Warp Lines
-                    else if (e.Key == Keys.U)
-                    {
-                        tool = Tools.WarpToken;
-                        editorTool.Text = "U - Warp Token";
-                        ClearSelection();
-                    } // Warp Tokens
-                    else if (e.Key == Keys.Y)
-                    {
-                        tool = Tools.ScriptBox;
-                        editorTool.Text = "Y - Script Box";
-                        ClearSelection();
-                    } // Script Boxes
-                    else if (e.Key == Keys.T)
-                    {
-                        tool = Tools.Terminal;
-                        editorTool.Text = "T - Terminal";
-                        ClearSelection();
-                    } // Terminals
-                    else if (e.Key == Keys.R)
-                    {
-                        tool = Tools.RoomText;
-                        editorTool.Text = "R - Roomtext";
-                        ClearSelection();
-                    } // Room Text
-                    else if (e.Key == Keys.Semicolon)
-                    {
-                        tool = Tools.Lever;
-                        editorTool.Text = "; - Lever";
-                        ClearSelection();
-                    } // Lever
-                    else if (e.Key == Keys.Minus)
-                    {
-                        tool = Tools.Tiles;
-                        tileSelection.X = currentTile.X * 8 - tileScroll.X;
-                        tileSelection.Y = currentTile.Y * 8 - tileScroll.Y;
-                        tileSelection.SetSize(1, 1);
-                        editorTool.Text = "- - Tiles";
-                        ClearSelection();
-                    } // Tiles
-                    else if (e.Key == Keys.Equal)
-                    {
-                        tool = Tools.Select;
-                        editorTool.Text = "= - Select";
-                        ClearSelection();
-                    } // Select
-                    else if (e.Key == Keys.GraveAccent)
-                    {
-                        tool = Tools.CustomSprite;
-                        editorTool.Text = "` - Custom Sprite";
-                        ClearSelection();
-                    } // Custom Sprite
-                    else if (e.Key == Keys.Period)
+                        if (EditorTools[i].Keybind == e.Key)
+                        {
+                            currentTool = EditorTools[i];
+                        }
+                    }
+
+                    if (e.Key == Keys.Period)
                     {
                         int t = (int)tool;
                         t = (t + 1) % EditorTools.Length;
                         tool = (Tools)t;
                         ClearSelection();
                         EditorTool et = EditorTools[t];
-                        editorTool.Text = et.Hotkey.ToString() + " - " + et.Name;
+                        editorTool.Text = et.DefaultKey + " - " + et.DefaultName;
                         if (tool == Tools.Ground) prefix = 'g';
                         else if (tool == Tools.Background) prefix = 'b';
                         else if (tool == Tools.Spikes) prefix = 's';
-                    } // Next Tool
+                    } // Next Tool (Period)
                     else if (e.Key == Keys.Comma)
                     {
                         int t = (int)tool;
@@ -818,11 +734,11 @@ namespace V7
                         tool = (Tools)t;
                         ClearSelection();
                         EditorTool et = EditorTools[t];
-                        editorTool.Text = et.Hotkey.ToString() + " - " + et.Name;
+                        editorTool.Text = et.DefaultKey + " - " + et.DefaultName;
                         if (tool == Tools.Ground) prefix = 'g';
                         else if (tool == Tools.Background) prefix = 'b';
                         else if (tool == Tools.Spikes) prefix = 's';
-                    } // Previous Tool
+                    } // Previous Tool (Comma)
                     else if (e.Key == Keys.Space)
                     {
                         PreviewScreen ps = new PreviewScreen(new Sprite[] { }, null, Owner);
@@ -835,7 +751,7 @@ namespace V7
                             rs.Layer = -1;
                             rs.Name = i.ToString();
                             ps.Sprites.Add(rs);
-                            StringDrawable sd = new StringDrawable(52, 0, Owner.FontTexture, EditorTools[i].Hotkey.ToString() + " - " + EditorTools[i].Name);
+                            StringDrawable sd = new StringDrawable(52, 0, Owner.FontTexture, EditorTools[i].DefaultKey + " - " + EditorTools[i].DefaultName);
                             sd.Color = Color.Black;
                             sd.CenterY = rs.CenterY;
                             ps.Sprites.Add(sd);
@@ -850,62 +766,20 @@ namespace V7
                                 ClearSelection();
                                 EditorTool et = EditorTools[tn];
                                 tool = (Tools)tn;
-                                editorTool.Text = et.Hotkey.ToString() + " - " + et.Name;
+                                editorTool.Text = et.DefaultKey + " - " + et.DefaultName;
                                 if (tool == Tools.Ground) prefix = 'g';
                                 else if (tool == Tools.Background) prefix = 'b';
                                 else if (tool == Tools.Spikes) prefix = 's';
                             }
                         };
                         Owner.AddLayer(ps);
-                    } // Open Tool Select
-                    // Open Tileset
+                    } // Open Tool Select (Space)
+                    // Open Tileset (Tab)
                     else if (e.Key == Keys.Tab && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes || tool == Tools.Tiles))
                     {
-                        CurrentEditingFocus = FocusOptions.Tileset;
-                        if (tileset.Texture != currentTexture)
-                        {
-                            tileset.ChangeTexture(currentTexture);
-                            tileset.X = 0;
-                            tileset.Y = 0;
-                            tileScroll = new Point(0, 0);
-                            tileset.Size = 1f / (currentTexture.TileSizeX / 8);
-                        }
-                        tileset.Layer = -1;
-                        if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes)
-                        {
-                            if (autoTiles.Size == 3)
-                            {
-                                selection.SetSize(3, 1);
-                                tileSelection.SetSize(3, 1);
-                            }
-                            else if (autoTiles.Size == 13)
-                            {
-                                selection.SetSize(3, 5);
-                                tileSelection.SetSize(3, 5);
-                            }
-                            else if (autoTiles.Size == 47)
-                            {
-                                selection.SetSize(8, 6);
-                                tileSelection.SetSize(8, 6);
-                            }
-                            else if (autoTiles.Size == 4)
-                            {
-                                selection.SetSize(4, 1);
-                                tileSelection.SetSize(4, 1);
-                            }
-                            tileSelection.X = autoTiles.Origin.X * currentTexture.TileSizeX - tileScroll.X;
-                            tileSelection.Y = autoTiles.Origin.Y * currentTexture.TileSizeY - tileScroll.Y;
-                        }
-                        else if (tool == Tools.Tiles)
-                        {
-                            tileSelection.SetSize(1, 1);
-                            tileSelection.X = currentTile.X * currentTexture.TileSizeX - tileScroll.X;
-                            tileSelection.Y = currentTile.Y * currentTexture.TileSizeY - tileScroll.Y;
-                        }
-                        hudSprites.Add(tileSelection);
-                        hudSprites.Add(tileset);
+                        
                     }
-                    // Begin Playtest
+                    // Begin Playtest (Enter)
                     else if (e.Key == Keys.Enter)
                     {
                         ClearSelection();
@@ -926,7 +800,7 @@ namespace V7
                         Owner.LoadRoom(CurrentRoom.X, CurrentRoom.Y);
                         if (!pl)
                         {
-                            List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                            List<Sprite> col = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                             bool found = false;
                             for (int i = 0; i < col.Count; i++)
                             {
@@ -952,25 +826,25 @@ namespace V7
                             }
                             if (!found)
                             {
-                                for (int i = 0; i < sprites.Count; i++)
+                                for (int i = 0; i < Sprites.Count; i++)
                                 {
-                                    if (sprites[i] is Checkpoint)
+                                    if (Sprites[i] is Checkpoint)
                                     {
-                                        Player.CenterX = sprites[i].CenterX;
-                                        if (sprites[i].FlipY)
+                                        Player.CenterX = Sprites[i].CenterX;
+                                        if (Sprites[i].FlipY)
                                         {
-                                            Player.Y = sprites[i].Y;
+                                            Player.Y = Sprites[i].Y;
                                             Player.Gravity = -Math.Abs(Player.Gravity);
                                         }
                                         else
                                         {
-                                            Player.Bottom = sprites[i].Bottom;
+                                            Player.Bottom = Sprites[i].Bottom;
                                             Player.Gravity = Math.Abs(Player.Gravity);
                                         }
-                                        Player.FlipX = sprites[i].FlipX;
-                                        Player.FlipY = sprites[i].FlipY;
+                                        Player.FlipX = Sprites[i].FlipX;
+                                        Player.FlipY = Sprites[i].FlipY;
                                         found = true;
-                                        sprites[i].HandleCrewmanCollision(Player);
+                                        Sprites[i].HandleCrewmanCollision(Player);
                                         break;
                                     }
                                 }
@@ -1004,11 +878,11 @@ namespace V7
                             }
                         }
                         Owner.IgnoreAction();
-                        if (!sprites.Contains(Player))
-                            sprites.Add(Player);
+                        if (!Sprites.Contains(Player))
+                            Sprites.Add(Player);
                         Owner.RemoveLayer(this, false);
                     }
-                    // Set Room Name
+                    // Set Room Name (E)
                     else if (e.Key == Keys.E)
                     {
                         Owner.ShowRoomName();
@@ -1025,11 +899,11 @@ namespace V7
                             }
                         }, true);
                     }
-                    // Show Map
+                    // Show Map (M)
                     else if (e.Key == Keys.M)
                     {
                         Owner.LoadRoom(CurrentRoom.X, CurrentRoom.Y);
-                        MapLayer m = Owner.ShowMap(15, 15, Game.RESOLUTION_WIDTH - 30, Game.RESOLUTION_HEIGHT - 30);
+                        MapLayer m = Owner.ShowMap(15, 15, Game.RESOLUTION_WIDTH - 30, Game.RESOLUTION_HEIGHT - 30, showAll: true);
                         m.OnClick = (x, y) =>
                         {
                             Owner.LoadRoom(x, y);
@@ -1056,7 +930,7 @@ namespace V7
                         };
                         SaveRoom = false;
                     }
-                    // Set Background
+                    // Set Background (B)
                     else if (e.Key == Keys.B)
                     {
                         string[] choices = new string[Owner.Backgrounds.Count];
@@ -1077,7 +951,7 @@ namespace V7
                             }
                         });
                     }
-                    // Tool Info
+                    // Tool Info (Slash)
                     else if (e.Key == Keys.Slash)
                     {
                         if (descBack is null || !hudSprites.Contains(descBack))
@@ -1092,8 +966,8 @@ namespace V7
                                 descText.MaxWidth = Game.RESOLUTION_WIDTH - 50;
                                 descText.Layer = 61;
                             }
-                            EditorTool et = EditorTools[(int)tool];
-                            descText.Text = "Press Space for a list of tools and their keybinds.\nPress < and > to select the previous/next tool.\n\n" + et.Hotkey.ToString() + " - " + et.Name + "\n\n" + et.Description;
+                            EditorTool et = currentTool;
+                            descText.Text = "Press Space for a list of tools and their keybinds.\nPress < and > to select the previous/next tool.\n\n" + et.DefaultKey + " - " + et.DefaultName + "\n\n" + et.DefaultDescription;
                             descBack.SetHeight(descText.Height + 10);
                             descBack.CenterY = Game.RESOLUTION_HEIGHT / 2;
                             descText.CenterY = Game.RESOLUTION_HEIGHT / 2;
@@ -1106,29 +980,7 @@ namespace V7
                             hudSprites.Remove(descText);
                         }
                     }
-                    else if (tool == Tools.Tiles)
-                    {
-                        // Change Tile
-                        if (e.Key == Keys.S)
-                        {
-                            currentTile.Y = (currentTile.Y + 1) % ((int)currentTexture.Height / currentTexture.TileSizeY);
-                        }
-                        else if (e.Key == Keys.W)
-                        {
-                            currentTile.Y -= 1;
-                            if (currentTile.Y < 0) currentTile.Y += (int)currentTexture.Height / currentTexture.TileSizeY;
-                        }
-                        else if (e.Key == Keys.D)
-                        {
-                            currentTile.X = (currentTile.X + 1) % ((int)currentTexture.Width / currentTexture.TileSizeX);
-                        }
-                        else if (e.Key == Keys.A)
-                        {
-                            currentTile.X -= 1;
-                            if (currentTile.X < 0) currentTile.X += (int)currentTexture.Width / currentTexture.TileSizeX;
-                        }
-                    }
-                    // Edit Room Group
+                    // Edit Room Group (Shift G)
                     else if (e.Shift && e.Key == Keys.G)
                     {
                         if (CurrentRoom is RoomGroup)
@@ -1236,7 +1088,7 @@ namespace V7
                             {
                                 Owner.ClearMenu();
                             });
-                            Owner.AddLayer(menuItems.Result);
+                            menuItems.Build();
                         }
                         else
                         {
@@ -1349,7 +1201,7 @@ namespace V7
                             float max = w * h;
                             int curX = (int)CurrentRoom.Right - 8;
                             int curY = (int)CurrentRoom.Bottom - 8;
-                            sprites.RemoveAll((s) => s is Tile);
+                            Sprites.RemoveAll((s) => s is Tile);
                             for (int i = tiles.Length - 1; i > -1; i--)
                             {
                                 string t = tiles[i];
@@ -1362,7 +1214,7 @@ namespace V7
                                             int y = tile / (int)w;
                                             int x = tile % (int)w;
                                             Tile newTile = new Tile(curX, curY, currentTexture, x, y);
-                                            sprites.AddForCollisions(newTile);
+                                            Sprites.AddForCollisions(newTile);
                                         }
                                     }
                                 }
@@ -1376,49 +1228,6 @@ namespace V7
                                 }
                             }
                         }
-                    }
-                    if (e.Key == Keys.L)
-                    {
-                        Owner.ShowDialog("Layer for tiles?", tileLayer.ToString(), new string[] { }, (r, st) =>
-                        {
-                            int l = -2;
-                            if (r && int.TryParse(st, out l))
-                                tileLayer = l;
-                        });
-                    }
-                    else if (e.Shift && e.Key == Keys.Z)
-                    {
-                        if (tileToolDefW == 3)
-                            tileToolDefW = tileToolDefH = 1;
-                        else
-                            tileToolDefW = tileToolDefH = 3;
-                    }
-                    else if (e.Shift && e.Key == Keys.X)
-                    {
-                        if (tileToolDefW == 5)
-                            tileToolDefW = tileToolDefH = 1;
-                        else
-                            tileToolDefW = tileToolDefH = 5;
-                    }
-                    else if (e.Shift && e.Key == Keys.C)
-                    {
-                        Owner.ShowDialog("Brush size? (Format = x, y)", tileToolDefW.ToString() + ", " + tileToolDefH.ToString(), null, (r, st) =>
-                        {
-                            if (r)
-                            {
-                                string[] s = st.Split(',');
-                                int w = 1;
-                                int h = 1;
-                                int.TryParse(s.First().Trim(), out w);
-                                int.TryParse(s.Last().Trim(), out h);
-                                tileToolDefW = w;
-                                tileToolDefH = h;
-                            }
-                        });
-                    }
-                    else if (e.Shift && e.Key == Keys.F)
-                    {
-                        fillLock = !fillLock;
                     }
                 }
                 else if (tool == Tools.CustomSprite)
@@ -1463,7 +1272,7 @@ namespace V7
                     if (e.Key == Keys.A && e.Control)
                     {
                         ClearSelection();
-                        List<Sprite> spr = new List<Sprite>(sprites);
+                        List<Sprite> spr = new List<Sprite>(Sprites);
                         foreach (Sprite s in spr)
                         {
                             if (s is BoxSprite && !(s is ScriptBox)) continue;
@@ -1476,14 +1285,14 @@ namespace V7
                                 b.CenterX = s.CenterX;
                                 b.CenterY = s.CenterY;
                                 selectBoxes.Add(b);
-                                sprites.Add(b);
+                                Sprites.Add(b);
 
                             }
                             else
                             {
                                 int i = selectedSprites.IndexOf(s);
                                 BoxSprite b = selectBoxes[i];
-                                sprites.Remove(b);
+                                Sprites.Remove(b);
                                 selectBoxes.RemoveAt(i);
                                 selectedSprites.RemoveAt(i);
                             }
@@ -1550,76 +1359,320 @@ namespace V7
                     }
                 }
 
+                currentTool.HandleKey(e);
             }
             else if (CurrentEditingFocus == FocusOptions.Tileset)
             {
-                if (e.Key == Keys.Tab || e.Key == Keys.Escape)
+                TilesTool tt = currentTool as TilesTool;
+                if (tt is null)
+                    HideTileset();
+                else
                 {
-                    CurrentEditingFocus = FocusOptions.Level;
-                    hudSprites.Remove(tileset);
-                    hudSprites.Remove(tileSelection);
-                    selection.SetSize(1, 1);
-                }
-                else if (e.Key == Keys.D1 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
-                {
-                    selection.SetSize(3, 5);
-                }
-                else if (e.Key == Keys.D2 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
-                {
-                    selection.SetSize(3, 1);
-                }
-                else if (e.Key == Keys.D3 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
-                {
-                    selection.SetSize(8, 6);
-                }
-                else if (e.Key == Keys.D4 && (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Spikes))
-                {
-                    selection.SetSize(4, 1);
-                }
-                else if (e.Key == Keys.Right)
-                {
-                    float tx = tileset.X;
-                    tileset.X -= 32;
-                    if (tileset.Right < Game.RESOLUTION_WIDTH)
-                        tileset.Right = Game.RESOLUTION_WIDTH;
-                    tx -= tileset.X;
-                    tileScroll.X += (int)tx;
-                    tileSelection.X -= tx;
-                }
-                else if (e.Key == Keys.Left)
-                {
-                    float tx = tileset.X;
-                    tileset.X += 32;
-                    if (tileset.X > 0)
-                        tileset.X = 0;
-                    tx -= tileset.X;
-                    tileScroll.X += (int)tx;
-                    tileSelection.X -= tx;
-                }
-                else if (e.Key == Keys.Down)
-                {
-                    float ty = tileset.Y;
-                    tileset.Y -= 32;
-                    if (tileset.Bottom < Game.RESOLUTION_HEIGHT)
-                        tileset.Bottom = Game.RESOLUTION_HEIGHT;
-                    ty -= tileset.Y;
-                    tileScroll.Y += (int)ty;
-                    tileSelection.Y -= ty;
-                }
-                else if (e.Key == Keys.Up)
-                {
-                    float ty = tileset.Y;
-                    tileset.Y -= 32;
-                    if (tileset.Y > 0)
-                        tileset.Y = 0;
-                    ty -= tileset.Y;
-                    tileScroll.Y += (int)ty;
-                    tileSelection.Y -= ty;
+                    if (e.Key == Keys.Tab || e.Key == Keys.Escape)
+                    {
+                        HideTileset();
+                    }
+                    else if (e.Key == Keys.D1 && tt.IsAuto)
+                    {
+                        selection.SetSize(3, 5);
+                    }
+                    else if (e.Key == Keys.D2 && tt.IsAuto)
+                    {
+                        selection.SetSize(3, 1);
+                    }
+                    else if (e.Key == Keys.D3 && tt.IsAuto)
+                    {
+                        selection.SetSize(8, 6);
+                    }
+                    else if (e.Key == Keys.D4 && tt.IsAuto)
+                    {
+                        selection.SetSize(4, 1);
+                    }
+                    else if (e.Key == Keys.Right)
+                    {
+                        float tx = tileset.X;
+                        tileset.X -= 32;
+                        if (tileset.Right < Game.RESOLUTION_WIDTH)
+                            tileset.Right = Game.RESOLUTION_WIDTH;
+                        tx -= tileset.X;
+                        tileScroll.X += (int)tx;
+                        tileSelection.X -= tx;
+                    }
+                    else if (e.Key == Keys.Left)
+                    {
+                        float tx = tileset.X;
+                        tileset.X += 32;
+                        if (tileset.X > 0)
+                            tileset.X = 0;
+                        tx -= tileset.X;
+                        tileScroll.X += (int)tx;
+                        tileSelection.X -= tx;
+                    }
+                    else if (e.Key == Keys.Down)
+                    {
+                        float ty = tileset.Y;
+                        tileset.Y -= 32;
+                        if (tileset.Bottom < Game.RESOLUTION_HEIGHT)
+                            tileset.Bottom = Game.RESOLUTION_HEIGHT;
+                        ty -= tileset.Y;
+                        tileScroll.Y += (int)ty;
+                        tileSelection.Y -= ty;
+                    }
+                    else if (e.Key == Keys.Up)
+                    {
+                        float ty = tileset.Y;
+                        tileset.Y -= 32;
+                        if (tileset.Y > 0)
+                            tileset.Y = 0;
+                        ty -= tileset.Y;
+                        tileScroll.Y += (int)ty;
+                        tileSelection.Y -= ty;
+                    }
                 }
             }
         }
 
-        private PreviewScreen AnimationPreviews(Texture texture)
+        private void UpdateBoundsBoxes()
+        {
+            BoundsSprites.Clear();
+            for (int i = 0; i < Sprites.Count; i++)
+            {
+                if (Sprites[i] is IBoundSprite)
+                {
+                    Color c = Sprites[i].KillCrewmen ? Color.Red : Color.Lime;
+                    if (Sprites[i].Within(MouseX, MouseY, 1, 1))
+                        c = Color.Cyan;
+                    Rectangle s = (Sprites[i] as IBoundSprite).Bounds;
+                    if (s.Width == 0 || s.Height == 0) continue;
+                    s.X += (int)Sprites[i].InitialX;
+                    s.Y += (int)Sprites[i].InitialY;
+                    RectangleSprite rs = new RectangleSprite(s.X, s.Y, s.Width, 1);
+                    rs.Color = c;
+                    BoundsSprites.Add(rs);
+                    rs = new RectangleSprite(s.X, s.Y, 1, s.Height);
+                    rs.Color = c;
+                    BoundsSprites.Add(rs);
+                    rs = new RectangleSprite(s.X, s.Y + s.Height - 1, s.Width, 1);
+                    rs.Color = c;
+                    BoundsSprites.Add(rs);
+                    rs = new RectangleSprite(s.X + s.Width - 1, s.Y, 1, s.Height);
+                    rs.Color = c;
+                    BoundsSprites.Add(rs);
+                }
+            }
+        }
+        public void Notify(string message, float x, float y, Color color, int time)
+        {
+            VTextBox tb = new VTextBox(x, y - 26, Owner.FontTexture, message, color);
+            if (tb.Y < 0)
+                tb.Y = 0;
+            else if (tb.Bottom > Game.RESOLUTION_HEIGHT)
+                tb.Bottom = Game.RESOLUTION_HEIGHT;
+            if (tb.X < 0)
+                tb.X = 0;
+            else if (tb.Right > Game.RESOLUTION_WIDTH)
+                tb.Right = Game.RESOLUTION_WIDTH;
+            Owner.hudSprites.Add(tb);
+            tb.Disappeared += (b) =>
+            {
+                Owner.hudSprites.Remove(b);
+            };
+            tb.frames = time;
+            tb.Appear();
+        }
+
+        public void ShowTileset(TilesTool tool)
+        {
+            CurrentEditingFocus = FocusOptions.Tileset;
+            if (tileset.Texture != tool.Texture)
+            {
+                tileset.ChangeTexture(tool.Texture);
+                tileset.X = 0;
+                tileset.Y = 0;
+                tileScroll = new Point(0, 0);
+                tileset.Size = 1f / (tool.Texture.TileSizeX / 8);
+            }
+            tileset.Layer = -1;
+            if (tool.IsAuto)
+            {
+                if (autoTiles.Size == 3)
+                {
+                    selection.SetSize(3, 1);
+                    tileSelection.SetSize(3, 1);
+                }
+                else if (autoTiles.Size == 13)
+                {
+                    selection.SetSize(3, 5);
+                    tileSelection.SetSize(3, 5);
+                }
+                else if (autoTiles.Size == 47)
+                {
+                    selection.SetSize(8, 6);
+                    tileSelection.SetSize(8, 6);
+                }
+                else if (autoTiles.Size == 4)
+                {
+                    selection.SetSize(4, 1);
+                    tileSelection.SetSize(4, 1);
+                }
+                tileSelection.X = autoTiles.Origin.X * currentTexture.TileSizeX - tileScroll.X;
+                tileSelection.Y = autoTiles.Origin.Y * currentTexture.TileSizeY - tileScroll.Y;
+            }
+            else
+            {
+                tileSelection.SetSize(1, 1);
+                tileSelection.X = tool.Tile.X * tool.Texture.TileSizeX - tileScroll.X;
+                tileSelection.Y = tool.Tile.Y * tool.Texture.TileSizeY - tileScroll.Y;
+            }
+            hudSprites.Add(tileSelection);
+            hudSprites.Add(tileset);
+        }
+
+        public void HideTileset()
+        {
+            CurrentEditingFocus = FocusOptions.Level;
+            hudSprites.Remove(tileset);
+            hudSprites.Remove(tileSelection);
+        }
+
+        private void backupSelectTool(KeyboardKeyEventArgs e)
+        {
+
+            if (e.Key == Keys.D1)
+            {
+                tool = Tools.Ground;
+                editorTool.Text = "1 - Ground";
+                prefix = 'g';
+                ClearSelection();
+            } // Ground
+            else if (e.Key == Keys.D2)
+            {
+                tool = Tools.Background;
+                editorTool.Text = "2 - Background";
+                prefix = 'b';
+                ClearSelection();
+            } // Background
+            else if (e.Key == Keys.D3)
+            {
+                tool = Tools.Spikes;
+                editorTool.Text = "3 - Spikes";
+                prefix = 's';
+                ClearSelection();
+            } // Spikes
+            else if (e.Key == Keys.D4)
+            {
+                tool = Tools.Trinket;
+                editorTool.Text = "4 - Trinket";
+                ClearSelection();
+            } // Trinkets
+            else if (e.Key == Keys.D5)
+            {
+                tool = Tools.Checkpoint;
+                editorTool.Text = "5 - Checkpoint";
+                ClearSelection();
+            } // Checkpoints
+            else if (e.Key == Keys.D6)
+            {
+                tool = Tools.Disappear;
+                editorTool.Text = "6 - Disappear";
+                ClearSelection();
+            } // Disappear
+            else if (e.Key == Keys.D7)
+            {
+                tool = Tools.Conveyor;
+                editorTool.Text = "7 - Conveyor";
+                ClearSelection();
+            } // Moving Platforms
+            else if (e.Key == Keys.D8)
+            {
+                tool = Tools.Platform;
+                editorTool.Text = "8 - Platform";
+                ClearSelection();
+            } // Conveyors
+            else if (e.Key == Keys.D9)
+            {
+                tool = Tools.Enemy;
+                editorTool.Text = "9 - Enemy";
+                ClearSelection();
+            } // Enemies
+            else if (e.Key == Keys.D0)
+            {
+                tool = Tools.GravityLine;
+                editorTool.Text = "0 - Grav Line";
+                ClearSelection();
+            } // Grav Lines
+            else if (e.Key == Keys.P)
+            {
+                tool = Tools.Start;
+                editorTool.Text = "P - Start";
+                ClearSelection();
+            } // Start Point
+            else if (e.Key == Keys.O)
+            {
+                tool = Tools.Crewman;
+                editorTool.Text = "O - Crewmate";
+                ClearSelection();
+            } // Crewmates
+            else if (e.Key == Keys.I)
+            {
+                tool = Tools.WarpLine;
+                editorTool.Text = "I - Warp Line";
+                ClearSelection();
+            } // Warp Lines
+            else if (e.Key == Keys.U)
+            {
+                tool = Tools.WarpToken;
+                editorTool.Text = "U - Warp Token";
+                ClearSelection();
+            } // Warp Tokens
+            else if (e.Key == Keys.Y)
+            {
+                tool = Tools.ScriptBox;
+                editorTool.Text = "Y - Script Box";
+                ClearSelection();
+            } // Script Boxes
+            else if (e.Key == Keys.T)
+            {
+                tool = Tools.Terminal;
+                editorTool.Text = "T - Terminal";
+                ClearSelection();
+            } // Terminals
+            else if (e.Key == Keys.R)
+            {
+                tool = Tools.RoomText;
+                editorTool.Text = "R - Roomtext";
+                ClearSelection();
+            } // Room Text
+            else if (e.Key == Keys.Semicolon)
+            {
+                tool = Tools.Lever;
+                editorTool.Text = "; - Lever";
+                ClearSelection();
+            } // Lever
+            else if (e.Key == Keys.Minus)
+            {
+                tool = Tools.Tiles;
+                tileSelection.X = currentTile.X * 8 - tileScroll.X;
+                tileSelection.Y = currentTile.Y * 8 - tileScroll.Y;
+                tileSelection.SetSize(1, 1);
+                editorTool.Text = "- - Tiles";
+                ClearSelection();
+            } // Tiles
+            else if (e.Key == Keys.Equal)
+            {
+                tool = Tools.Select;
+                editorTool.Text = "= - Select";
+                ClearSelection();
+            } // Select
+            else if (e.Key == Keys.GraveAccent)
+            {
+                tool = Tools.CustomSprite;
+                editorTool.Text = "` - Custom Sprite";
+                ClearSelection();
+            } // Custom Sprite
+        }
+
+        public PreviewScreen AnimationPreviews(Texture texture)
         {
             PreviewScreen ps = new PreviewScreen(new Sprite[] { }, null, Owner);
             int x = 20;
@@ -1658,13 +1711,17 @@ namespace V7
 
         public override void HandleWheel(int e)
         {
-            //throw new NotImplementedException();
+            
         }
 
         public override void Render(Matrix4 baseCamera, int viewMatrixLocation)
         {
             GL.UniformMatrix4(viewMatrixLocation, false, ref baseCamera);
             hudSprites.Render(Owner.FrameCount);
+            if (currentTool.Sprites is object)
+                currentTool.Sprites.Render(Owner.FrameCount);
+            if (ShowBoundsBoxes)
+                BoundsSprites.Render(Owner.FrameCount);
         }
         public override void DrawExtraHud(Matrix4 baseCamera, int viewMatrixLocation)
         {
@@ -1676,38 +1733,40 @@ namespace V7
         {
             if (replaceTiles)
                 ReplaceTiles();
-            bool shift = Owner.IsKeyHeld(Keys.LeftShift);
-            sprites.SortForCollisions();
-            selection.Color = Color.Blue;
+            Sprites.SortForCollisions();
+            if (ShowBoundsBoxes)
+                UpdateBoundsBoxes();
             selection.Visible = true;
-            if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Tiles || tool == Tools.Spikes)
-            {
-                if (isFill)
-                    selection.Color = Color.Magenta;
-                if (tool != Tools.Spikes)
-                {
-                    if (Owner.IsKeyHeld(Keys.Z))
-                    {
-                        tileToolW = 3;
-                        tileToolH = 3;
-                    }
-                    else if (Owner.IsKeyHeld(Keys.X))
-                    {
-                        tileToolW = 5;
-                        tileToolH = 5;
-                    }
-                    else
-                    {
-                        tileToolW = tileToolDefW;
-                        tileToolH = tileToolDefH;
-                    }
-                }
-                else
-                {
-                    tileToolW = tileToolH = 1;
-                }
-            }
-            else if (tool == Tools.Checkpoint || tool == Tools.Start || tool == Tools.Terminal || tool == Tools.CustomSprite || tool == Tools.Crewman || tool == Tools.Lever)
+            { 
+            //selection.Color = Color.Blue;
+            //if (tool == Tools.Background || tool == Tools.Ground || tool == Tools.Tiles || tool == Tools.Spikes)
+            //{
+            //    if (isFill)
+            //        selection.Color = Color.Magenta;
+            //    if (tool != Tools.Spikes)
+            //    {
+            //        if (Owner.IsKeyHeld(Keys.Z))
+            //        {
+            //            tileToolW = 3;
+            //            tileToolH = 3;
+            //        }
+            //        else if (Owner.IsKeyHeld(Keys.X))
+            //        {
+            //            tileToolW = 5;
+            //            tileToolH = 5;
+            //        }
+            //        else
+            //        {
+            //            tileToolW = tileToolDefW;
+            //            tileToolH = tileToolDefH;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        tileToolW = tileToolH = 1;
+            //    }
+            //}
+            //else if (tool == Tools.Checkpoint || tool == Tools.Start || tool == Tools.Terminal || tool == Tools.CustomSprite || tool == Tools.Crewman || tool == Tools.Lever)
             {
                 if (Owner.IsKeyHeld(Keys.Z))
                 {
@@ -1726,173 +1785,176 @@ namespace V7
                     flipToolX = false;
                 }
             }
-            if (CurrentEditingFocus == FocusOptions.Level && !currentlyBinding)
-                switch (tool)
-                {
-                    case Tools.Ground:
-                    case Tools.Background:
-                    case Tools.Spikes:
-                    case Tools.Tiles:
-                        {
-                            selection.SetSize(tileToolW, tileToolH);
-                            int x = tool == Tools.Tiles ? currentTile.X : autoTiles.Origin.X;
-                            int y = tool == Tools.Tiles ? currentTile.Y : autoTiles.Origin.Y;
-                            if (previewTile.Texture != currentTexture)
-                            {
-                                previewTile.ChangeTexture(currentTexture);
-                            }
-                            if (previewTile.TextureX != x || previewTile.TextureY != y)
-                            {
-                                previewTile.Animation = Animation.Static(x, y, currentTexture);
-                                previewTile.ResetAnimation();
-                            }
-                            string s = "  " + (tool == Tools.Tiles ? "Tile" : "Auto Tiles") + " {" + x.ToString() + ", " + y.ToString() + "}";
-                            if (tileLayer != -2)
-                            {
-                                s += " (Layer = " + tileLayer.ToString() + ")";
-                            }
-                            toolPrompt.Text = s;
-                            previewTile.Visible = true;
-                        }
-                        break;
-                    case Tools.Checkpoint:
-                        selection.SetSize(2, 2);
-                        toolPrompt.Text = "";
-                        break;
-                    case Tools.Trinket:
-                        selection.SetSize(2, 2);
-                        toolPrompt.Text = "Total Trinkets: " + Owner.LevelTrinkets.Count.ToString();
-                        break;
-                    case Tools.Enemy:
-                        {
-                            Rectangle r = new Rectangle(0, 0, 8, 8);
-                            Animation a = enemyTexture.AnimationFromName(enemyAnimation);
-                            if (a is object) r = a.Hitbox;
-                            selection.SetSize((int)Math.Ceiling(r.Width / 8f), (int)Math.Ceiling(r.Height / 8f));
-                            if (GiveDirection == null)
-                                toolPrompt.Text = enemyAnimation;
-                            else
-                                toolPrompt.Text = "Press arrow key for enemy direction";
-                            if (!hudSprites.Contains(toolPrompt))
-                                hudSprites.Add(toolPrompt);
-                        }
-                        break;
-                    case Tools.Disappear:
-                        {
-                            if (shift)
-                                selection.SetSize(1, 1);
-                            else
-                            {
-                                Animation a = platformTexture.AnimationFromName(disappearAnimation);
-                                if (a is object)
-                                    selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
-                            }
-                            toolPrompt.Text = disappearAnimation;
-                        }
-                        break;
-                    case Tools.Platform:
-                        {
-                            if (shift)
-                                selection.SetSize(1, 1);
-                            else
-                            {
-                                Animation a = platformTexture.AnimationFromName(platformAnimation);
-                                if (a is object)
-                                    selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
-                            }
-                            if (!toolPromptImportant)
-                                toolPrompt.Text = platformAnimation;
-                        }
-                        break;
-                    case Tools.Lever:
-                        {
-                            Rectangle r = new Rectangle(0, 0, 8, 8);
-                            Animation a = leverTexture.AnimationFromName(leverAnimation + "Off");
-                            if (a is object) r = a.Hitbox;
-                            selection.SetSize((int)Math.Ceiling(r.Width / 8f), (int)Math.Ceiling(r.Height / 8f));
-                            if (!toolPromptImportant)
-                                toolPrompt.Text = leverAnimation;
-                            if (!hudSprites.Contains(toolPrompt))
-                                hudSprites.Add(toolPrompt);
-                        }
-                        break;
-                    case Tools.Conveyor:
-                        {
-                            if (shift)
-                                selection.SetSize(1, 1);
-                            else
-                            {
-                                Animation a = platformTexture.AnimationFromName(conveyorAnimation);
-                                if (a is object)
-                                    selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
-                            }
-                            if (!toolPromptImportant)
-                                toolPrompt.Text = conveyorAnimation;
-                        }
-                        break;
-                    case Tools.Terminal:
-                        {
-                            Animation terminal = terminalTexture.AnimationFromName(terminalOff);
-                            if (terminal is object)
-                                selection.SetSize((int)Math.Ceiling(terminal.Hitbox.Width / 8d), (int)Math.Ceiling(terminal.Hitbox.Height / 8d));
-                            if (!toolPromptImportant)
-                                toolPrompt.Text = terminalOff + "/" + terminalOn;
-                        }
-                        break;
-                    case Tools.WarpToken:
-                        {
-                            Animation warp = warpTokenTexture.AnimationFromName(warpTokenAnimation);
-                            if (warp is object)
-                                selection.SetSize((int)Math.Ceiling(warp.Hitbox.Width / 8d), (int)Math.Ceiling(warp.Hitbox.Height / 8d));
-                            if (!toolPromptImportant)
-                                toolPrompt.Text = "";
-                        }
-                        break;
-                    case Tools.ScriptBox:
-                        selection.SetSize(1, 1);
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = "";
-                        break;
-                    case Tools.GravityLine:
-                    case Tools.WarpLine:
-                        selection.SetSize(1, 1);
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = "";
-                        break;
-                    case Tools.Start:
-                        selection.SetSize((int)Math.Ceiling(Player.Width / 8), (int)Math.Ceiling(Player.Height / 8));
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = "";
-                        break;
-                    case Tools.Crewman:
-                        selection.SetSize(2, 3);
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = crewmanTexture?.Name ?? "Press S to choose crewmate";
-                        break;
-                    case Tools.RoomText:
-                        selection.SetSize(1, 1);
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = "";
-                        break;
-                    case Tools.CustomSprite:
-                        {
-                            Animation anim = customSpriteTexture.AnimationFromName(customSpriteAnimation);
-                            if (anim is null)
-                                selection.SetSize(1, 1);
-                            else
-                                selection.SetSize((int)Math.Ceiling((float)anim.Hitbox.Width / 8), (int)Math.Ceiling((float)anim.Hitbox.Height / 8));
-                            toolPrompt.Text = customSpriteAnimation + " (" + customSpriteTexture.Name + ")";
-                        }
-                        break;
-                    case Tools.Select:
-                        selection.SetSize(1, 1);
-                        if (!toolPromptImportant)
-                            toolPrompt.Text = "";
-                        break;
-                    default:
-                        selection.SetSize(1, 1);
-                        break;
-                }
+            } // Backup
+            { 
+            //if (CurrentEditingFocus == FocusOptions.Level && !currentlyBinding)
+            //    switch (tool)
+            //    {
+            //        case Tools.Ground:
+            //        case Tools.Background:
+            //        case Tools.Spikes:
+            //        case Tools.Tiles:
+            //            {
+            //                selection.SetSize(tileToolW, tileToolH);
+            //                int x = tool == Tools.Tiles ? currentTile.X : autoTiles.Origin.X;
+            //                int y = tool == Tools.Tiles ? currentTile.Y : autoTiles.Origin.Y;
+            //                if (previewTile.Texture != currentTexture)
+            //                {
+            //                    previewTile.ChangeTexture(currentTexture);
+            //                }
+            //                if (previewTile.TextureX != x || previewTile.TextureY != y)
+            //                {
+            //                    previewTile.Animation = Animation.Static(x, y, currentTexture);
+            //                    previewTile.ResetAnimation();
+            //                }
+            //                string s = "  " + (tool == Tools.Tiles ? "Tile" : "Auto Tiles") + " {" + x.ToString() + ", " + y.ToString() + "}";
+            //                if (tileLayer != -2)
+            //                {
+            //                    s += " (Layer = " + tileLayer.ToString() + ")";
+            //                }
+            //                toolPrompt.Text = s;
+            //                previewTile.Visible = true;
+            //            }
+            //            break;
+            //        case Tools.Checkpoint:
+            //            selection.SetSize(2, 2);
+            //            toolPrompt.Text = "";
+            //            break;
+            //        case Tools.Trinket:
+            //            selection.SetSize(2, 2);
+            //            toolPrompt.Text = "Total Trinkets: " + Owner.LevelTrinkets.Count.ToString();
+            //            break;
+            //        case Tools.Enemy:
+            //            {
+            //                Rectangle r = new Rectangle(0, 0, 8, 8);
+            //                Animation a = enemyTexture.AnimationFromName(enemyAnimation);
+            //                if (a is object) r = a.Hitbox;
+            //                selection.SetSize((int)Math.Ceiling(r.Width / 8f), (int)Math.Ceiling(r.Height / 8f));
+            //                if (GiveDirection == null)
+            //                    toolPrompt.Text = enemyAnimation;
+            //                else
+            //                    toolPrompt.Text = "Press arrow key for enemy direction";
+            //                if (!hudSprites.Contains(toolPrompt))
+            //                    hudSprites.Add(toolPrompt);
+            //            }
+            //            break;
+            //        case Tools.Disappear:
+            //            {
+            //                if (shift)
+            //                    selection.SetSize(1, 1);
+            //                else
+            //                {
+            //                    Animation a = platformTexture.AnimationFromName(disappearAnimation);
+            //                    if (a is object)
+            //                        selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
+            //                }
+            //                toolPrompt.Text = disappearAnimation;
+            //            }
+            //            break;
+            //        case Tools.Platform:
+            //            {
+            //                if (shift)
+            //                    selection.SetSize(1, 1);
+            //                else
+            //                {
+            //                    Animation a = platformTexture.AnimationFromName(platformAnimation);
+            //                    if (a is object)
+            //                        selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
+            //                }
+            //                if (!toolPromptImportant)
+            //                    toolPrompt.Text = platformAnimation;
+            //            }
+            //            break;
+            //        case Tools.Lever:
+            //            {
+            //                Rectangle r = new Rectangle(0, 0, 8, 8);
+            //                Animation a = leverTexture.AnimationFromName(leverAnimation + "Off");
+            //                if (a is object) r = a.Hitbox;
+            //                selection.SetSize((int)Math.Ceiling(r.Width / 8f), (int)Math.Ceiling(r.Height / 8f));
+            //                if (!toolPromptImportant)
+            //                    toolPrompt.Text = leverAnimation;
+            //                if (!hudSprites.Contains(toolPrompt))
+            //                    hudSprites.Add(toolPrompt);
+            //            }
+            //            break;
+            //        case Tools.Conveyor:
+            //            {
+            //                if (shift)
+            //                    selection.SetSize(1, 1);
+            //                else
+            //                {
+            //                    Animation a = platformTexture.AnimationFromName(conveyorAnimation);
+            //                    if (a is object)
+            //                        selection.SetSize((int)Math.Ceiling(a.Hitbox.Width / 2d), (int)Math.Ceiling(a.Hitbox.Height / 8d));
+            //                }
+            //                if (!toolPromptImportant)
+            //                    toolPrompt.Text = conveyorAnimation;
+            //            }
+            //            break;
+            //        case Tools.Terminal:
+            //            {
+            //                Animation terminal = terminalTexture.AnimationFromName(terminalOff);
+            //                if (terminal is object)
+            //                    selection.SetSize((int)Math.Ceiling(terminal.Hitbox.Width / 8d), (int)Math.Ceiling(terminal.Hitbox.Height / 8d));
+            //                if (!toolPromptImportant)
+            //                    toolPrompt.Text = terminalOff + "/" + terminalOn;
+            //            }
+            //            break;
+            //        case Tools.WarpToken:
+            //            {
+            //                Animation warp = warpTokenTexture.AnimationFromName(warpTokenAnimation);
+            //                if (warp is object)
+            //                    selection.SetSize((int)Math.Ceiling(warp.Hitbox.Width / 8d), (int)Math.Ceiling(warp.Hitbox.Height / 8d));
+            //                if (!toolPromptImportant)
+            //                    toolPrompt.Text = "";
+            //            }
+            //            break;
+            //        case Tools.ScriptBox:
+            //            selection.SetSize(1, 1);
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = "";
+            //            break;
+            //        case Tools.GravityLine:
+            //        case Tools.WarpLine:
+            //            selection.SetSize(1, 1);
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = "";
+            //            break;
+            //        case Tools.Start:
+            //            selection.SetSize((int)Math.Ceiling(Player.Width / 8), (int)Math.Ceiling(Player.Height / 8));
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = "";
+            //            break;
+            //        case Tools.Crewman:
+            //            selection.SetSize(2, 3);
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = crewmanTexture?.Name ?? "Press S to choose crewmate";
+            //            break;
+            //        case Tools.RoomText:
+            //            selection.SetSize(1, 1);
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = "";
+            //            break;
+            //        case Tools.CustomSprite:
+            //            {
+            //                Animation anim = customSpriteTexture.AnimationFromName(customSpriteAnimation);
+            //                if (anim is null)
+            //                    selection.SetSize(1, 1);
+            //                else
+            //                    selection.SetSize((int)Math.Ceiling((float)anim.Hitbox.Width / 8), (int)Math.Ceiling((float)anim.Hitbox.Height / 8));
+            //                toolPrompt.Text = customSpriteAnimation + " (" + customSpriteTexture.Name + ")";
+            //            }
+            //            break;
+            //        case Tools.Select:
+            //            selection.SetSize(1, 1);
+            //            if (!toolPromptImportant)
+            //                toolPrompt.Text = "";
+            //            break;
+            //        default:
+            //            selection.SetSize(1, 1);
+            //            break;
+            //    }
+            } // Backup
             if (Owner.MouseIn)
             {
                 selection.Visible = true;
@@ -1908,6 +1970,73 @@ namespace V7
                 selection.Bottom = 0;
             }
             if (CurrentEditingFocus == FocusOptions.Level)
+            {
+                Sprites.SortForCollisions();
+                currentTool.Process();
+                Rectangle r = new Rectangle(currentTool.Position, currentTool.Size);
+                selection.X = r.X;
+                selection.Y = r.Y;
+                selection.SetSize(r.Width, r.Height);
+                selection.Color = currentTool.Color;
+            }
+            else if (CurrentEditingFocus == FocusOptions.Tileset)
+            {
+                TilesTool tt = currentTool as TilesTool;
+                if (tt is null)
+                    HideTileset();
+                else
+                {
+                    if (!tt.IsAuto)
+                    {
+                        if (LeftMouse)
+                        {
+                            tt.Tile = new Point((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
+                            tileSelection.X = selection.X;
+                            tileSelection.Y = selection.Y;
+                            tileSelection.SetSize(1, 1);
+                        }
+                    }
+                    else
+                    {
+                        if (LeftMouse)
+                        {
+                            if (selection.WidthTiles == 3 && selection.HeightTiles == 1)
+                            {
+                                autoTiles = AutoTileSettings.Default3((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
+                                tileSelection.X = selection.X;
+                                tileSelection.Y = selection.Y;
+                                tileSelection.SetSize(3, 1);
+                            }
+                            else if (selection.HeightTiles == 5)
+                            {
+                                autoTiles = AutoTileSettings.Default13((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
+                                tileSelection.X = selection.X;
+                                tileSelection.Y = selection.Y;
+                                tileSelection.SetSize(3, 5);
+                            }
+                            else if (selection.WidthTiles == 8)
+                            {
+                                autoTiles = AutoTileSettings.Default47((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
+                                tileSelection.X = selection.X;
+                                tileSelection.Y = selection.Y;
+                                tileSelection.SetSize(8, 6);
+                            }
+                            else if (selection.WidthTiles == 4)
+                            {
+                                autoTiles = AutoTileSettings.Default4((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
+                                tileSelection.X = selection.X;
+                                tileSelection.Y = selection.Y;
+                                tileSelection.SetSize(4, 1);
+                            }
+                        }
+                    }
+                }
+            }
+            HandleHUD();
+        }
+
+        void backupProcessTool()
+        {
             {
                 if (currentlyBinding)
                 {
@@ -1954,7 +2083,7 @@ namespace V7
                             if (!LeftMouse)
                             {
                                 selecting = false;
-                                List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, selection.Width, selection.Height);
+                                List<Sprite> col = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, selection.Width, selection.Height);
                                 foreach (Sprite s in col)
                                 {
                                     if (s is BoxSprite && !(s is ScriptBox)) continue;
@@ -1968,14 +2097,14 @@ namespace V7
                                         b.CenterX = s.CenterX;
                                         b.CenterY = s.CenterY;
                                         selectBoxes.Add(b);
-                                        sprites.Add(b);
+                                        Sprites.Add(b);
 
                                     }
                                     else if (selectedSprites.Contains(s))
                                     {
                                         int i = selectedSprites.IndexOf(s);
                                         BoxSprite b = selectBoxes[i];
-                                        sprites.Remove(b);
+                                        Sprites.Remove(b);
                                         selectBoxes.RemoveAt(i);
                                         selectedSprites.RemoveAt(i);
                                     }
@@ -2012,7 +2141,7 @@ namespace V7
                                 bool drag = false;
                                 if (!Owner.IsKeyHeld(Keys.LeftShift))
                                 {
-                                    List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 1, 1);
+                                    List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 1, 1);
                                     foreach (Sprite s in spr)
                                     {
                                         if (selectedSprites.Contains(s))
@@ -2040,7 +2169,7 @@ namespace V7
                             else if (MiddleMouse)
                             {
                                 bool isSelected = false;
-                                List<Sprite> colliders = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> colliders = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 Sprite s = null;
                                 foreach (Sprite sprite in colliders)
                                 {
@@ -2058,7 +2187,7 @@ namespace V7
                                     b.CenterX = s.CenterX;
                                     b.CenterY = s.CenterY;
                                     selectBoxes.Add(b);
-                                    sprites.Add(b);
+                                    Sprites.Add(b);
                                 }
                                 SetProperty();
                             }
@@ -2066,7 +2195,7 @@ namespace V7
                             {
                                 stillHolding = true;
                                 bool isSelected = false;
-                                List<Sprite> colliders = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> colliders = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 Sprite s = null;
                                 foreach (Sprite sprite in colliders)
                                 {
@@ -2086,7 +2215,7 @@ namespace V7
                                         b.CenterX = s.CenterX;
                                         b.CenterY = s.CenterY;
                                         selectBoxes.Add(b);
-                                        sprites.Add(b);
+                                        Sprites.Add(b);
                                     }
                                 }
                                 if (selectedSprites.Count > 0)
@@ -2289,9 +2418,9 @@ namespace V7
                                                 {
                                                     foreach (Sprite sprite in selectedSprites)
                                                     {
-                                                        sprites.RemoveFromCollisions(sprite);
+                                                        Sprites.RemoveFromCollisions(sprite);
                                                         sprite.Layer = l;
-                                                        sprites.AddForCollisions(sprite);
+                                                        Sprites.AddForCollisions(sprite);
                                                     }
                                                 }
                                             }
@@ -2363,7 +2492,7 @@ namespace V7
                                     if (!selecting)
                                     {
                                         selecting = true;
-                                        Owner.TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, tool, autoTiles, currentTile, tileLayer, currentTexture, prefix, lr: !Owner.IsKeyHeld(Keys.RightBracket), ud: !Owner.IsKeyHeld(Keys.LeftBracket));
+                                        Owner.TileFillTool(selection.X + CameraX, selection.Y + CameraY, lm, Tools.Tiles, autoTiles, currentTile, tileLayer, currentTexture, prefix, lr: !Owner.IsKeyHeld(Keys.RightBracket), ud: !Owner.IsKeyHeld(Keys.LeftBracket));
                                     }
                                 }
                             }
@@ -2471,14 +2600,14 @@ namespace V7
                                         t.CenterY = selection.CenterY + CameraY;
                                         t.InitializePosition();
                                         t.SetID(id);
-                                        sprites.Add(t);
+                                        Sprites.Add(t);
                                         selecting = true;
                                     }
                                 }
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Trinket)
@@ -2503,25 +2632,25 @@ namespace V7
                                 if (!flipToolY)
                                     cp.Bottom = selection.Bottom + CameraY;
                                 cp.InitializePosition();
-                                sprites.Add(cp);
+                                Sprites.Add(cp);
                             }
                             else if (!LeftMouse & selecting)
                                 selecting = false;
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Checkpoint)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
                         }
                         else if (tool == Tools.Disappear)
                         {
-                            if (shift && !dragging)
+                            if (true && !dragging)
                             {
                                 selection.SetSize(1, 1);
                                 if (LeftMouse)
@@ -2553,19 +2682,19 @@ namespace V7
                                 selecting = false;
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Platform)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
                         }
                         else if (tool == Tools.Conveyor)
                         {
-                            if (shift && !dragging)
+                            if (true && !dragging)
                             {
                                 selection.SetSize(1, 1);
                                 if (LeftMouse)
@@ -2597,19 +2726,19 @@ namespace V7
                                 selecting = false;
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Platform)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
                         }
                         else if (tool == Tools.Platform)
                         {
-                            if (shift && !dragging)
+                            if (true && !dragging)
                             {
                                 selection.SetSize(1, 1);
                                 if (LeftMouse)
@@ -2641,19 +2770,19 @@ namespace V7
                                 selecting = false;
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Platform)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
                             else if (MiddleMouse && !stillHolding)
                             {
                                 stillHolding = true;
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Platform)
@@ -2691,7 +2820,7 @@ namespace V7
                                     enemy.InitializePosition();
                                     enemy.Color = roomColor;
                                     enemy.ResetAnimation();
-                                    sprites.AddForCollisions(enemy);
+                                    Sprites.AddForCollisions(enemy);
                                     if (!hudSprites.Contains(toolPrompt))
                                         hudSprites.Add(toolPrompt);
                                     toolPromptImportant = true;
@@ -2706,7 +2835,7 @@ namespace V7
                                         else if (d == Keys.Right)
                                             enemy.XVelocity = 2;
                                         else if (d == Keys.Escape)
-                                            sprites.Remove(enemy);
+                                            Sprites.Remove(enemy);
                                         toolPromptImportant = false;
                                     };
                                 }
@@ -2715,19 +2844,19 @@ namespace V7
                                 selecting = false;
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Enemy)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
                             else if (MiddleMouse && !stillHolding)
                             {
                                 stillHolding = true;
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Enemy)
@@ -2778,7 +2907,7 @@ namespace V7
                                         else
                                             gl.CenterX = (int)(selection.CenterX + CameraX);
                                         gl.InitializePosition();
-                                        sprites.AddForCollisions(gl);
+                                        Sprites.AddForCollisions(gl);
                                     }
                                     else if (tool == Tools.WarpLine)
                                     {
@@ -2818,7 +2947,7 @@ namespace V7
                                             }
                                         }
                                         wl.InitializePosition();
-                                        sprites.Add(wl);
+                                        Sprites.Add(wl);
                                     }
                                 }
                             }
@@ -2831,19 +2960,19 @@ namespace V7
                                 }
                                 else if (RightMouse)
                                 {
-                                    List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                    List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                     foreach (Sprite sprite in spr)
                                     {
                                         if ((tool == Tools.GravityLine && sprite is GravityLine) || (tool == Tools.WarpLine && sprite is WarpLine))
                                         {
-                                            sprites.RemoveFromCollisions(sprite);
+                                            Sprites.RemoveFromCollisions(sprite);
                                         }
                                     }
                                 }
                                 else if (tool == Tools.GravityLine && MiddleMouse && !stillHolding)
                                 {
                                     stillHolding = true;
-                                    List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                    List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                     foreach (Sprite sprite in spr)
                                     {
                                         if (sprite is GravityLine)
@@ -2869,9 +2998,9 @@ namespace V7
                         {
                             if (LeftMouse)
                             {
-                                if (!sprites.Contains(Player))
+                                if (!Sprites.Contains(Player))
                                 {
-                                    sprites.Add(Player);
+                                    Sprites.Add(Player);
                                 }
                                 Player.Visible = true;
                                 Player.CenterX = selection.CenterX + CameraX;
@@ -2892,9 +3021,9 @@ namespace V7
                                 {
                                     Owner.LoadRoom(Owner.StartRoomX, Owner.StartRoomY);
                                 }
-                                if (!sprites.Contains(Player))
+                                if (!Sprites.Contains(Player))
                                 {
-                                    sprites.Add(Player);
+                                    Sprites.Add(Player);
                                     Player.Visible = true;
                                 }
                                 Player.X = Owner.StartX;
@@ -2939,7 +3068,7 @@ namespace V7
                                         else
                                             c.Name = null;
                                         c.InitializePosition();
-                                        sprites.Add(c);
+                                        Sprites.Add(c);
                                     }
                                     else
                                     {
@@ -2955,8 +3084,8 @@ namespace V7
                                             c.Bottom = bottom;
                                         c.FlipX = flipX;
                                         c.InitializePosition();
-                                        if (!sprites.Contains(c))
-                                            sprites.Add(c);
+                                        if (!Sprites.Contains(c))
+                                            Sprites.Add(c);
                                     }
                                 }
                             }
@@ -2966,7 +3095,7 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sp in spr)
                                 {
                                     if (sp is Crewman && sp != Player)
@@ -2988,7 +3117,7 @@ namespace V7
                                     {
                                         wt.CenterX = selection.CenterX + CameraX;
                                         wt.CenterY = selection.CenterY + CameraY;
-                                        sprites.Add(wt);
+                                        Sprites.Add(wt);
                                         currentWarp = wt;
                                         WarpRoom = Owner.CurrentRoom;
                                         toolPrompt.Text = "Choose Warp Token output...";
@@ -3006,17 +3135,17 @@ namespace V7
                                     RoomDatas[WarpRoom.X + WarpRoom.Y * 100] = WarpRoom.Save(Owner);
                                     Texture sp32 = Owner.TextureFromName("sprites32");
                                     WarpToken.WarpData data = new WarpToken.WarpData(currentWarp, WarpRoom.X, WarpRoom.Y);
-                                    WarpTokenOutput wto = new WarpTokenOutput(currentWarp.OutX, currentWarp.OutY, sp32, sp32.AnimationFromName("WarpToken"), data);
-                                    Owner.Warps.Add(data);
+                                    WarpTokenOutput wto = new WarpTokenOutput(currentWarp.OutX, currentWarp.OutY, sp32, sp32.AnimationFromName("WarpToken"), data, currentWarp.ID);
+                                    Owner.Warps.Add(Owner.GetNextWarpID(), data);
                                     currentWarp = null;
                                     WarpRoom = null;
-                                    sprites.Add(wto);
+                                    Sprites.Add(wto);
                                 }
                             }
                             else if (MiddleMouse & !selecting)
                             {
                                 selecting = true;
-                                List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> col = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sprite in col)
                                 {
                                     if (sprite is WarpToken)
@@ -3047,7 +3176,7 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is WarpToken)
@@ -3076,7 +3205,7 @@ namespace V7
                                     if (currentlyResizing is null)
                                     {
                                         ScriptBox sb = new ScriptBox(selection.X + CameraX, selection.Y + CameraY, Owner.BoxTexture, selection.WidthTiles, selection.HeightTiles, null, Owner);
-                                        sprites.Add(sb);
+                                        Sprites.Add(sb);
                                         toolPrompt.Text = "[Script Name]";
                                         toolPromptImportant = true;
                                         Owner.StartTyping(toolPrompt, (r, st) =>
@@ -3093,7 +3222,7 @@ namespace V7
                                             }
                                             else
                                             {
-                                                sprites.Remove(sb);
+                                                Sprites.Remove(sb);
                                             }
                                             toolPromptImportant = false;
                                         }, true);
@@ -3118,7 +3247,7 @@ namespace V7
                                 if (Owner.IsKeyHeld(Keys.LeftShift))
                                 {
                                     stillHolding = true;
-                                    List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, 8, 8);
+                                    List<Sprite> col = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, 8, 8);
                                     ScriptBox resize = null;
                                     foreach (Sprite sprite in col)
                                     {
@@ -3147,7 +3276,7 @@ namespace V7
                             }
                             else if (MiddleMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is ScriptBox && (sprite as ScriptBox).Script is object)
@@ -3163,7 +3292,7 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is ScriptBox)
@@ -3188,7 +3317,7 @@ namespace V7
                                 }
                                 else
                                     t.Bottom = selection.Bottom + CameraY;
-                                sprites.Add(t);
+                                Sprites.Add(t);
                                 if (!hudSprites.Contains(toolPrompt))
                                     hudSprites.Add(toolPrompt);
                                 toolPrompt.Text = "[Script Name]";
@@ -3207,7 +3336,7 @@ namespace V7
                                     }
                                     else
                                     {
-                                        sprites.Remove(t);
+                                        Sprites.Remove(t);
                                     }
                                     toolPromptImportant = false;
                                 }, true);
@@ -3217,7 +3346,7 @@ namespace V7
                             }
                             else if (MiddleMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Terminal && (sprite as Terminal).Script is object)
@@ -3233,12 +3362,12 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Terminal)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
@@ -3253,10 +3382,10 @@ namespace V7
                                 {
                                     if (!b)
                                     {
-                                        sprites.Remove(s);
+                                        Sprites.Remove(s);
                                     }
                                 }, true);
-                                sprites.Add(s);
+                                Sprites.Add(s);
                             }
                             else if (!LeftMouse && !MiddleMouse && selecting)
                             {
@@ -3264,7 +3393,7 @@ namespace V7
                             }
                             else if (MiddleMouse && !selecting)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sp in spr)
                                 {
                                     if (sp is StringDrawable)
@@ -3285,14 +3414,14 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sp in spr)
                                 {
                                     if (sp is StringDrawable)
                                     {
                                         if (sp == Owner.TypingTo)
                                             Owner.StartTyping(null);
-                                        sprites.RemoveFromCollisions(sp);
+                                        Sprites.RemoveFromCollisions(sp);
                                     }
                                 }
                             }
@@ -3330,7 +3459,7 @@ namespace V7
                                             lever.Bottom = selection.Bottom;
                                     }
                                 }
-                                sprites.Add(lever);
+                                Sprites.Add(lever);
                                 if (!hudSprites.Contains(toolPrompt))
                                     hudSprites.Add(toolPrompt);
                                 toolPrompt.Text = "[Script Name]";
@@ -3349,7 +3478,7 @@ namespace V7
                                     }
                                     else
                                     {
-                                        sprites.Remove(lever);
+                                        Sprites.Remove(lever);
                                     }
                                     toolPromptImportant = false;
                                 }, true);
@@ -3361,7 +3490,7 @@ namespace V7
                                 selecting = false;
                             else if (MiddleMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Lever && (sprite as Lever).Script is object)
@@ -3373,12 +3502,12 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(MouseX + CameraX, MouseY + CameraY, 2, 2);
                                 foreach (Sprite sprite in spr)
                                 {
                                     if (sprite is Lever)
                                     {
-                                        sprites.RemoveFromCollisions(sprite);
+                                        Sprites.RemoveFromCollisions(sprite);
                                     }
                                 }
                             }
@@ -3398,7 +3527,7 @@ namespace V7
                                     cs.CenterX = selection.CenterX + CameraX;
                                     cs.CenterY = selection.CenterY + CameraY;
                                     cs.InitializePosition();
-                                    sprites.AddForCollisions(cs);
+                                    Sprites.AddForCollisions(cs);
                                 }
                             }
                             else if (!LeftMouse && selecting)
@@ -3407,12 +3536,12 @@ namespace V7
                             }
                             else if (RightMouse)
                             {
-                                List<Sprite> spr = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
+                                List<Sprite> spr = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY);
                                 foreach (Sprite sp in spr)
                                 {
                                     if (sp.GetType() == typeof(Sprite))
                                     {
-                                        sprites.RemoveFromCollisions(sp);
+                                        Sprites.RemoveFromCollisions(sp);
                                         //if (sp == typingTo)
                                         //{
                                         //    EscapeTyping();
@@ -3443,7 +3572,7 @@ namespace V7
                                 toolPrompt.Text = "";
                                 toolPromptImportant = false;
                                 IPlatform att = null;
-                                List<Sprite> col = sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, 8, 8);
+                                List<Sprite> col = Sprites.GetPotentialColliders(selection.X + CameraX, selection.Y + CameraY, 8, 8);
                                 foreach (Sprite c in col)
                                 {
                                     if (c is IPlatform)
@@ -3464,55 +3593,7 @@ namespace V7
                         }
                     }
                 }
-            }
-            else if (CurrentEditingFocus == FocusOptions.Tileset)
-            {
-                if (tool == Tools.Tiles)
-                {
-                    if (LeftMouse)
-                    {
-                        currentTile = new Point((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
-                        tileSelection.X = selection.X;
-                        tileSelection.Y = selection.Y;
-                        tileSelection.SetSize(1, 1);
-                    }
-                }
-                else if (tool == Tools.Ground || tool == Tools.Background || tool == Tools.Spikes)
-                {
-                    if (LeftMouse)
-                    {
-                        if (selection.WidthTiles == 3 && selection.HeightTiles == 1)
-                        {
-                            autoTiles = AutoTileSettings.Default3((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
-                            tileSelection.X = selection.X;
-                            tileSelection.Y = selection.Y;
-                            tileSelection.SetSize(3, 1);
-                        }
-                        else if (selection.HeightTiles == 5)
-                        {
-                            autoTiles = AutoTileSettings.Default13((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
-                            tileSelection.X = selection.X;
-                            tileSelection.Y = selection.Y;
-                            tileSelection.SetSize(3, 5);
-                        }
-                        else if (selection.WidthTiles == 8)
-                        {
-                            autoTiles = AutoTileSettings.Default47((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
-                            tileSelection.X = selection.X;
-                            tileSelection.Y = selection.Y;
-                            tileSelection.SetSize(8, 6);
-                        }
-                        else if (selection.WidthTiles == 4)
-                        {
-                            autoTiles = AutoTileSettings.Default4((int)(selection.X + tileScroll.X) / 8, (int)(selection.Y + tileScroll.Y) / 8);
-                            tileSelection.X = selection.X;
-                            tileSelection.Y = selection.Y;
-                            tileSelection.SetSize(4, 1);
-                        }
-                    }
-                }
-            }
-            HandleHUD();
+            } // Backup
         }
 
         internal void ExitPlaytest()
@@ -3529,7 +3610,7 @@ namespace V7
             previewTile.Visible = false;
             foreach (BoxSprite sprite in selectBoxes)
             {
-                sprites.Remove(sprite);
+                Sprites.Remove(sprite);
                 sprite.Dispose();
             }
             selectBoxes.Clear();
@@ -3691,7 +3772,7 @@ namespace V7
             tileLayer = -2;
             if (replaceAutoTiles)
             {
-                foreach (Tile tile in sprites.Where((s) => s is Tile && s.Layer == -2))
+                foreach (Tile tile in Sprites.Where((s) => s is Tile && s.Layer == -2))
                 {
                     if (tile.Tag is null || tile.Tag == "") continue;
                     switch (tile.Tag.First())
@@ -3727,7 +3808,7 @@ namespace V7
             }
             else
             {
-                foreach (Tile tile in sprites.Where((s) => s is Tile))
+                foreach (Tile tile in Sprites.Where((s) => s is Tile))
                 {
                     tile.ChangeTexture(currentTexture);
                 }
@@ -3753,7 +3834,7 @@ namespace V7
                 platform.Color = Color.FromArgb(255, r, g, b);
                 platform.ResetAnimation();
                 platform.InitializePosition();
-                sprites.AddForCollisions(platform);
+                Sprites.AddForCollisions(platform);
                 toolPrompt.Text = "Press arrow key for platform direction";
                 toolPromptImportant = true;
                 GiveDirection = (d) =>
@@ -3768,7 +3849,7 @@ namespace V7
                         platform.Conveyor = 2;
                     }
                     else if (d == Keys.Escape)
-                        sprites.Remove(platform);
+                        Sprites.Remove(platform);
                     toolPromptImportant = false;
                 };
             }
@@ -3789,7 +3870,7 @@ namespace V7
                 platform.Color = Color.FromArgb(255, r, g, b);
                 platform.ResetAnimation();
                 platform.InitializePosition();
-                sprites.AddForCollisions(platform);
+                Sprites.AddForCollisions(platform);
                 toolPrompt.Text = "Press arrow key for platform direction";
                 if (!hudSprites.Contains(toolPrompt))
                     hudSprites.Add(toolPrompt);
@@ -3805,7 +3886,7 @@ namespace V7
                     else if (d == Keys.Right)
                         platform.XVelocity = 2;
                     else if (d == Keys.Escape)
-                        sprites.Remove(platform);
+                        Sprites.Remove(platform);
                     toolPromptImportant = false;
                 };
             }
@@ -3825,7 +3906,7 @@ namespace V7
                 int b = c.B + (255 - c.B) / 2;
                 platform.Color = Color.FromArgb(255, r, g, b);
                 platform.InitializePosition();
-                sprites.AddForCollisions(platform);
+                Sprites.AddForCollisions(platform);
             }
         }
 
@@ -3892,9 +3973,7 @@ namespace V7
                                 case SpriteProperty.Types.Bool:
                                     choices = new List<string> { "True", "False" };
                                     break;
-                                case SpriteProperty.Types.Rectangle:
                                 case SpriteProperty.Types.Color:
-                                case SpriteProperty.Types.Point:
                                     break;
                                 case SpriteProperty.Types.Texture:
                                     choices = new List<string>();
@@ -4036,7 +4115,7 @@ namespace V7
             TileTexture t = p.Texture;
             if (t != null && CurrentRoom.TileTexture != t)
             {
-                foreach (Sprite tile in sprites)
+                foreach (Sprite tile in Sprites)
                 {
                     if (tile is Tile)
                     {
@@ -4046,7 +4125,7 @@ namespace V7
                 CurrentRoom.TileTexture = t;
             }
             CurrentRoom.UsePreset(p, g.Name);
-            foreach (Sprite sprite in sprites)
+            foreach (Sprite sprite in Sprites)
             {
                 if (sprite is Platform)
                 {
@@ -4092,20 +4171,6 @@ namespace V7
                     selection.Visible = tileSelection.Visible =
                         CurrentEditingFocus == FocusOptions.Tileset;
                 }
-                Owner.RoomNameBar.Color = Color.FromArgb(100, 0, 0, 0);
-                if (selection.Y > 200 || hideToolbars)
-                {
-                    if (Owner.RoomNameBar.Y < Game.RESOLUTION_HEIGHT)
-                    {
-                        Owner.RoomName.Y += 1;
-                        Owner.RoomNameBar.Y += 1;
-                    }
-                }
-                else if (Owner.RoomNameBar.Bottom > Game.RESOLUTION_HEIGHT)
-                {
-                    Owner.RoomName.Y -= 1;
-                    Owner.RoomNameBar.Y -= 1;
-                }
                 if ((selection.Y < 56 && Owner.MouseIn) || hideToolbars)
                 {
                     if (topEditor.Bottom > 0)
@@ -4124,14 +4189,12 @@ namespace V7
                     if (topEditor.Y >= Game.RESOLUTION_HEIGHT)
                         MoveTop(-Game.RESOLUTION_HEIGHT - topEditor.Height);
                 }
-                if (toolPromptImportant)
-                    toolPrompt.Color = Color.Red;
-                else
-                    toolPrompt.Color = Color.LightBlue;
-                Owner.RoomName.CenterX = Game.RESOLUTION_WIDTH / 2;
-                Owner.RoomName.Y = Owner.RoomNameBar.Y + 1;
-                selection.Visible = true;
             }
+            if (currentTool.PromptImportant)
+                toolPrompt.Color = Color.Red;
+            else
+                toolPrompt.Color = Color.LightBlue;
+            selection.Visible = true;
             if (Owner.MouseIn)
             {
                 selecLoc.Text = "[" + selection.X.ToString() + "," + selection.Y.ToString() + "]";
@@ -4141,6 +4204,39 @@ namespace V7
                 selecLoc.Text = "[-,-]";
             }
             selecLoc.Right = RoomLoc.X - 4;
+            editorTool.Text = currentTool.Key + " - " + currentTool.Name;
+            toolPrompt.Text = currentTool.Prompt;
+            if (currentTool.PreviewTexture is object)
+            {
+                previewTile.Visible = true;
+                if (previewTile.Texture != currentTool.PreviewTexture)
+                {
+                    hudSprites.Remove(previewTile);
+                    previewTile.ChangeTexture(currentTool.PreviewTexture);
+                    hudSprites.Add(previewTile);
+                }
+                previewTile.Animation = Animation.Static(currentTool.PreviewPoint.X, currentTool.PreviewPoint.Y, currentTool.PreviewTexture);
+            }
+            else
+            {
+                previewTile.Visible = false;
+            }
+            Owner.RoomNameBar.Color = Color.FromArgb(100, 0, 0, 0);
+            if (selection.Y > 200 || hideToolbars)
+            {
+                if (Owner.RoomNameBar.Y < Game.RESOLUTION_HEIGHT)
+                {
+                    Owner.RoomName.Y += 1;
+                    Owner.RoomNameBar.Y += 1;
+                }
+            }
+            else if (Owner.RoomNameBar.Bottom > Game.RESOLUTION_HEIGHT)
+            {
+                Owner.RoomName.Y -= 1;
+                Owner.RoomNameBar.Y -= 1;
+            }
+            Owner.RoomName.CenterX = Game.RESOLUTION_WIDTH / 2;
+            Owner.RoomName.Y = Owner.RoomNameBar.Y + 1;
         }
 
         private void MoveTop(float y)

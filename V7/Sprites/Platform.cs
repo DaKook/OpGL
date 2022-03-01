@@ -10,7 +10,7 @@ using System.Drawing;
 
 namespace V7
 {
-    public class Platform : InstancedSprite, IPlatform, IBoundSprite, IMovingSprite, ISolidObject
+    public class Platform : BoxSprite, IPlatform, IBoundSprite, IMovingSprite, ISolidObject
     {
         public override Pushability Pushability => Pushability.Solid;
         public float XSpeed;
@@ -21,60 +21,79 @@ namespace V7
         public float Conveyor { get; set; }
         public bool Sticky { get; set; }
         public Script BoardEvent;
+        public Script LeaveEvent;
         SpriteProperty evBoard => new SpriteProperty("BoardEvent", () => BoardEvent?.Name ?? "", (t, g) => BoardEvent = g.ScriptFromName((string)t ?? ""), "", SpriteProperty.Types.Script, "The script to run when the platform is boarded by a crewman.");
+        SpriteProperty evLeave => new SpriteProperty("LeaveEvent", () => LeaveEvent?.Name ?? "", (t, g) => LeaveEvent = g.ScriptFromName((string)t ?? ""), "", SpriteProperty.Types.Script, "The script to run when the platform is left by a crewman.");
         public bool CanDisappear;
         public Animation NormalAnimation;
         public Animation DisappearAnimation;
         public bool IsDisappearing = false;
         private int DisappearFrames = -1;
         public bool MultiTexture = true;
-        private int _length = 4;
+
+        public override float Height => Animation.Hitbox.Height * VLength;
+        public override float Width => Animation.Hitbox.Width * Length;
+        //private int _length = 4;
+        //private int _height = 1;
         public int Length
         {
-            get => _length;
+            get => WidthTiles;
             set
             {
-                _length = value;
-                SetBuffer();
+                SetWidth(value);
             }
         }
-        public override float Width => base.Width * _length;
+        public int VLength
+        {
+            get => HeightTiles;
+            set
+            {
+                SetHeight(value);
+            }
+        }
         /// <summary>
-        /// Determines whether or not the platform pushes crewmen the opposite direction on the bottom. Set to true to disable this.
+        /// Determines whether or not the platform (conveyor) pushes crewmen the opposite direction on the bottom. Set to true to disable this.
         /// </summary>
         public bool SingleDirection { get; set; } = true;
         public List<Sprite> OnTop { get; set; } = new List<Sprite>();
         private Rectangle _bounds;
         public Rectangle Bounds { get => _bounds; set => _bounds = value; }
         public static SoundEffect DisappearSound;
-        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null, int length = 4) : base(x, y, texture, animation)
+        public Platform(float x, float y, Texture texture, Animation animation, float xSpeed = 0, float ySpeed = 0, float conveyor = 0, bool disappear = false, Animation disappearAnimation = null, int length = 4, int height = 1) : base(x, y, texture, length, height)
         {
             NormalAnimation = animation;
+            Animation = animation;
             XVelocity = xSpeed;
             YVelocity = ySpeed;
             Conveyor = conveyor;
             CanDisappear = disappear;
             DisappearAnimation = disappearAnimation ?? Animation.EmptyAnimation;
             Length = length;
+            VLength = height;
             Solid = SolidState.Ground;
         }
 
-        public void SetBuffer()
-        {
-            instances = _length;
-            bufferData = new float[_length * 4];
-            int index = 0;
-            int curX = 0;
-            for (int i = 0; i < instances; i++)
-            {
-                bufferData[index++] = curX;
-                bufferData[index++] = 0;
-                bufferData[index++] = i == 0 ? 0 : (i == _length - 1 ? 2 : 1);
-                bufferData[index++] = 0;
-                curX += Texture.TileSizeX;
-            }
-            updateBuffer = true;
-        }
+        //public void SetBuffer()
+        //{
+        //    instances = _length * _height;
+        //    bufferData = new float[_length * _height * 4];
+        //    int index = 0;
+        //    int curX = 0;
+        //    int curY = 0;
+        //    for (int y = 0; y < _height; y++)
+        //    {
+        //        for (int x = 0; x < _length; x++)
+        //        {
+        //            bufferData[index++] = curX;
+        //            bufferData[index++] = curY;
+        //            bufferData[index++] = x == 0 ? 0 : (x == _length - 1 ? 2 : 1);
+        //            bufferData[index++] = y == 0 ? 0 : (y == _height - 1 ? 2 : 1);
+        //            curX += Texture.TileSizeX;
+        //        }
+        //        curY += Texture.TileSizeY;
+        //    }
+        //    updateBuffer = true;
+        //}
 
         public void Reappear()
         {
@@ -276,6 +295,7 @@ namespace V7
             {
                 SortedList<string, SpriteProperty> ret = new SortedList<string, SpriteProperty>();
                 ret.Add("BoardEvent", evBoard);
+                ret.Add("LeaveEvent", evLeave);
                 return ret;
             }
         }
@@ -296,9 +316,11 @@ namespace V7
                 ret.Add("BoundsWidth", new SpriteProperty("BoundsWidth", () => _bounds.Width, (t, g) => _bounds.Width = (int)t, 0, SpriteProperty.Types.Int, "The width of the platform's bounds."));
                 ret.Add("BoundsHeight", new SpriteProperty("BoundsHeight", () => _bounds.Height, (t, g) => _bounds.Height = (int)t, 0, SpriteProperty.Types.Int, "The height of the platform's bounds."));
                 ret.Add("Length", new SpriteProperty("Length", () => Length, (t, g) => Length = (int)t, 4, SpriteProperty.Types.Int, "The length in tiles of the platform."));
+                ret.Add("Height", new SpriteProperty("Height", () => VLength, (t, g) => VLength = (int)t, 1, SpriteProperty.Types.Int, "The height in tiles of the platform."));
                 ret.Add("Sticky", new SpriteProperty("Sticky", () => Sticky, (t, g) => Sticky = (bool)t, false, SpriteProperty.Types.Bool, "Crewmen cannot flip/jump from sticky platforms."));
                 ret.Add("SolidSide", new SpriteProperty("SolidSide", () => (int)State, (t, g) => State = (Tile.TileStates)(int)t, 0, SpriteProperty.Types.Int, "The one-way state of the platform.", false));
                 ret.Add("BoardEvent", evBoard);
+                ret.Add("LeaveEvent", evLeave);
                 ret["Type"].GetValue = () => "Platform";
                 return ret;
             }
